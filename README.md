@@ -1,6 +1,6 @@
 **StarkMinds-Backend**
 
-StarkMinds-Backend is the NestJS-based API server powering StarkMinds, a pioneering blockchain education platform built on Stellar. This repository provides secure, scalable endpoints for user authentication, course management, data persistence, and integration with Stellar smart contracts.
+StrellerMinds-Backend is the NestJS-based API server powering StarkMinds, a pioneering blockchain education platform built on Stellar. This repository provides secure, scalable endpoints for user authentication, course management, data persistence, and integration with Stellar smart contracts.
 
 **Features**  
 • Secure JWT-based authentication and authorization  
@@ -21,7 +21,7 @@ _Prerequisites:_
 
 _Installation:_  
 1. Clone the repository:  
-   `git clone https://github.com/your-username/starkminds-backend.git`  
+   `git clone https://github.com/your-username/strellerminds-backend.git`  
 2. Change to the project directory:  
    `cd starkminds-backend`  
 3. Install dependencies:  
