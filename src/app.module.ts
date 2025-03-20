@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UsersModule } from './users/users.module';
+import { CoursesModule } from './courses/courses.module';
 
 @Module({
   imports: [
@@ -23,6 +25,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         synchronize: true, // ⚠️ Auto-sync schema (disable in production)
       }),
     }),
+
+    UsersModule,
+
+    CoursesModule,
   ],
 })
 export class AppModule {}
