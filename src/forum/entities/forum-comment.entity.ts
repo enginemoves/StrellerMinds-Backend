@@ -1,17 +1,17 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index, CreateDateColumn, UpdateDateColumn } from "typeorm"
-import { Course } from "./course.entity"
+import { ForumPost } from "./forum-post.entity"
 import { User } from "src/users/entities/user.entity"
 
-@Entity("course_reviews")
-export class CourseReview {
+@Entity("forum_comments")
+export class ForumComment {
   @PrimaryGeneratedColumn("uuid")
   id: string
 
-  @Column({ type: "int", default: 5 })
-  rating: number
+  @Column({ type: "text" })
+  content: string
 
-  @Column({ type: "text", nullable: true })
-  comment: string
+  @Column({ default: 0 })
+  likes: number
 
   @CreateDateColumn()
   createdAt: Date
@@ -22,18 +22,18 @@ export class CourseReview {
   // Many-to-One relationships
   @ManyToOne(
     () => User,
-    (user) => user.reviews,
+    (user) => user.forumComments,
     { nullable: false },
   )
   @Index()
-  user: User
+  author: User
 
   @ManyToOne(
-    () => Course,
-    (course) => course.reviews,
+    () => ForumPost,
+    (post) => post.comments,
     { nullable: false, onDelete: "CASCADE" },
   )
   @Index()
-  course: Course
+  post: ForumPost
 }
 
