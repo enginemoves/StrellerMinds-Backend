@@ -12,6 +12,8 @@ import { BlockchainModule } from './blockchain/blockchain.module';
 import { FilesModule } from './files/files.module';
 import { EmailModule } from './email/email.module';
 import { HealthModule } from './health/health.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -47,5 +49,7 @@ import { HealthModule } from './health/health.module';
     EmailModule,
     HealthModule,
   ],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule { }

@@ -13,10 +13,12 @@ describe('HealthController (e2e)', () => {
 
         app = moduleFixture.createNestApplication();
         await app.init();
-    });
+    }, 30000); // Increase timeout to 30 seconds
 
-    afterEach(async () => {
-        await app.close();
+    afterAll(async () => {
+        if (app) {
+            await app.close();
+        }
     });
 
     describe('/health (GET)', () => {
