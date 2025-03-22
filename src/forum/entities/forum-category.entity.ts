@@ -1,19 +1,19 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from "typeorm"
-import { Course } from "./course.entity"
+import { ForumTopic } from "./forum-topic.entity"
 
-@Entity("categories")
-export class Category {
+@Entity("forum_categories")
+export class ForumCategory {
   @PrimaryGeneratedColumn("uuid")
   id: string
 
-  @Column({ length: 100, unique: true })
+  @Column({ length: 100 })
   name: string
 
   @Column({ type: "text", nullable: true })
   description: string
 
-  @Column({ nullable: true })
-  icon: string
+  @Column({ default: 0 })
+  order: number
 
   @CreateDateColumn()
   createdAt: Date
@@ -23,9 +23,9 @@ export class Category {
 
   // One-to-Many relationship
   @OneToMany(
-    () => Course,
-    (course) => course.category,
+    () => ForumTopic,
+    (topic) => topic.category,
   )
-  courses: Course[]
+  topics: ForumTopic[]
 }
 
