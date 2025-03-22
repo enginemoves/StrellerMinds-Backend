@@ -1,7 +1,7 @@
 import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Min, MaxLength, IsArray, Max, ArrayMinSize } from 'class-validator';
 import { ManyToOne } from 'typeorm';
 import { Course } from '../entities/course.entity';
-import { User } from 'src/users/entities/user.entity';
+import { User } from '../../users/entities/user.entity';
 import { CreateCourseModuleDto } from './create.course.moduledto';
 import { Type } from 'class-transformer';
 
@@ -12,7 +12,7 @@ export class CreateCourseDto {
   title: string;
 
 
-  
+
   @ManyToOne(() => User)
   user: User;
 
@@ -85,11 +85,11 @@ export class CreateCourseDto {
   @IsOptional()
   categoryId?: string;
 
-  
+
   @ManyToOne(() => Course, course => course.reviewCount, { onDelete: 'CASCADE' })
   course: Course;
 
-  
+
   @IsOptional()
   @IsArray()
   @ArrayMinSize(0)
@@ -97,7 +97,7 @@ export class CreateCourseDto {
   tagIds?: string[];
 
 
-  
+
   @IsOptional()
   @IsArray()
   @ArrayMinSize(0)

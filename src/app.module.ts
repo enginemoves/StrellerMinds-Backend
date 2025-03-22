@@ -11,6 +11,7 @@ import { NotificationModule } from './notification/notification.module';
 import { BlockchainModule } from './blockchain/blockchain.module';
 import { FilesModule } from './files/files.module';
 import { EmailModule } from './email/email.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { EmailModule } from './email/email.module';
     BlockchainModule,
     FilesModule,
     EmailModule,
+    HealthModule,
   ],
 })
 export class AppModule { }

@@ -3,7 +3,7 @@ import { CourseReview } from "./course-review.entity"
 import { Tag } from "./tag.entity"
 import { Category } from "./category.entity"
 import { CourseModule } from "./course-module.entity"
-import { User } from "src/users/entities/user.entity"
+import { User } from "../../users/entities/user.entity"
 
 @Entity("courses")
 export class Course {
@@ -64,7 +64,7 @@ export class Course {
   @Column({ nullable: true })
   categoryId: string
 
-  
+
   @ManyToOne(() => User, user => user.intructorCourses)
   instructor: User;
 
