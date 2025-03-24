@@ -8,9 +8,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './jwt.strategy';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthToken } from './entities/auth-token.entity';
+import { EmailModule } from 'src/email/email.module';
 
 @Module({
   imports: [
+    EmailModule,
     UsersModule,
     PassportModule,
     TypeOrmModule.forFeature([AuthToken]),
@@ -28,4 +30,4 @@ import { AuthToken } from './entities/auth-token.entity';
   providers: [AuthService, JwtStrategy],
   exports: [AuthService],
 })
-export class AuthModule { }
+export class AuthModule {}
