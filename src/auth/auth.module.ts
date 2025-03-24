@@ -1,3 +1,4 @@
+
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
@@ -17,6 +18,24 @@ import { AuthController, JwtAuthStrategy } from './auth.controller';
     ConfigModule,
     UsersService,
     PassportModule,
+import { Module } from '@nestjs/common';
+import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
+import { UsersModule } from '../users/users.module';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtStrategy } from './jwt.strategy';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthToken } from './entities/auth-token.entity';
+import { EmailModule } from 'src/email/email.module';
+
+@Module({
+  imports: [
+    EmailModule,
+    UsersModule,
+    PassportModule,
+    TypeOrmModule.forFeature([AuthToken]
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -28,6 +47,14 @@ import { AuthController, JwtAuthStrategy } from './auth.controller';
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtAuthStrategy],
+
+        signOptions: { expiresIn: '1h' },
+      }),
+    }),
+  ],
+
+  controllers: [AuthController],
+  providers: [AuthService, JwtStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}

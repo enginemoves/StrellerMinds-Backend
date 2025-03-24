@@ -1,13 +1,14 @@
-/* eslint-disable prettier/prettier */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Module, Controller, Post, Body, UnauthorizedException, Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import { AuthResponseDto } from './dto/auth-response.dto';
+import { EmailService } from 'src/email/email.service';
 
-
-// ========================== AUTH SERVICE ==========================
 @Injectable()
 export class AuthService {
   private refreshTokens: Map<string, string> = new Map(); // Stores hashed refresh tokens
@@ -15,6 +16,7 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly emailService: EmailService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -24,11 +26,25 @@ export class AuthService {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) throw new UnauthorizedException('Invalid credentials');
 
+    try {
+      await this.emailService.sendEmail({
+        to: user.email,
+        subject: 'Welcome to Our Platform',
+        templateName: 'welcome',
+        context: {
+          name: user.firstName,
+          year: new Date().getFullYear(),
+        },
+      });
+    } catch (error) {
+      throw new BadRequestException('Error sending welcome email');
+    }
+
     return user;
   }
 
   async generateTokens(userId: string) {
-    const accessToken = this.jwtService.sign({ sub: userId });
+    const accessToken = this.jwtService.sign({ sub: userId }, { expiresIn: '1h' });
     const refreshToken = this.jwtService.sign(
       { sub: userId },
       { secret: process.env.REFRESH_TOKEN_SECRET, expiresIn: '7d' }
@@ -41,8 +57,14 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async login(user: any) {
-    return this.generateTokens(user.id);
+  async login(user: any): Promise<AuthResponseDto> {
+    const tokens = await this.generateTokens(user.id);
+    return {
+      access_token: tokens.accessToken,
+      refresh_token: tokens.refreshToken,
+      expires_in: 3600, // 1 hour in seconds
+      user: { id: user.id, email: user.email },
+    };
   }
 
   async refreshToken(userId: string, refreshToken: string) {
@@ -50,7 +72,6 @@ export class AuthService {
     if (!storedToken || !(await bcrypt.compare(refreshToken, storedToken))) {
       throw new UnauthorizedException('Invalid refresh token');
     }
-
     return this.generateTokens(userId); // Issue new tokens and rotate refresh token
   }
 }

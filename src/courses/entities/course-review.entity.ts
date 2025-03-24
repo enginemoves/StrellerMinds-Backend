@@ -1,37 +1,31 @@
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index, CreateDateColumn, UpdateDateColumn } from "typeorm"
+import { Course } from "./course.entity"
+import { User } from "../../users/entities/user.entity"
 
-// src/courses/entities/course-review.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
-import { Course } from './course.entity';
-import { User } from '../../users/entities/user.entity';
-
-@Entity('course_reviews')
+@Entity("course_reviews")
 export class CourseReview {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn("uuid")
+  id: string
 
-  @Column({ type: 'int', width: 1 })
-  rating: number;
+  @Column({ type: "int", default: 5 })
+  rating: number
 
-  @Column('text', { nullable: true })
-  comment: string;
-
-  @Column('uuid')
-  @Index()
-  userId: string;
-
-  @ManyToOne(() => User)
-  user: User;
-
-  @Column('uuid')
-  @Index()
-  courseId: string;
-
-  @ManyToOne(() => Course, course => course.reviewCount, { onDelete: 'CASCADE' })
-  course: Course;
+  @Column({ type: "text", nullable: true })
+  comment: string
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt: Date
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt: Date
+
+  // Many-to-One relationships
+  @ManyToOne(() => User, (user) => user.reviews, { nullable: false })
+  @Index()
+  user: Promise<User>
+
+  @ManyToOne(() => Course, (course) => course.reviews, { nullable: false, onDelete: "CASCADE" })
+  @Index()
+  course: Promise<Course>
 }
+

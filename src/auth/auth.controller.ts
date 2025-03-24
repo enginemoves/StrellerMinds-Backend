@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import {
   Controller,
   Post,
@@ -6,12 +5,11 @@ import {
   UnauthorizedException,
   Injectable,
 } from '@nestjs/common';
-
 import { ConfigService } from '@nestjs/config';
-import { UsersService } from '../users/users.service';
-import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import { AuthService } from './auth.service';
-
+import { UsersService } from '../users/users.service';
+import { LoginDto } from './dto/login.dto';
+import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 
 @Controller('auth')
 export class AuthController {
@@ -21,8 +19,11 @@ export class AuthController {
   ) {}
 
   @Post('login')
-  async login(@Body() body: { email: string; password: string }) {
+  async login(@Body() body: LoginDto) {
     const user = await this.authService.validateUser(body.email, body.password);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
     return this.authService.login(user);
   }
 

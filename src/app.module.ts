@@ -1,12 +1,9 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { CoursesModule } from './courses/courses.module';
 import { AuthModule } from './auth/auth.module';
-import { CourseModule } from './course/course.module';
-import { ModuleModule } from './module/module.module';
-import { LessonModule } from './lesson/lesson.module';
 import { CertificateModule } from './certificate/certificate.module';
 import { ForumModule } from './forum/forum.module';
 import { PaymentModule } from './payment/payment.module';
@@ -14,6 +11,11 @@ import { NotificationModule } from './notification/notification.module';
 import { BlockchainModule } from './blockchain/blockchain.module';
 import { FilesModule } from './files/files.module';
 import { EmailModule } from './email/email.module';
+import { HealthModule } from './health/health.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { LessonModule } from './lesson/lesson.module';
+import { IpfsModule } from './ipfs/ipfs.module';
 
 @Module({
   imports: [
@@ -38,30 +40,20 @@ import { EmailModule } from './email/email.module';
     }),
 
     UsersModule,
-
     CoursesModule,
-
     AuthModule,
-
-    CourseModule,
-
-    ModuleModule,
-
-    LessonModule,
-
     CertificateModule,
-
     ForumModule,
-
     PaymentModule,
-
     NotificationModule,
-
     BlockchainModule,
-
     FilesModule,
-
     EmailModule,
+    HealthModule,
+    LessonModule,
+    IpfsModule,
   ],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}
