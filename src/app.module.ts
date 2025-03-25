@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
+import { ProgressModule } from './progress/progress.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { CoursesModule } from './courses/courses.module';
 
 @Module({
-  imports: [
+  imports: [ProgressModule],
     ConfigModule.forRoot({
       isGlobal: true, // Makes config available across all modules
       envFilePath: ['.env.development'], // Loads variables from .env file
