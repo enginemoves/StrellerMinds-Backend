@@ -16,6 +16,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { LessonModule } from './lesson/lesson.module';
 import { IpfsModule } from './ipfs/ipfs.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { IpfsModule } from './ipfs/ipfs.module';
     HealthModule,
     LessonModule,
     IpfsModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
