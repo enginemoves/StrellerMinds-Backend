@@ -1,45 +1,50 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Param,
-  Body,
-} from '@nestjs/common';
-import { CreatePaymentDto } from './dto/create-payment.dto';
-import { Payment } from './entities/payment.entity';
+import { Controller, Post, Body, Get, Param, UseGuards, Req, BadRequestException } from '@nestjs/common';
 import { PaymentsService } from './payment.service';
+import { ProcessPaymentDto } from './dto/process-payment.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
+@ApiTags('payments')
 @Controller('payments')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class PaymentsController {
-  constructor(private paymentsService: PaymentsService) {}
+  constructor(private readonly paymentsService: PaymentsService) {}
 
-  @Post()
-  async create(@Body() dto: CreatePaymentDto): Promise<Payment> {
-    return this.paymentsService.create(dto);
+  @Post('process')
+  @ApiOperation({ summary: 'Process a payment' })
+  @ApiResponse({ status: 201, description: 'Payment processed successfully' })
+  async processPayment(@Req() req, @Body() dto: ProcessPaymentDto) {
+    return this.paymentsService.processPayment(req.user, dto);
   }
 
   @Get()
-  async findAll(): Promise<Payment[]> {
-    return this.paymentsService.findAll();
+  @ApiOperation({ summary: 'Get all payments' })
+  async findAll(@Req() req) {
+    return this.paymentsService.getUserPayments(req.user.id);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Payment> {
+  @ApiOperation({ summary: 'Get payment by ID' })
+  async findOne(@Param('id') id: string) {
     return this.paymentsService.findOne(id);
   }
 
-  @Put(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() dto: Partial<CreatePaymentDto>,
-  ): Promise<Payment> {
-    return this.paymentsService.update(id, dto);
+  @Get(':id/verify')
+  @ApiOperation({ summary: 'Verify payment status' })
+  async verifyPayment(@Param('id') id: string) {
+    return this.paymentsService.verifyPayment(id);
   }
 
-  @Delete(':id')
-  async remove(@Param('id') id: string): Promise<void> {
-    return this.paymentsService.remove(id);
+  @Post(':id/refund')
+  @ApiOperation({ summary: 'Process a refund' })
+  async processRefund(
+    @Param('id') id: string,
+    @Body('reason') reason: string,
+  ) {
+    if (!reason) {
+      throw new BadRequestException('Refund reason is required');
+    }
+    return this.paymentsService.processRefund(id, reason);
   }
 }
