@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ForumCategory } from './entities/forum-category.entity';
-import { ForumTopic } from './entities/forum-topic.entity';
-import { ForumPost } from './entities/forum-post.entity';
+import { ForumCategory } from '../catogory/entities/forum-category.entity';
+import { ForumTopic } from '../topic/entities/forum-topic.entity';
+import { ForumPost } from '../post/entities/forum-post.entity';
 import { ForumComment } from './entities/forum-comment.entity';
 import { CreateForumCategoryDto } from './dto/create-forum-category.dto';
 import { CreateForumTopicDto } from './dto/create-forum-topic.dto';
@@ -93,5 +93,12 @@ export class ForumsService {
       throw new NotFoundException(`ForumComment with id ${id} not found`);
     }
     return comment;
+  }
+
+  async deletePost(postId: number) {
+    return this.postRepository.delete(postId);
+  }
+  async deleteComment(commentId: number) {
+    return this.postRepository.delete(commentId);
   }
 }
