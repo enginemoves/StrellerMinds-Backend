@@ -1,9 +1,9 @@
-import { Controller, Get, Post, Param, Body } from '@nestjs/common';
-import { ForumsService } from './forums.service';
+import { Controller, Get, Post, Param, Body, Delete } from '@nestjs/common';
 import { CreateForumCategoryDto } from './dto/create-forum-category.dto';
 import { CreateForumTopicDto } from './dto/create-forum-topic.dto';
 import { CreateForumPostDto } from './dto/create-forum-post.dto';
 import { CreateForumCommentDto } from './dto/create-forum-comment.dto';
+import { ForumsService } from './forum.service';
 
 @Controller('forums')
 export class ForumsController {
@@ -71,5 +71,15 @@ export class ForumsController {
   @Get('comment/:id')
   async findCommentById(@Param('id') id: string) {
     return this.forumsService.findCommentById(id);
+  }
+
+  @Delete('post/:id')
+  deletePost(@Param('id') id: number) {
+    return this.forumsService.deletePost(id);
+  }
+
+  @Delete('comment/:id')
+  deleteComment(@Param('id') id: number) {
+    return this.forumsService.deleteComment(id);
   }
 }

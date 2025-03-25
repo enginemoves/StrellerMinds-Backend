@@ -1,7 +1,15 @@
-import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
-import { NotificationsService } from './notifications.service';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+} from '@nestjs/common';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { Notification } from './entities/notification.entity';
+import { NotificationsService } from './notification.service';
 
 @Controller('notifications')
 export class NotificationsController {
@@ -23,7 +31,10 @@ export class NotificationsController {
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() dto: Partial<CreateNotificationDto>): Promise<Notification> {
+  async update(
+    @Param('id') id: string,
+    @Body() dto: Partial<CreateNotificationDto>,
+  ): Promise<Notification> {
     return this.notificationsService.update(id, dto);
   }
 

@@ -7,8 +7,8 @@ import { Repository } from 'typeorm';
 import { Like, Between, In } from 'typeorm';
 import { Course } from '../courses/entities/course.entity';
 import { User } from '../users/entities/user.entity';
-import { ForumPost } from '../forum/entities/forum-post.entity';
-import { ForumTopic } from '../forum/entities/forum-topic.entity';
+import { ForumPost } from '../post/entities/forum-post.entity';
+import { ForumTopic } from '../topic/entities/forum-topic.entity';
 import { SearchQueryDto } from './dto/search-query.dto';
 import { SearchResultItemDto } from './dto/search-result.dto';
 

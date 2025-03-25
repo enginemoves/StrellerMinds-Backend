@@ -1,6 +1,6 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { LessonType } from '../enums/lesson-type.enum';
-import { Module } from '../../module/entities/module.entity';
+import { Module } from 'src/module/entities/module.entity';
 
 @Entity('lessons')
 export class Lesson {
