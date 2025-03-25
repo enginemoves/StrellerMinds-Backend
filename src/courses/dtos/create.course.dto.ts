@@ -1,4 +1,7 @@
-import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Min, MaxLength, IsArray, Max } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Min, MaxLength, IsArray, Max, ArrayMinSize } from 'class-validator';
+import { Type } from 'class-transformer';
+import { User } from '../../users/entities/user.entity';
+import { CreateCourseModuleDto } from './create.course.moduledto';
 
 export class CreateCourseDto {
   @IsString()
@@ -10,68 +13,41 @@ export class CreateCourseDto {
   @IsNotEmpty()
   description: string;
 
-  @IsString()
-  @IsOptional()
-  thumbnail?: string;
-
-  @IsString()
-  @IsOptional()
-  introVideo?: string;
-
   @IsNumber()
   @Min(0)
   @IsOptional()
   price?: number;
 
-  @IsString()
-  @IsOptional()
-  currency?: string;
-
-  @IsBoolean()
-  @IsOptional()
-  isFeatured?: boolean;
-
-  @IsBoolean()
-  @IsOptional()
-  isPublished?: boolean;
-
   @IsNumber()
   @Min(0)
   @IsOptional()
-  enrollmentCount?: number;
-
-  @IsNumber()
-  @Min(0)
-  @Max(10)
-  @IsOptional()
-  averageRating?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  reviewCount?: number;
+  durationInHours?: number;
 
   @IsString()
   @IsOptional()
-  duration?: string;
+  status?: string; // draft, published, archived
 
   @IsString()
   @IsOptional()
-  level?: string;
-
-  @IsArray()
-  @IsOptional()
-  requirements?: string[];
-
-  @IsArray()
-  @IsOptional()
-  learningOutcomes?: string[];
+  thumbnail?: string;
 
   @IsUUID()
   @IsNotEmpty()
   instructorId: string;
 
   @IsUUID()
+  @IsNotEmpty()
+  categoryId: string;
+
   @IsOptional()
-  categoryId?: string;
+  @IsArray()
+  @ArrayMinSize(0)
+  @IsUUID(undefined, { each: true })
+  tagIds?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(0)
+  @Type(() => CreateCourseModuleDto)
+  modules?: CreateCourseModuleDto[];
 }

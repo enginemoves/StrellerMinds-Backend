@@ -1,9 +1,28 @@
+
 import { Module } from '@nestjs/common';
-import { ProgressModule } from './progress/progress.module';
+import { ProgressModule } from './progress/progres.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { CoursesModule } from './courses/courses.module';
+import { AuthModule } from './auth/auth.module';
+import { CertificateModule } from './certificate/certificate.module';
+import { ForumModule } from './forum/forum.module';
+import { PaymentModule } from './payment/payment.module';
+import { NotificationModule } from './notification/notification.module';
+import { BlockchainModule } from './blockchain/blockchain.module';
+import { FilesModule } from './files/files.module';
+import { EmailModule } from './email/email.module';
+import { HealthModule } from './health/health.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { LessonModule } from './lesson/lesson.module';
+import { IpfsModule } from './ipfs/ipfs.module';
+import { Module } from '@nestjs/common';
+import { ModerationModule } from './moderation/moderation.module';
+import { CatogoryModule } from './catogory/catogory.module';
+import { PostModule } from './post/post.module';
+import { TopicModule } from './topic/topic.module';
 
 @Module({
   imports: [ProgressModule],
@@ -28,8 +47,24 @@ import { CoursesModule } from './courses/courses.module';
     }),
 
     UsersModule,
-
     CoursesModule,
+    AuthModule,
+    CertificateModule,
+    ForumModule,
+    PaymentModule,
+    NotificationModule,
+    BlockchainModule,
+    FilesModule,
+    EmailModule,
+    HealthModule,
+    LessonModule,
+    IpfsModule,
+    ModerationModule,
+    CatogoryModule,
+    PostModule,
+    TopicModule,
   ],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}
