@@ -1,32 +1,19 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  OneToMany,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
-import { Course } from '../../courses/entities/course.entity';
-import { CourseReview } from '../../courses/entities/course-review.entity';
-import { Payment } from '../../payment/entities/payment.entity';
+// src/users/entities/user.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, OneToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { UserProgress } from './user-progress.entity';
-import { Certificate } from '../../certificate/entity/certificate.entity';
-import { ForumPost } from '../../post/entities/forum-post.entity';
-import { ForumComment } from '../../forum/entities/forum-comment.entity';
-import { Notification } from '../../notification/entities/notification.entity';
-import { AuthToken } from '../../auth/entities/auth-token.entity';
-import { PostVote } from 'src/post/entities/forum-post-vote.entity';
-import { ForumTopic } from 'src/topic/entities/forum-topic.entity';
+import { WalletInfo } from './wallet-info.entity'; // Ensure this import is present
+import * as bcrypt from 'bcrypt';
+import { UserRole } from '../enums/userRole.enum';
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ length: 100 })
+  @Column()
   firstName: string;
 
-  @Column({ length: 100 })
+  @Column()
   lastName: string;
 
   @Column({ unique: true })
@@ -44,45 +31,27 @@ export class User {
   @Column({ nullable: true })
   profilePicture: string;
 
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.STUDENT })
+  role: UserRole;
+
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
 
-  // Instructor relationship
-  @OneToMany(() => Course, (course) => course.instructor)
-  instructorCourses: Promise<Course[]>;
-
-  // User relationships
-  @OneToMany(() => CourseReview, (review) => review.user)
-  reviews: Promise<CourseReview[]>;
-
-  @OneToMany(() => Payment, (payment) => payment.user)
-  payments: Promise<Payment[]>;
-
   @OneToMany(() => UserProgress, (progress) => progress.user)
   progress: Promise<UserProgress[]>;
 
-  @OneToMany(() => Certificate, (certificate) => certificate.user)
-  certificates: Promise<Certificate[]>;
+  @OneToOne(() => WalletInfo, (walletInfo) => walletInfo.user) // This defines the inverse relation
+  walletInfo: WalletInfo;
 
-  @OneToMany(() => ForumPost, (post) => post.author)
-  forumPosts: Promise<ForumPost[]>;
+  async setPassword(password: string): Promise<void> {
+    const salt = await bcrypt.genSalt();
+    this.password = await bcrypt.hash(password, salt);
+  }
 
-  @OneToMany(() => ForumComment, (comment) => comment.author)
-  forumComments: Promise<ForumComment[]>;
-
-  @OneToMany(() => Notification, (notification) => notification.user)
-  notifications: Promise<Notification[]>;
-
-  @OneToMany(() => AuthToken, (token) => token.user)
-  authTokens: Promise<AuthToken[]>;
-
-  // Add the OneToMany relationship for PostVote
-  @OneToMany(() => PostVote, (vote) => vote.user)
-  votes: PostVote[]; // This links the votes cast by the user
-
-  @OneToMany(() => ForumTopic, (forumTopic) => forumTopic.creator)
-  topics: ForumTopic[]; // This is where the user can have many topics.
+  async validatePassword(password: string): Promise<boolean> {
+    return bcrypt.compare(password, this.password);
+  }
 }
