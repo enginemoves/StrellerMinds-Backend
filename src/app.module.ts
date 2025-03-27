@@ -1,3 +1,6 @@
+
+import { Module } from '@nestjs/common';
+import { ProgressModule } from './progress/progres.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
@@ -22,7 +25,7 @@ import { PostModule } from './post/post.module';
 import { TopicModule } from './topic/topic.module';
 
 @Module({
-  imports: [
+  imports: [ProgressModule],
     ConfigModule.forRoot({
       isGlobal: true, // Makes config available across all modules
       envFilePath: ['.env.development'], // Loads variables from .env file
