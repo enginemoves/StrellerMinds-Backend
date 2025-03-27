@@ -1,4 +1,3 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
@@ -16,7 +15,11 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { LessonModule } from './lesson/lesson.module';
 import { IpfsModule } from './ipfs/ipfs.module';
-import { AnalyticsModule } from './analytics/analytics.module';
+import { Module } from '@nestjs/common';
+import { ModerationModule } from './moderation/moderation.module';
+import { CatogoryModule } from './catogory/catogory.module';
+import { PostModule } from './post/post.module';
+import { TopicModule } from './topic/topic.module';
 
 @Module({
   imports: [
@@ -53,7 +56,10 @@ import { AnalyticsModule } from './analytics/analytics.module';
     HealthModule,
     LessonModule,
     IpfsModule,
-    AnalyticsModule,
+    ModerationModule,
+    CatogoryModule,
+    PostModule,
+    TopicModule,
   ],
   controllers: [AppController],
   providers: [AppService],

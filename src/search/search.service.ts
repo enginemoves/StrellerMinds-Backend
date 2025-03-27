@@ -389,4 +389,11 @@ export class SearchService {
 
     return suggestions.slice(0, 5);
   }
+
+  async searchPosts(query: string, page: number, limit: number) {
+    // Mock database query (Replace with actual DB logic)
+    return {
+      message: `Searching for posts with query: ${query}, page: ${page}, limit: ${limit}`,
+    };
+  }
 }
