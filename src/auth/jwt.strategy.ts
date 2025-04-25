@@ -14,14 +14,24 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: configService.get<string>('JWT_SECRET'),
+      ignoreExpiration: false,
     });
   }
 
-  async validate(payload: { id: string }): Promise<User> {
-    const user = await this.usersService.findOne(payload.id);
+  async validate(payload: {
+    sub: string;
+    email: string;
+    roles: string[];
+  }): Promise<any> {
+    const user = await this.usersService.findOne(payload.sub);
     if (!user) {
-      throw new UnauthorizedException('Invalid token');
+      throw new UnauthorizedException('User no longer exists');
     }
-    return user;
+
+    return {
+      id: payload.sub,
+      email: payload.email,
+      roles: payload.roles,
+    };
   }
 }
