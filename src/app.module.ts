@@ -18,14 +18,19 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { LessonModule } from './lesson/lesson.module';
 import { IpfsModule } from './ipfs/ipfs.module';
-import { Module } from '@nestjs/common';
+// import { Module } from '@nestjs/common';
 import { ModerationModule } from './moderation/moderation.module';
 import { CatogoryModule } from './catogory/catogory.module';
 import { PostModule } from './post/post.module';
 import { TopicModule } from './topic/topic.module';
+import { SubmissionModule } from './dry-run/submission/submission.module';
+import { SubmissionModule } from './submission/submission.module';
+import { SubmissionService } from './submission.service';
+import { SubmissionService } from './provider/submission/submission.service';
+import { SubmissionService } from './submissio/provider/submission/submission.service';
 
 @Module({
-  imports: [ProgressModule],
+  imports: [ProgressModule,
     ConfigModule.forRoot({
       isGlobal: true, // Makes config available across all modules
       envFilePath: ['.env.development'], // Loads variables from .env file
@@ -63,8 +68,9 @@ import { TopicModule } from './topic/topic.module';
     CatogoryModule,
     PostModule,
     TopicModule,
+    SubmissionModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, SubmissionService],
 })
 export class AppModule {}
