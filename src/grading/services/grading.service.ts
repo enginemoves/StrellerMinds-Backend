@@ -12,6 +12,13 @@ import { User } from '../../users/entities/user.entity';
 
 @Injectable()
 export class GradingService {
+  createGrade(
+    arg0: number,
+    arg1: { grade: number; feedback: string },
+    arg2: any,
+  ) {
+    throw new Error('Method not implemented.');
+  }
   constructor(
     @InjectRepository(Grade)
     private readonly gradeRepository: Repository<Grade>,
