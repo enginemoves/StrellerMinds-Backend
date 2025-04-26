@@ -1,9 +1,16 @@
-import { User } from "../../users/entities/user.entity";
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index, CreateDateColumn } from "typeorm";
+import { User } from '../../users/entities/user.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  Index,
+  CreateDateColumn,
+} from 'typeorm';
 
-@Entity("auth_tokens")
+@Entity('auth_tokens')
 export class AuthToken {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column({ length: 500 })
@@ -19,13 +26,19 @@ export class AuthToken {
   deviceInfo: string;
 
   @Column({ nullable: true })
-  ipAddress: string; 
+  ipAddress: string;
+
+  @Column({ default: 'login' })
+  purpose: 'login' | 'reset_password';
 
   @CreateDateColumn()
   createdAt: Date;
 
   // Many-to-One relationship with the User entity
-  @ManyToOne(() => User, (user) => user.authTokens, { nullable: false, onDelete: "CASCADE" })
+  @ManyToOne(() => User, (user) => user.authTokens, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
   @Index()
   user: User;
 }

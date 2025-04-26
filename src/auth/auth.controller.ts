@@ -1,6 +1,8 @@
 import {
   Controller,
   Post,
+  Get,
+  Query,
   Body,
   UnauthorizedException,
   Injectable,
@@ -9,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 
 @Controller('auth')
@@ -33,6 +36,22 @@ export class AuthController {
       throw new UnauthorizedException('Missing credentials');
     }
     return this.authService.refreshToken(body.userId, body.refreshToken);
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body('email') email: string) {
+    return this.authService.requestPasswordReset(email);
+  }
+
+  @Get('validate-reset-token')
+  async validateToken(@Query('token') token: string) {
+    await this.authService.validateResetToken(token);
+    return { message: 'Token is valid' };
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() resetDto: ResetPasswordDto) {
+    return this.authService.resetPassword(resetDto.token, resetDto.newPassword);
   }
 }
 
