@@ -9,6 +9,7 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { AuthToken } from './entities/auth-token.entity';
 import { EmailModule } from 'src/email/email.module';
+import { RefreshToken } from './entities/refresh-token.entity';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { EmailModule } from 'src/email/email.module';
     UsersModule,
     PassportModule,
     TypeOrmModule.forFeature([AuthToken]),
+    TypeOrmModule.forFeature([RefreshToken]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

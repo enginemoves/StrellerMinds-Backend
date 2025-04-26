@@ -63,6 +63,7 @@ import {
         throw new InternalServerErrorException('Error updating user');
       }
     }
+
   
     public async delete(id: string): Promise<void> {
       try {
