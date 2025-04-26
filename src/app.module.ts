@@ -1,4 +1,3 @@
-
 import { Module } from '@nestjs/common';
 import { ProgressModule } from './progress/progres.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -28,9 +27,12 @@ import { SubmissionModule } from './submission/submission.module';
 import { SubmissionService } from './submission.service';
 import { SubmissionService } from './provider/submission/submission.service';
 import { SubmissionService } from './submissio/provider/submission/submission.service';
+import { CourseEnrollmentModule } from './course-enrollment/course-enrollment.module';
+import { EnrollmentModule } from './enrollment/enrollment.module';
 
 @Module({
-  imports: [ProgressModule,
+  imports: [
+    ProgressModule,
     ConfigModule.forRoot({
       isGlobal: true, // Makes config available across all modules
       envFilePath: ['.env.development'], // Loads variables from .env file
@@ -41,11 +43,7 @@ import { SubmissionService } from './submissio/provider/submission/submission.se
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         type: 'postgres',
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USER'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_NAME'),
+        url: 'postgresql://gg_xbkp_user:oIBp6SxjmvV3pPzexykI5fzm2vbhx9jW@dpg-d06intjuibrs73el09rg-a.oregon-postgres.render.com/gg_xbkp',
         autoLoadEntities: true, // Automatically loads entity files
         synchronize: true, // ⚠️ Auto-sync schema (disable in production)
       }),
@@ -69,6 +67,7 @@ import { SubmissionService } from './submissio/provider/submission/submission.se
     PostModule,
     TopicModule,
     SubmissionModule,
+    EnrollmentModule,
   ],
   controllers: [AppController],
   providers: [AppService, SubmissionService],
