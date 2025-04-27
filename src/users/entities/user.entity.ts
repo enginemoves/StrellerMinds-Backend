@@ -4,6 +4,11 @@ import { UserProgress } from './user-progress.entity';
 import { WalletInfo } from './wallet-info.entity'; // Ensure this import is present
 import * as bcrypt from 'bcrypt';
 import { UserRole } from '../enums/userRole.enum';
+import { AuthToken } from '../../auth/entities/auth-token.entity';
+import { Course } from '../../courses/entities/course.entity';
+import { CourseReview } from '../../courses/entities/course-review.entity';
+import { Certificate } from '../../certificate/entity/certificate.entity';
+import { Payment } from '../../payment/entities/payment.entity';
 
 @Entity('users')
 export class User {
@@ -42,6 +47,21 @@ export class User {
 
   @OneToMany(() => UserProgress, (progress) => progress.user)
   progress: Promise<UserProgress[]>;
+
+  @OneToMany(() => Course, (course) => course.instructor)
+  instructorCourses: Course[];
+
+  @OneToMany(() => Certificate, (certificate) => certificate.user)
+  certificates: Certificate[];
+
+  @OneToMany(() => CourseReview, (courseReview) => courseReview.user)
+  reviews: CourseReview[];
+
+  @OneToMany(() => Payment, payment => payment.user)
+  payments: Payment[];
+
+  @OneToMany(() => AuthToken, (authTokens) => authTokens.user)
+  authTokens: Promise<UserProgress[]>;
 
   @OneToOne(() => WalletInfo, (walletInfo) => walletInfo.user) // This defines the inverse relation
   walletInfo: WalletInfo;
