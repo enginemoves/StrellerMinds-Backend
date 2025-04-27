@@ -7,7 +7,8 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { AuthResponseDto } from './dto/auth-response.dto';
-import { EmailService } from 'src/email/email.service';
+import { EmailService } from '../email/email.service';
+import { PasswordValidationService } from './password-validation.service';
 
 @Injectable()
 export class AuthService {
@@ -17,7 +18,10 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
-  ) {}
+    private readonly passwordValidationService: PasswordValidationService,
+  ) { }
+
+
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findOne(email);
@@ -37,10 +41,47 @@ export class AuthService {
         },
       });
     } catch (error) {
-      throw new BadRequestException('Error sending welcome email');
+      throw new BadRequestException(error.message || 'Error sending welcome email');
     }
 
     return user;
+  }
+
+  async validatePassword(password: string): Promise<boolean> {
+    const validationResult = this.passwordValidationService.validatePassword(password);
+
+    if (!validationResult.isValid) {
+      throw new BadRequestException({
+        message: 'Password does not meet requirements',
+        errors: validationResult.errors
+      });
+    }
+
+    return true;
+  }
+
+  async register(email: string, password: string, userData?: any): Promise<AuthResponseDto> {
+    // First validate the password
+    await this.validatePassword(password);
+
+    // Check if user already exists
+    const existingUser = await this.usersService.findByEmail(email);
+    if (existingUser) {
+      throw new BadRequestException('User already exists');
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
+    const user = await this.usersService.create({
+      email,
+      password: hashedPassword,
+      ...userData
+    });
+
+    // Generate tokens and return login response
+    return this.login(user);
   }
 
   async generateTokens(userId: string) {
@@ -73,5 +114,31 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
     return this.generateTokens(userId); // Issue new tokens and rotate refresh token
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
+    // Find the user
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    // Validate new password
+    await this.validatePassword(newPassword);
+
+    // Hash and update the password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.usersService.updatePassword(userId, hashedPassword);
+
+    // Invalidate refresh tokens
+    this.refreshTokens.delete(userId);
+
+    return true;
   }
 }

@@ -9,6 +9,7 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { AuthToken } from './entities/auth-token.entity';
 import { EmailModule } from 'src/email/email.module';
+import { PasswordValidationService } from './password-validation.service';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { EmailModule } from 'src/email/email.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, PasswordValidationService],
   exports: [AuthService],
 })
 export class AuthModule {}
