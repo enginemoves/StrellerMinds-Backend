@@ -11,10 +11,10 @@ import {
 
 import { CreateUsersDto } from './dtos/create.users.dto';
 import { updateUsersDto } from './dtos/update.users.dto';
-import { UsersService } from './users.service'; // Or UserService, adjust as needed
+import { UsersService } from './services/users.service';
 
 @Controller('users')
-export class UnifiedUsersController {
+export class UsersController {
   constructor(private readonly userService: UsersService) {} // Or UserService
 
   @Post()
