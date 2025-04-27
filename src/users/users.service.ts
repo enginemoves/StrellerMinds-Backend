@@ -74,5 +74,23 @@ import {
         throw new InternalServerErrorException('Error deleting user');
       }
     }
+
+      async findByEmail(email: string): Promise<User | undefined> {
+    return this.userRepository.findOne({ where: { email } });
+  }
+
+  async findById(id: string): Promise<User | undefined> {
+    return this.userRepository.findOne({ where: { id } });
+  }
+
+  async updatePassword(userId: string, hashedPassword: string): Promise<User> {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+    
+    user.password = hashedPassword;
+    return this.userRepository.save(user);
+  }
   }
   
