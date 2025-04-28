@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { create } from 'ipfs-http-client';
-import NodeCache from 'node-cache';
+import NodeCache  from 'node-cache';
+import { of as hashOf } from 'ipfs-only-hash';
 
 @Injectable()
 export class IpfsService {
@@ -45,8 +46,8 @@ export class IpfsService {
     }
   }
 
-  verifyContent(cid: string, content: Buffer) {
-    const hash = this.ipfs.hash(content);
+  async verifyContent(cid: string, content: Buffer) {
+    const hash = await hashOf(content, { cidVersion: 0 });
     return hash === cid;
   }
 }

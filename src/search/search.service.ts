@@ -18,6 +18,7 @@ export class SearchService {
 
   constructor(
     private readonly searchRepository: SearchRepository,
+    
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
