@@ -20,6 +20,7 @@ import { CreateReactionDto } from './dto/create-reaction.dto';
 export class PostController {
   constructor(
     private readonly postService: PostService,
+    
     private readonly searchService: SearchService,
   ) {}
 

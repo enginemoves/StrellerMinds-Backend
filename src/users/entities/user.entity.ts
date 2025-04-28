@@ -1,5 +1,14 @@
 // src/users/entities/user.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, OneToOne, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  OneToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { UserProgress } from './user-progress.entity';
 import { WalletInfo } from './wallet-info.entity'; // Ensure this import is present
 import * as bcrypt from 'bcrypt';
@@ -29,11 +38,14 @@ export class User {
   @Column({ nullable: true, type: 'text' })
   bio: string;
 
-  @Column({ nullable: true })
-  profilePicture: string;
+  // @Column({ nullable: true })
+  // profilePicture: string;
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.STUDENT })
   role: UserRole;
+
+  @Column({ nullable: true })
+  profileImageUrl?: string;
 
   @CreateDateColumn()
   createdAt: Date;

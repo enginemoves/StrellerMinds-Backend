@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { WalletInfo } from './entities/wallet-info.entity';
 import { AuditLog } from 'src/audit/entities/audit.log.entity';
 import { ConfigModule } from '@nestjs/config';
