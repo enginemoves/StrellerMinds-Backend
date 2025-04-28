@@ -10,6 +10,9 @@ import { User } from './entities/user.entity';
 import { CreateUsersDto } from './dtos/create.users.dto';
 import { updateUsersDto } from './dtos/update.users.dto';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { Role } from 'src/role/roles.enum';
+import { UserRole } from './enums/user-role.enum';
+// import { Role } from '@/roles/enums/user-role.enum'; // Add this import
 
 @Injectable()
 export class UsersService {
@@ -33,14 +36,16 @@ export class UsersService {
         throw new ConflictException('Email already exists');
       }
 
-      // Handle image upload logic here
       if (file) {
         const uploadResult = await this.cloudinaryService.uploadImage(file);
         createUsersDto.profileImageUrl = uploadResult.secure_url;
       }
 
-      // Create and save the user
       const user = this.userRepo.create(createUsersDto);
+
+      // ✅ Set role: if not provided, default to STUDENT
+      user.role = createUsersDto.role === Role.STUDENT ? Role.STUDENT : createUsersDto.role ?? Role.STUDENT;
+
       return await this.userRepo.save(user);
     } catch (error) {
       throw new InternalServerErrorException('Error creating user');
