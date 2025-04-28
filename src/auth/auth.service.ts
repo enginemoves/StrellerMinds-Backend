@@ -8,7 +8,6 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { EmailService } from 'src/email/email.service';
-import { User } from '../users/entities/user.entity'; // <== make sure you import User entity
 
 @Injectable()
 export class AuthService {
@@ -20,7 +19,7 @@ export class AuthService {
     private readonly emailService: EmailService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<User> {
+  async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findOne(email);
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
@@ -44,57 +43,35 @@ export class AuthService {
     return user;
   }
 
-  async generateTokens(user: User) {
-    const payload = { sub: user.id, role: user.role };
-
-    const accessToken = this.jwtService.sign(payload, { expiresIn: '1h' });
+  async generateTokens(userId: string) {
+    const accessToken = this.jwtService.sign({ sub: userId }, { expiresIn: '1h' });
     const refreshToken = this.jwtService.sign(
-      { sub: user.id },
+      { sub: userId },
       { secret: process.env.REFRESH_TOKEN_SECRET, expiresIn: '7d' }
     );
 
     // Store refresh token securely (hashed)
     const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-    this.refreshTokens.set(user.id, hashedRefreshToken);
+    this.refreshTokens.set(userId, hashedRefreshToken);
 
     return { accessToken, refreshToken };
   }
 
-  async login(user: User): Promise<AuthResponseDto> {
-    const tokens = await this.generateTokens(user);
+  async login(user: any): Promise<AuthResponseDto> {
+    const tokens = await this.generateTokens(user.id);
     return {
       access_token: tokens.accessToken,
       refresh_token: tokens.refreshToken,
       expires_in: 3600, // 1 hour in seconds
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
+      user: { id: user.id, email: user.email },
     };
   }
-  
+
   async refreshToken(userId: string, refreshToken: string) {
     const storedToken = this.refreshTokens.get(userId);
     if (!storedToken || !(await bcrypt.compare(refreshToken, storedToken))) {
       throw new UnauthorizedException('Invalid refresh token');
     }
-  
-    // Find the user to regenerate token with role
-    const user = await this.usersService.findOne(userId); // Correct method name
-    if (!user) throw new UnauthorizedException('User not found');
-  
-    const tokens = await this.generateTokens(user); // Now pass user
-    return {
-      access_token: tokens.accessToken,
-      refresh_token: tokens.refreshToken,
-      expires_in: 3600, // 1 hour
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
-    };
+    return this.generateTokens(userId); // Issue new tokens and rotate refresh token
   }
-  
 }
