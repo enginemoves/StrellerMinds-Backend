@@ -44,7 +44,7 @@ export class ForumTopic {
   @Index()
   category: ForumCategory;
 
-  @ManyToOne(() => User, (user) => user.topics, {
+  @ManyToOne(() => User, (user) => user.id, {
     nullable: false,
     eager: true,
   })

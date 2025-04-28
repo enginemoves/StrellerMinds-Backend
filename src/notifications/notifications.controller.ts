@@ -19,8 +19,8 @@ import type { UpdateNotificationDto } from "./dto/update-notification.dto"
 import type { NotificationPreferenceDto } from "./dto/notification-preference.dto"
 import type { QueryNotificationsDto } from "./dto/query-notifications.dto"
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard"
-import { CurrentUser } from "../auth/decorators/current-user.decorator"
 import type { User } from "../users/entities/user.entity"
+import { CurrentUser } from "src/auth/decorators/current-user.decorator"
 
 @ApiTags("notifications")
 @ApiBearerAuth()

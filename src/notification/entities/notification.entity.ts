@@ -28,7 +28,7 @@ export class Notification {
   // Many-to-One relationship
   @ManyToOne(
     () => User,
-    (user) => user.notifications,
+    (user) => user.id,
     { nullable: false },
   )
   @Index()
