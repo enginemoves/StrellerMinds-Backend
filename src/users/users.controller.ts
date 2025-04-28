@@ -22,7 +22,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 export class UsersController {
   constructor(private readonly userService: UsersService) {} // Or UserService
 
-
   @UseInterceptors(FileInterceptor('file'))
   @Post('create')
   async createUser(
@@ -37,7 +36,6 @@ export class UsersController {
       throw new InternalServerErrorException('Error creating user');
     }
   }
-
 
   @Get()
   public async findAll() {
@@ -60,5 +58,11 @@ export class UsersController {
   @Delete(':id')
   public async delete(@Param('id', ParseUUIDPipe) id: string) {
     return await this.userService.delete(id);
+  }
+
+  @Post(':id/request-account-deletion')
+  async requestAccountDeletion(@Param('id') id: string) {
+    await this.userService.requestAccountDeletion(id);
+    return { message: 'Account deletion confirmation email sent' };
   }
 }

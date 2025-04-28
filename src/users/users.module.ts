@@ -7,9 +7,10 @@ import { AuditLog } from 'src/audit/entities/audit.log.entity';
 import { ConfigModule } from '@nestjs/config';
 import { AccountDeletionConfirmationService } from './services/account.deletion.confirmation.service';
 import { UsersService } from './services/users.service';
-import { EmailModule } from 'src/shared/email.module';
+import { EmailModule } from 'src/email/email.module';
 import { AuditLogModule } from 'src/audit/audit.log.module';
 import { UsersController } from './users.controller';
+import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { UsersController } from './users.controller';
     AuditLogModule,
     ConfigModule,
     EmailModule,
+    CloudinaryModule,
   ],
   controllers: [UsersController],
   providers: [UsersService, AccountDeletionConfirmationService],

@@ -1,4 +1,3 @@
-// src/users/services/user-deletion.service.ts
 import {
   Injectable,
   Logger,
@@ -116,7 +115,15 @@ export class UserDeletionService {
     await this.userRepository.save(user);
 
     // Start confirmation workflow
-    await this.confirmationService.startDeletionConfirmationWorkflow(userId);
+    const confirmationUrl = `${this.configService.get<string>('FRONTEND_URL')}/confirm-deletion?userId=${user.id}`;
+    const unsubscribeUrl = `${this.configService.get<string>('FRONTEND_URL')}/preferences?email=${user.email}`;
+
+    await this.confirmationService.sendAccountDeletionEmail({
+      email: user.email,
+      firstName: user.firstName,
+      confirmationUrl,
+      unsubscribeUrl,
+    });
 
     // Log deletion request
     await this.auditLogService.createLog({
@@ -142,9 +149,7 @@ export class UserDeletionService {
     confirmationToken: string,
   ): Promise<void> {
     // Validate confirmation token
-    const isValid = await this.confirmationService.validateDeletionConfirmation(
-      userId,
-      confirmationToken,
+    const isValid = await this.confirmationService.validateAndDeleteAccount(confirmationToken,
     );
 
     if (!isValid) {
