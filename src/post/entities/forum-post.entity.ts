@@ -33,7 +33,7 @@ export class ForumPost {
   updatedAt: Date;
 
   // Many-to-One relationships
-  @ManyToOne(() => User, (user) => user.forumPosts, { nullable: false })
+  @ManyToOne(() => User, (user) => user.id, { nullable: false })
   @Index()
   author: User; // Remove Promise, use the entity directly
 
