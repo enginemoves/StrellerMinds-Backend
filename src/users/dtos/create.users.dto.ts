@@ -32,7 +32,7 @@ export class CreateUsersDto {
   @IsOptional()
   bio?: string;
 
-  @IsEnum(UserRole)
+  @IsEnum(Role)
   @IsOptional()
   role?: UserRole;
 }
