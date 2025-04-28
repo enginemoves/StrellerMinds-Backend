@@ -21,6 +21,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       ForumPost,
       ForumTopic,
       SearchAnalytics,
+      SearchRepository
     ]),
     EventEmitterModule.forRoot(),
   ],

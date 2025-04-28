@@ -9,6 +9,6 @@ export class UpdateNotificationDto {
   })
   @IsEnum(NotificationStatus)
   @IsOptional()
-  status?: NotificationStatus
+  status? : NotificationStatus
 }
 

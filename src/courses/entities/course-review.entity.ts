@@ -20,7 +20,7 @@ export class CourseReview {
   updatedAt: Date
 
   // Many-to-One relationships
-  @ManyToOne(() => User, (user) => user.reviews, { nullable: false })
+  @ManyToOne(() => User, (user) => user.id, { nullable: false })
   @Index()
   user: Promise<User>
 
