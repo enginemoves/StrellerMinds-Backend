@@ -28,7 +28,7 @@ export class ForumComment {
   updatedAt: Date;
 
   // Many-to-One relationships
-  @ManyToOne(() => User, (user) => user.forumComments, { nullable: false })
+  @ManyToOne(() => User, (user) => user.id, { nullable: false })
   @Index()
   author: Promise<User>;
 

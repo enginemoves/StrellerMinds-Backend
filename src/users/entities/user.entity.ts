@@ -36,11 +36,14 @@ export class User {
   @Column({ nullable: true, type: 'text' })
   bio: string;
 
-  @Column({ nullable: true })
-  profilePicture: string;
+  // @Column({ nullable: true })
+  // profilePicture: string;
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.STUDENT })
   role: UserRole;
+
+  @Column({ nullable: true })
+  profileImageUrl?: string;
 
   @CreateDateColumn()
   createdAt: Date;

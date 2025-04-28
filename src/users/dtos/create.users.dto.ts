@@ -20,15 +20,19 @@ export class CreateUsersDto {
   @IsNotEmpty()
   lastName: string;
 
-  @IsString()
+  // @IsString()
+  // @IsOptional()
+  // profilePicture?: string;
+
   @IsOptional()
-  profilePicture?: string;
+  @IsString()
+  profileImageUrl?: string;
 
   @IsString()
   @IsOptional()
   bio?: string;
 
-  @IsEnum(UserRole)
+  @IsEnum(Role)
   @IsOptional()
   role?: UserRole;
 }
