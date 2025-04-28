@@ -7,24 +7,23 @@ import {
   Delete,
   Patch,
   ParseUUIDPipe,
+  ConflictException,
   InternalServerErrorException,
-  UploadedFile,
-  UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 
 import { CreateUsersDto } from './dtos/create.users.dto';
 import { updateUsersDto } from './dtos/update.users.dto';
-import { UsersService } from './users.service';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Roles } from 'src/role/roles.decorator';
-import { Role } from 'src/role/roles.enum';
+import { UsersService } from './users.service'; // Or UserService, adjust as needed
 import { FileInterceptor } from '@nestjs/platform-express';
+import { UploadedFile, UseInterceptors } from '@nestjs/common';
+
 
 @Controller('users')
-@UseGuards(RolesGuard)
-export class UsersController {
-  constructor(private readonly userService: UsersService) {}
+export class UnifiedUsersController {
+  constructor(
+    private readonly userService: UsersService,
+
+  ) {} // Or UserService
 
   @UseInterceptors(FileInterceptor('file'))
   @Post('create')
@@ -33,6 +32,7 @@ export class UsersController {
     @Body() createUsersDto: CreateUsersDto,
   ) {
     try {
+      // Delegate the user creation and image upload to the service
       const user = await this.userService.create(createUsersDto, file);
       return user;
     } catch (error) {
@@ -40,19 +40,19 @@ export class UsersController {
     }
   }
 
-  @Get('all')
-  @Roles(Role.ADMIN) // Corrected to Role.ADMIN
-  async findAll() {
+
+  @Get()
+  public async findAll() {
     return await this.userService.findAll();
   }
 
   @Get(':id')
-  async findOne(@Param('id', ParseUUIDPipe) id: string) {
+  public async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return await this.userService.findOne(id);
   }
 
   @Patch(':id')
-  async update(
+  public async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateUserDto: updateUsersDto,
   ) {
@@ -60,7 +60,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  async delete(@Param('id', ParseUUIDPipe) id: string) {
+  public async delete(@Param('id', ParseUUIDPipe) id: string) {
     return await this.userService.delete(id);
   }
 }

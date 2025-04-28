@@ -11,8 +11,7 @@ import {
 import { UserProgress } from './user-progress.entity';
 import { WalletInfo } from './wallet-info.entity'; // Ensure this import is present
 import * as bcrypt from 'bcrypt';
-import { UserRole } from '../enums/user-role.enum';
-import { Role } from 'src/role/roles.enum';
+import { UserRole } from '../enums/userRole.enum';
 
 @Entity('users')
 export class User {
@@ -40,8 +39,8 @@ export class User {
   // @Column({ nullable: true })
   // profilePicture: string;
 
-  @Column({ type: 'enum', enum: Role, default: Role.STUDENT })
-  role: Role;
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.STUDENT })
+  role: UserRole;
 
   @Column({ nullable: true })
   profileImageUrl?: string;
