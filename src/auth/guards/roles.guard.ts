@@ -1,13 +1,15 @@
-/* eslint-disable prettier/prettier */
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+// src/auth/guards/roles.guard.ts
+
+import { CanActivate, ExecutionContext, Injectable, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { Role } from 'src/role/roles.enum'; // Adjust if necessary
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>('roles', [
+    const requiredRoles = this.reflector.getAllAndOverride<Role[]>('roles', [
       context.getHandler(),
       context.getClass(),
     ]);
@@ -17,6 +19,10 @@ export class RolesGuard implements CanActivate {
     }
 
     const { user } = context.switchToHttp().getRequest();
-    return requiredRoles.some((role) => user.roles?.includes(role));
+    if (!requiredRoles.includes(user.role)) {
+      throw new ForbiddenException('You do not have permission (role mismatch)');
+    }
+
+    return true;
   }
 }
