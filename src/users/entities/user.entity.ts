@@ -1,9 +1,19 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, OneToOne, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  OneToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+} from 'typeorm';
 import { UserProgress } from './user-progress.entity';
 import { WalletInfo } from './wallet-info.entity'; // Ensure this import is present
 import * as bcrypt from 'bcrypt';
 import { UserRole } from '../enums/userRole.enum';
 import { AccountStatus } from '../enums/accountStatus.enum';
+import { UserProfile } from 'src/user-profiles/entities/user-profile.entity';
 
 @Entity('users')
 export class User {
@@ -64,6 +74,9 @@ export class User {
 
   @OneToOne(() => WalletInfo, (walletInfo) => walletInfo.user) // This defines the inverse relation
   walletInfo: WalletInfo;
+
+  @OneToOne(() => UserProfile, (profile) => profile.user, { cascade: true })
+  profile: UserProfile;
 
   async setPassword(password: string): Promise<void> {
     const salt = await bcrypt.genSalt();
