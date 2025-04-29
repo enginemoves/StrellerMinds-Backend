@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import { UserProgress } from './user-progress.entity';
 import { WalletInfo } from './wallet-info.entity'; // Ensure this import is present
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { UserRole } from '../enums/userRole.enum';
 import { AccountStatus } from '../enums/accountStatus.enum';
 import { UserProfile } from 'src/user-profiles/entities/user-profile.entity';
@@ -74,6 +74,12 @@ export class User {
 
   @OneToOne(() => WalletInfo, (walletInfo) => walletInfo.user) // This defines the inverse relation
   walletInfo: WalletInfo;
+
+  @Column({ nullable: true })
+  refreshToken?: string;
+
+  @Column({ default: false })
+  isEmailVerified: boolean;
 
   @OneToOne(() => UserProfile, (profile) => profile.user, { cascade: true })
   profile: UserProfile;
