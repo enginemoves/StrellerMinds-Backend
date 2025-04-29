@@ -7,9 +7,9 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
-import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
+import { UsersService } from 'src/users/services/users.service';
 
 @Controller('auth')
 export class AuthController {

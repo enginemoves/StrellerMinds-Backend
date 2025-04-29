@@ -1,17 +1,9 @@
-// src/users/entities/user.entity.ts
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  OneToMany,
-  OneToOne,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, OneToOne, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
 import { UserProgress } from './user-progress.entity';
 import { WalletInfo } from './wallet-info.entity'; // Ensure this import is present
 import * as bcrypt from 'bcrypt';
 import { UserRole } from '../enums/userRole.enum';
+import { AccountStatus } from '../enums/accountStatus.enum';
 
 @Entity('users')
 export class User {
@@ -50,6 +42,22 @@ export class User {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @Column({
+    type: 'enum',
+    enum: AccountStatus,
+    default: AccountStatus.ACTIVE,
+  })
+  status: AccountStatus;
+
+  @Column({ nullable: true })
+  deactivatedAt: Date;
+
+  @Column({ nullable: true })
+  deletionRequestedAt: Date;
+
+  @DeleteDateColumn({ nullable: true })
+  deletedAt: Date;
 
   @OneToMany(() => UserProgress, (progress) => progress.user)
   progress: Promise<UserProgress[]>;
