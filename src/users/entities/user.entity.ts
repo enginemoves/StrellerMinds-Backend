@@ -1,4 +1,3 @@
-// src/users/entities/user.entity.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -7,12 +6,13 @@ import {
   OneToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
 import { UserProgress } from './user-progress.entity';
 import { WalletInfo } from './wallet-info.entity'; // Ensure this import is present
 import * as bcrypt from 'bcrypt';
-import { UserRole } from '../enums/user-role.enum';
-import { Role } from 'src/role/roles.enum';
+import { UserRole } from '../enums/userRole.enum';
+import { AccountStatus } from '../enums/accountStatus.enum';
 import { UserProfile } from 'src/user-profiles/entities/user-profile.entity';
 
 @Entity('users')
@@ -41,8 +41,8 @@ export class User {
   // @Column({ nullable: true })
   // profilePicture: string;
 
-  @Column({ type: 'enum', enum: Role, default: Role.STUDENT })
-  role: Role;
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.STUDENT })
+  role: UserRole;
 
   @Column({ nullable: true })
   profileImageUrl?: string;
@@ -52,6 +52,22 @@ export class User {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @Column({
+    type: 'enum',
+    enum: AccountStatus,
+    default: AccountStatus.ACTIVE,
+  })
+  status: AccountStatus;
+
+  @Column({ nullable: true })
+  deactivatedAt: Date;
+
+  @Column({ nullable: true })
+  deletionRequestedAt: Date;
+
+  @DeleteDateColumn({ nullable: true })
+  deletedAt: Date;
 
   @OneToMany(() => UserProgress, (progress) => progress.user)
   progress: Promise<UserProgress[]>;

@@ -16,7 +16,6 @@ import { SearchResultDto } from './dto/search-result.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { Role } from '../role/roles.enum'; // Make sure Role enum is imported here
 
 @Controller('search')
 export class SearchController {
@@ -44,7 +43,7 @@ export class SearchController {
 
   @Post('reindex')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN) // Use Role.ADMIN instead of 'admin'
+  @Roles('admin')
   async reindex(): Promise<{ success: boolean; message: string }> {
     try {
       await this.searchIndexingService.reindexAll();
@@ -62,7 +61,7 @@ export class SearchController {
 
   @Post('reindex/courses')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN) // Use Role.ADMIN instead of 'admin'
+  @Roles('admin')
   async reindexCourses(): Promise<{ success: boolean; count: number }> {
     try {
       const count = await this.searchIndexingService.indexCourses();
@@ -74,7 +73,7 @@ export class SearchController {
 
   @Post('reindex/users')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN) // Use Role.ADMIN instead of 'admin'
+  @Roles('admin')
   async reindexUsers(): Promise<{ success: boolean; count: number }> {
     try {
       const count = await this.searchIndexingService.indexUsers();
@@ -86,7 +85,7 @@ export class SearchController {
 
   @Post('reindex/forum')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN) // Use Role.ADMIN instead of 'admin'
+  @Roles('admin')
   async reindexForum(): Promise<{
     success: boolean;
     counts: { posts: number; topics: number };

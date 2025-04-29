@@ -1,6 +1,4 @@
-// src/auth/decorators/roles.decorator.ts
+/* eslint-disable prettier/prettier */
 import { SetMetadata } from '@nestjs/common';
-import { Role } from 'src/role/roles.enum';
-// import { Role } from '@/roles/enums/user-role.enum';
 
-export const Roles = (...roles: Role[]) => SetMetadata('roles', roles);
+export const Roles = (...roles: string[]) => SetMetadata('roles', roles);
