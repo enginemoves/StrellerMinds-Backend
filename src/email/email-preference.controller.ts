@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Request } from '@nestjs/common';
-import type { EmailService } from './email.service';
-import type { EmailType } from './entities/email-preference.entity';
+import  { EmailService } from './email.service';
+import  { EmailType } from './entities/email-preference.entity';
 
 @Controller('email-preferences')
 export class EmailPreferenceController {
