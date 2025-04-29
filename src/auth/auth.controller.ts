@@ -4,12 +4,14 @@ import {
   Body,
   UnauthorizedException,
   Injectable,
+  UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import { UsersService } from 'src/users/services/users.service';
+import { RateLimitGuard } from 'src/common/guards/rate-limiter.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -17,7 +19,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly usersService: UsersService,
   ) {}
-
+  @UseGuards(RateLimitGuard)
   @Post('login')
   async login(@Body() body: LoginDto) {
     const user = await this.authService.validateUser(body.email, body.password);
