@@ -8,6 +8,7 @@ import {
   HttpCode,
   HttpStatus,
   Injectable,
+  UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
@@ -17,6 +18,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UsersService } from 'src/users/services/users.service';
+import { RateLimitGuard } from 'src/common/guards/rate-limiter.guard';
 
 @ApiTags('authentication')
 @Controller('auth')
@@ -25,7 +27,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly usersService: UsersService,
   ) {}
-
+  @UseGuards(RateLimitGuard)
   @Post('login')
   @ApiOperation({ summary: 'User login' })
   @ApiResponse({ status: 200, description: 'Login successful' })
