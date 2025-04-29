@@ -27,7 +27,7 @@ import { UserProfilesModule } from './user-profiles/user-profiles.module';
 
 @Module({
   imports: [
-    ProgressModule,
+    // ProgressModule,
     ConfigModule.forRoot({
       isGlobal: true, // Makes config available across all modules
       envFilePath: ['.env.development'], // Loads variables from .env file

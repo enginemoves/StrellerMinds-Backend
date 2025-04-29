@@ -11,18 +11,21 @@ import {
   InternalServerErrorException,
   UseInterceptors,
   UploadedFile,
+  UseGuards,
 } from '@nestjs/common';
 
 import { CreateUsersDto } from './dtos/create.users.dto';
 import { updateUsersDto } from './dtos/update.users.dto';
 import { UsersService } from './services/users.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { RateLimitGuard } from 'src/common/guards/rate-limiter.guard';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly userService: UsersService) {} // Or UserService
 
   @UseInterceptors(FileInterceptor('file'))
+  @UseGuards(RateLimitGuard)
   @Post('create')
   async createUser(
     @UploadedFile() file: Express.Multer.File,
