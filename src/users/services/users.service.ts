@@ -113,7 +113,7 @@ export class UsersService {
         context: {
           name: user.firstName,
           confirmationUrl,
-          companyName: 'YourCompanyName', 
+          companyName: 'YourCompanyName',
           unsubscribeUrl,
           year: new Date().getFullYear(),
         },
@@ -122,6 +122,29 @@ export class UsersService {
       throw new InternalServerErrorException(
         'Error sending account deletion email',
       );
+    }
+  }
+
+  public async findByEmail(email: string): Promise<User> {
+    try {
+      const user = await this.userRepo.findOne({ where: { email } });
+      if (!user) {
+        throw new NotFoundException(`User with email ${email} not found`);
+      }
+      return user;
+    } catch (error) {
+      throw new InternalServerErrorException('Error fetching user by email');
+    }
+  }
+
+  public async updateRefreshToken(
+    id: string,
+    refreshToken: string | null,
+  ): Promise<void> {
+    try {
+      await this.userRepo.update(id, { refreshToken });
+    } catch (error) {
+      throw new InternalServerErrorException('Error updating refresh token');
     }
   }
 }
