@@ -1,6 +1,6 @@
+/* eslint-disable prettier/prettier */
 export enum Role {
-  STUDENT = 'student',
-  MENTOR = 'mentor',
-  ADMIN = 'admin',
+  Admin = 'admin',
+  Instructor = 'instructor',
+  Student = 'student',
 }
-

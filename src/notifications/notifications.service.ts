@@ -14,7 +14,7 @@ import type { CreateNotificationFromTemplateDto } from './dto/create-notificatio
 import type { UpdateNotificationDto } from './dto/update-notification.dto';
 import type { NotificationPreferenceDto } from './dto/notification-preference.dto';
 import type { QueryNotificationsDto } from './dto/query-notifications.dto';
-import type { UsersService } from '../users/users.service';
+import { UsersService } from 'src/users/services/users.service';
 import type { NotificationDeliveryService } from './notification-delivery.service';
 
 @Injectable()
