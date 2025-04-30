@@ -22,9 +22,13 @@ import { CatogoryModule } from './catogory/catogory.module';
 import { PostModule } from './post/post.module';
 import { TopicModule } from './topic/topic.module';
 import { SubmissionModule } from './submission/submission.module';
-import { SubmissionService } from './submission/provider/submission.service';
+// import { SubmissionService } from './submission/provider/submission.service';
 import { UserProfilesModule } from './user-profiles/user-profiles.module';
+<<<<<<< HEAD
 import { EnrollmentModule } from './enrollment/enrollment.module';
+=======
+import { SorobanModule } from './soroban/soroban.module';
+>>>>>>> 08b5361f7dcfe6a1faf60ae96f130acecfcf284f
 
 @Module({
   imports: [
@@ -68,7 +72,11 @@ import { EnrollmentModule } from './enrollment/enrollment.module';
     TopicModule,
     SubmissionModule,
     UserProfilesModule,
+<<<<<<< HEAD
     EnrollmentModule,
+=======
+    SorobanModule,
+>>>>>>> 08b5361f7dcfe6a1faf60ae96f130acecfcf284f
   ],
   controllers: [AppController],
   providers: [AppService],
