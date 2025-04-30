@@ -28,10 +28,14 @@ export class AuthToken {
   @Column({ nullable: true })
   ipAddress: string;
 
+  @Column({ default: 'login' })
+  purpose: 'login' | 'reset_password';
+
   @CreateDateColumn()
   createdAt: Date;
 
   // Many-to-One relationship with the User entity
+  @ManyToOne(() => User, (user) => user.authTokens, {
   @ManyToOne(() => User, (user) => user.id, {
     nullable: false,
     onDelete: 'CASCADE',
