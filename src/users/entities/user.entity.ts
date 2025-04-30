@@ -14,6 +14,7 @@ import * as bcrypt from 'bcryptjs';
 import { UserRole } from '../enums/userRole.enum';
 import { AccountStatus } from '../enums/accountStatus.enum';
 import { UserProfile } from 'src/user-profiles/entities/user-profile.entity';
+import { UserSettings } from './user-settings.entity';
 
 @Entity('users')
 export class User {
@@ -84,6 +85,12 @@ export class User {
   @OneToOne(() => UserProfile, (profile) => profile.user, { cascade: true })
   profile: UserProfile;
 
+  @OneToOne(() => UserSettings, (settings) => settings.user, {
+    cascade: true,
+    eager: true,
+  })
+  settings: UserSettings;
+
   async setPassword(password: string): Promise<void> {
     const salt = await bcrypt.genSalt();
     this.password = await bcrypt.hash(password, salt);
@@ -93,3 +100,5 @@ export class User {
     return bcrypt.compare(password, this.password);
   }
 }
+
+
