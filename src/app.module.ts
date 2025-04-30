@@ -22,9 +22,12 @@ import { CatogoryModule } from './catogory/catogory.module';
 import { PostModule } from './post/post.module';
 import { TopicModule } from './topic/topic.module';
 import { SubmissionModule } from './submission/submission.module';
-import { SubmissionService } from './submission/provider/submission.service';
+// import { SubmissionService } from './submission/provider/submission.service';
 import { UserProfilesModule } from './user-profiles/user-profiles.module';
+
 import { AssignmentModule } from './assignment/assignment.module';
+import { SorobanModule } from './soroban/soroban.module';
+
 
 @Module({
   imports: [
@@ -70,6 +73,7 @@ import { AssignmentModule } from './assignment/assignment.module';
     SubmissionModule,
     UserProfilesModule,
     AssignmentModule,
+    SorobanModule,
   ],
   controllers: [AppController],
   providers: [AppService],
