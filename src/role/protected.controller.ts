@@ -8,19 +8,19 @@ import { Role } from './roles.enum';
 @UseGuards(RolesGuard) // Apply the RolesGuard to this controller
 export class ProtectedController {
   @Get('admin')
-  @Roles(Role.Admin)
+  @Roles(Role.ADMIN) // Corrected
   adminEndpoint() {
     return 'Admin Access Granted';
   }
 
-  @Get('instructor')
-  @Roles(Role.Instructor)
+  @Get('mentor') // Changed from 'instructor' to 'mentor'
+  @Roles(Role.MENTOR) // Corrected
   instructorEndpoint() {
     return 'Instructor Access Granted';
   }
 
   @Get('student')
-  @Roles(Role.Student)
+  @Roles(Role.STUDENT) // Corrected
   studentEndpoint() {
     return 'Student Access Granted';
   }
