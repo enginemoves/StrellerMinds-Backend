@@ -10,7 +10,7 @@ export class PostVote {
   @ManyToOne(() => ForumPost, (post) => post.votes, { nullable: false })
   post: ForumPost;
 
-  @ManyToOne(() => User, (user) => user.votes, { nullable: false })
+  @ManyToOne(() => User, (user) => user.id, { nullable: false })
   user: User;
 
   @Column()
