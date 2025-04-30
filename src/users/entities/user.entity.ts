@@ -75,6 +75,8 @@ export class User {
 
   @OneToOne(() => WalletInfo, (walletInfo) => walletInfo.user) // This defines the inverse relation
   walletInfo: WalletInfo;
+  gradesGiven: any;
+  gradesReceived: any;
 
   @Column({ nullable: true })
   refreshToken?: string;
