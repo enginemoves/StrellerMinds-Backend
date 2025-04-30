@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request = require('supertest');
 import { AppModule } from './../src/app.module';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -89,7 +89,7 @@ describe('AppController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
-  }, 60000); // Increase timeout to 60 seconds
+  }, 60000); // 1 minute timeout for the beforeEach to allow for database connection
 
   afterAll(async () => {
     if (app) {
@@ -102,5 +102,50 @@ describe('AppController (e2e)', () => {
       .get('/')
       .expect(200)
       .expect('Hello World!');
+  });
+});
+let app: INestApplication;
+
+beforeAll(async () => {
+  const moduleFixture: TestingModule = await Test.createTestingModule({
+    imports: [AppModule],
+  }).compile();
+
+  app = moduleFixture.createNestApplication();
+  await app.init();
+});
+
+afterAll(async () => {
+  await app.close();
+});
+describe('Courses (e2e)', () => {
+  it('/courses (POST)', async () => {
+    const getAdminToken = async (): Promise<string> => {
+      // Mock implementation of getAdminToken
+      return 'mocked-admin-token';
+    };
+    const token = await getAdminToken();
+    const courseDto = {
+      title: 'Intro to Stellar',
+      description: 'Learn Stellar basics',
+      difficulty: 'beginner',
+      modules: [
+        {
+          title: 'Module 1',
+          lessons: [
+            { title: 'Lesson 1', content: 'Stellar overview' },
+            { title: 'Lesson 2', content: 'Accounts' }
+          ]
+        }
+      ]
+    };
+
+    const response = await request(app.getHttpServer())
+      .post('/courses')
+      .set('Authorization', `Bearer ${token}`)
+      .send(courseDto)
+      .expect(201);
+
+    expect(response.body.title).toBe('Intro to Stellar');
   });
 });

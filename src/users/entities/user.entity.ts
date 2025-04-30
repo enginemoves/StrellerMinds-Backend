@@ -8,11 +8,17 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
 } from 'typeorm';
-import { UserProgress } from './user-progress.entity';
-import { WalletInfo } from './wallet-info.entity'; // Ensure this import is present
 import * as bcrypt from 'bcryptjs';
+
+import { UserProgress } from './user-progress.entity';
+import { WalletInfo } from './wallet-info.entity';
 import { UserRole } from '../enums/userRole.enum';
 import { AccountStatus } from '../enums/accountStatus.enum';
+import { AuthToken } from '../../auth/entities/auth-token.entity';
+import { Course } from '../../courses/entities/course.entity';
+import { CourseReview } from '../../courses/entities/course-review.entity';
+import { Certificate } from '../../certificate/entity/certificate.entity';
+import { Payment } from '../../payment/entities/payment.entity';
 import { UserProfile } from 'src/user-profiles/entities/user-profile.entity';
 import { UserSettings } from './user-settings.entity';
 
@@ -38,9 +44,6 @@ export class User {
 
   @Column({ nullable: true, type: 'text' })
   bio: string;
-
-  // @Column({ nullable: true })
-  // profilePicture: string;
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.STUDENT })
   role: UserRole;
@@ -73,10 +76,23 @@ export class User {
   @OneToMany(() => UserProgress, (progress) => progress.user)
   progress: Promise<UserProgress[]>;
 
-  @OneToOne(() => WalletInfo, (walletInfo) => walletInfo.user) // This defines the inverse relation
+  @OneToMany(() => Course, (course) => course.instructor)
+  instructorCourses: Course[];
+
+  @OneToMany(() => Certificate, (certificate) => certificate.user)
+  certificates: Certificate[];
+
+  @OneToMany(() => CourseReview, (courseReview) => courseReview.user)
+  reviews: CourseReview[];
+
+  @OneToMany(() => Payment, (payment) => payment.user)
+  payments: Payment[];
+
+  @OneToMany(() => AuthToken, (authToken) => authToken.user)
+  authTokens: Promise<AuthToken[]>;
+
+  @OneToOne(() => WalletInfo, (walletInfo) => walletInfo.user)
   walletInfo: WalletInfo;
-  gradesGiven: any;
-  gradesReceived: any;
 
   @Column({ nullable: true })
   refreshToken?: string;
@@ -93,6 +109,9 @@ export class User {
   })
   settings: UserSettings;
 
+  gradesGiven: any;
+  gradesReceived: any;
+
   async setPassword(password: string): Promise<void> {
     const salt = await bcrypt.genSalt();
     this.password = await bcrypt.hash(password, salt);
@@ -102,5 +121,4 @@ export class User {
     return bcrypt.compare(password, this.password);
   }
 }
-
 

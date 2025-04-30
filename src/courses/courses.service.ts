@@ -9,8 +9,10 @@ import { Repository } from 'typeorm';
 import { Course } from './entities/course.entity';
 import { CreateCourseDto } from './dtos/create.course.dto';
 import { UpdateCourseDto } from './dtos/update.course.dto';
+
 import { EmailService } from 'src/email/email.service';
 import { UsersService } from 'src/users/services/users.service';
+
 
 @Injectable()
 export class CourseService {
@@ -20,7 +22,7 @@ export class CourseService {
 
     private readonly emailService: EmailService,
     private readonly userService: UsersService,
-  ) {}
+  ) { }
 
   public async create(createCourseDto: CreateCourseDto): Promise<Course> {
     try {
