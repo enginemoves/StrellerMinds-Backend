@@ -9,6 +9,7 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { AuthToken } from './entities/auth-token.entity';
 import { EmailModule } from 'src/email/email.module';
+import { RefreshToken } from './entities/refresh-token.entity';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
@@ -19,6 +20,7 @@ import { RolesGuard } from './guards/roles.guard';
     UsersModule,
     PassportModule,
     TypeOrmModule.forFeature([AuthToken]),
+    TypeOrmModule.forFeature([RefreshToken]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

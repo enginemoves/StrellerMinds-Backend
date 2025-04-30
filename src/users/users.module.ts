@@ -11,10 +11,11 @@ import { EmailModule } from 'src/email/email.module';
 import { AuditLogModule } from 'src/audit/audit.log.module';
 import { UsersController } from './users.controller';
 import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
+import { UserSettings } from './entities/user-settings.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, WalletInfo, AuditLog]),
+    TypeOrmModule.forFeature([User, WalletInfo, AuditLog, UserSettings]),
     AuditLogModule,
     ConfigModule,
     EmailModule,

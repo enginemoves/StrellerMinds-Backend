@@ -22,12 +22,16 @@ import { CatogoryModule } from './catogory/catogory.module';
 import { PostModule } from './post/post.module';
 import { TopicModule } from './topic/topic.module';
 import { SubmissionModule } from './submission/submission.module';
-import { SubmissionService } from './submission/provider/submission.service';
+// import { SubmissionService } from './submission/provider/submission.service';
 import { UserProfilesModule } from './user-profiles/user-profiles.module';
+
+import { AssignmentModule } from './assignment/assignment.module';
+import { SorobanModule } from './soroban/soroban.module';
+
 
 @Module({
   imports: [
-    ProgressModule,
+    // ProgressModule,
     ConfigModule.forRoot({
       isGlobal: true, // Makes config available across all modules
       envFilePath: ['.env.development'], // Loads variables from .env file
@@ -45,6 +49,7 @@ import { UserProfilesModule } from './user-profiles/user-profiles.module';
         database: configService.get<string>('DB_NAME'),
         autoLoadEntities: true, // Automatically loads entity files
         synchronize: true, // ⚠️ Auto-sync schema (disable in production)
+        // dropSchema: true,
       }),
     }),
 
@@ -67,6 +72,8 @@ import { UserProfilesModule } from './user-profiles/user-profiles.module';
     TopicModule,
     SubmissionModule,
     UserProfilesModule,
+    AssignmentModule,
+    SorobanModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -6,6 +6,7 @@ import {
   JoinColumn,
   UpdateDateColumn,
   CreateDateColumn,
+  Index,
 } from 'typeorm';
 import { User } from './user.entity';
 
@@ -21,6 +22,7 @@ export class WalletInfo {
   currency: string;
 
   @Column({ unique: true })
+  @Index()
   walletAddress: string;
 
   @Column({ nullable: true })
@@ -28,7 +30,8 @@ export class WalletInfo {
 
   @Column({ nullable: true })
   chainId: string;
-   @Column({ type: 'jsonb', nullable: true })
+
+  @Column({ type: 'jsonb', nullable: true })
   blockchainCredentials: Record<string, any>;
 
   @CreateDateColumn()
@@ -37,7 +40,6 @@ export class WalletInfo {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  // New fields for handling orphaned wallets after account deletion
   @Column({ default: false })
   orphaned: boolean;
 
@@ -48,12 +50,3 @@ export class WalletInfo {
   @JoinColumn()
   user: User;
 }
-
- 
-
-
-
-
-  
-
- 
