@@ -2,17 +2,26 @@ import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
+  NotFoundException,
   InternalServerErrorException,
 } from '@nestjs/common';
 import { UsersService } from 'src/users/services/users.service';
+import { Injectable, BadRequestException, UnauthorizedException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { AuthResponseDto } from './dto/auth-response.dto';
-import { EmailService } from 'src/email/email.service';
+import * as crypto from 'crypto';
+import { addMinutes } from 'date-fns';
+import { v4 as uuidv4 } from 'uuid';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, MoreThan } from 'typeorm'; 
-import { RefreshToken } from './entities/refresh-token.entity';
+import { Repository, MoreThan } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
+
+import { UsersService } from '../users/users.service';
+import { AuthResponseDto } from './dto/auth-response.dto';
+import { EmailService } from '../email/email.service';
+import { PasswordValidationService } from './password-validation.service';
+import { AuthToken } from './entities/auth-token.entity';
+import { RefreshToken } from './entities/refresh-token.entity';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +29,9 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
+    private readonly passwordValidationService: PasswordValidationService,
+    @InjectRepository(AuthToken)
+    private readonly authTokenRepository: Repository<AuthToken>,
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepository: Repository<RefreshToken>,
     private readonly configService: ConfigService,
@@ -27,13 +39,13 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+    if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+    if (!isPasswordValid) throw new UnauthorizedException('Invalid credentials');
+
+    if (!user.isEmailVerified) {
+      throw new UnauthorizedException('Please verify your email first');
     }
 
     try {
@@ -46,46 +58,42 @@ export class AuthService {
           year: new Date().getFullYear(),
         },
       });
-      
     } catch (error) {
-      // Log error but don't stop the login process
       console.error('Error sending welcome email:', error);
-    if (!user.isEmailVerified) {
-      throw new UnauthorizedException('Please verify your email first');
     }
 
     return user;
   }
-}
 
-  // async generateTokens(userId: string) {
-  //   const accessToken = this.jwtService.sign({ sub: userId }, { expiresIn: '1h' });
-  //   const refreshToken = this.jwtService.sign(
-  //     { sub: userId, type: 'refresh' },
-  //     { secret: process.env.REFRESH_TOKEN_SECRET, expiresIn: '7d' }
-  //   );
+  async validatePassword(password: string): Promise<boolean> {
+    const validationResult = this.passwordValidationService.validatePassword(password);
+    if (!validationResult.isValid) {
+      throw new BadRequestException({
+        message: 'Password does not meet requirements',
+        errors: validationResult.errors,
+      });
+    }
+    return true;
+  }
 
-  //   // Hash the refresh token before storing
-  //   const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-    
-  //   // Store refresh token in database with expiration date
-  //   const expiresAt = new Date();
-  //   expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
-    
-  //   // Check if there's an existing token for this user and revoke it
-  //   await this.revokeUserRefreshTokens(userId);
-    
-  //   // Create new refresh token
-  //   const tokenEntity = this.refreshTokenRepository.create({
-  //     userId,
-  //     token: hashedRefreshToken,
-  //     expiresAt,
-  //     isRevoked: false
-  //   });
-    
-  //   await this.refreshTokenRepository.save(tokenEntity);
-  // }
-  async generateTokens(user) {
+  async register(email: string, password: string, userData?: any): Promise<AuthResponseDto> {
+    await this.validatePassword(password);
+
+    const existingUser = await this.usersService.findByEmail(email);
+    if (existingUser) throw new BadRequestException('User already exists');
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await this.usersService.create({
+      email,
+      password: hashedPassword,
+      ...userData,
+    });
+
+    return this.login(user);
+  }
+
+  async generateTokens(user: any) {
     const payload = {
       sub: user.id,
       email: user.email,
@@ -103,22 +111,18 @@ export class AuthService {
       }),
     ]);
 
-    // Hash the refresh token before storing
     const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-    
-    // Store the hashed refresh token in the database
     await this.usersService.updateRefreshToken(user.id, hashedRefreshToken);
 
     return {
       accessToken,
       refreshToken,
-      expiresIn: 3600, // 1 hour in seconds
+      expiresIn: 3600,
     };
   }
 
   async login(user: any): Promise<AuthResponseDto> {
     const tokens = await this.generateTokens(user);
-    
     return {
       access_token: tokens.accessToken,
       refresh_token: tokens.refreshToken,
@@ -128,78 +132,47 @@ export class AuthService {
         email: user.email,
         roles: user.roles,
       },
-    }
+    };
   }
 
   async refreshToken(userId: string, refreshToken: string) {
     try {
-      // Verify the token signature first
       await this.jwtService.verify(refreshToken, {
-        secret: process.env.REFRESH_TOKEN_SECRET
+        secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
       });
-      
-      // Find stored token for this user
+
       const tokenEntity = await this.refreshTokenRepository.findOne({
-        where: { 
+        where: {
           userId,
           isRevoked: false,
-          expiresAt: MoreThan(new Date()) // Only valid tokens
-        }
+          expiresAt: MoreThan(new Date()),
+        },
       });
-      
-      if (!tokenEntity) {
-        throw new UnauthorizedException('Invalid or expired refresh token');
-      }
-      
-      // Verify that the provided token matches the stored hash
+
+      if (!tokenEntity) throw new UnauthorizedException('Invalid or expired refresh token');
+
       const isTokenValid = await bcrypt.compare(refreshToken, tokenEntity.token);
-      if (!isTokenValid) {
-        throw new UnauthorizedException('Invalid refresh token');
-      }
-      
-      // Implement token rotation - revoke current token
+      if (!isTokenValid) throw new UnauthorizedException('Invalid refresh token');
+
       await this.refreshTokenRepository.update(tokenEntity.id, { isRevoked: true });
-      
-      // Generate new tokens
-      return this.generateTokens(userId);
+
+      const user = await this.usersService.findById(userId);
+      return this.generateTokens(user);
     } catch (error) {
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
-  
+
   async revokeUserRefreshTokens(userId: string): Promise<void> {
     try {
       await this.refreshTokenRepository.update(
         { userId, isRevoked: false },
-        { isRevoked: true }
+        { isRevoked: true },
       );
     } catch (error) {
       throw new InternalServerErrorException('Error revoking refresh tokens');
     }
   }
-  
-  // async logout(userId: string): Promise<void> {
-  //   // Revoke all refresh tokens for the user during logout
-  //   await this.revokeUserRefreshTokens(userId);
-  //   const user = await this.usersService.findOne(userId);
-  //   if (!user || !user.refreshToken) {
-  //     throw new UnauthorizedException('Invalid refresh token');
-  //   }
-
-  //   const refreshTokenMatches = await bcrypt.compare(
-  //     refreshToken,
-  //     user.refreshToken,
-  //   );
-
-  //   if (!refreshTokenMatches) {
-  //     throw new UnauthorizedException('Invalid refresh token');
-  //   }
-
-  //   return this.generateTokens(user);
-  // }
 
   async logout(userId: string) {
     await this.usersService.updateRefreshToken(userId, null);
@@ -212,9 +185,89 @@ export class AuthService {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
       return payload;
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Invalid token');
     }
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.usersService.findOne(email);
+    if (!user) throw new NotFoundException('User with this email does not exist.');
+
+    const token = uuidv4();
+    const expiresAt = addMinutes(new Date(), 15);
+
+    const resetToken = this.authTokenRepository.create({
+      user,
+      token,
+      expiresAt,
+      purpose: 'reset_password',
+      isRevoked: false,
+    });
+
+    await this.authTokenRepository.save(resetToken);
+
+    await this.emailService.sendEmail({
+      to: user.email,
+      subject: 'Password Reset Request',
+      templateName: 'reset-password',
+      context: {
+        name: user.firstName,
+        token,
+      },
+    });
+
+    return { message: 'Password reset email sent' };
+  }
+
+  async validateResetToken(token: string) {
+    const authToken = await this.authTokenRepository.findOne({
+      where: { token, purpose: 'reset_password', isRevoked: false },
+      relations: ['user'],
+    });
+
+    if (!authToken || authToken.expiresAt < new Date()) {
+      throw new BadRequestException('Invalid or expired password reset token.');
+    }
+
+    return authToken.user;
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const authToken = await this.authTokenRepository.findOne({
+      where: { token, purpose: 'reset_password', isRevoked: false },
+      relations: ['user'],
+    });
+
+    if (!authToken || authToken.expiresAt < new Date()) {
+      throw new BadRequestException('Invalid or expired password reset token.');
+    }
+
+    const user = authToken.user;
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.usersService.updatePassword(user.id, hashedPassword);
+
+    authToken.isRevoked = true;
+    await this.authTokenRepository.save(authToken);
+
+    return { message: 'Password successfully reset' };
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
+    const user = await this.usersService.findById(userId);
+    if (!user) throw new UnauthorizedException('User not found');
+
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isCurrentPasswordValid) throw new BadRequestException('Current password is incorrect');
+
+    await this.validatePassword(newPassword);
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.usersService.updatePassword(userId, hashedPassword);
+
+    await this.revokeUserRefreshTokens(userId);
+
+    return true;
   }
 }
 

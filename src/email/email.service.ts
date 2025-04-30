@@ -8,6 +8,7 @@ import * as nodemailer from 'nodemailer';
 import * as Handlebars from 'handlebars';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as crypto from 'crypto';
 import { EmailTemplate } from './entities/email-template.entity';
 import { EmailLog } from './entities/email-log.entity';
 import { EmailPreference } from './entities/email-preference.entity';
@@ -38,6 +39,7 @@ export class EmailService {
 
   constructor(
     private configService: ConfigService,
+    private readonly emailService: EmailService,
     @InjectQueue('email') private emailQueue: Queue,
     @InjectRepository(EmailTemplate)
     private emailTemplateRepository: Repository<EmailTemplate>,
@@ -370,7 +372,6 @@ export class EmailService {
   generateUnsubscribeToken(email: string, emailType: string): string {
     // In a real implementation, you would generate and store this token
     // For simplicity, we're just creating a hash
-    const crypto = require('crypto');
     const data = `${email}:${emailType}:${process.env.EMAIL_SECRET_KEY}`;
     return crypto.createHash('sha256').update(data).digest('hex');
   }
@@ -441,5 +442,17 @@ export class EmailService {
     }
 
     return query.getRawMany();
+  }
+  async sendPasswordResetEmail(email: string, token: string) {
+    const resetLink = `https://localhost:3000/reset-password?token=${token}`;
+
+    await this.emailService.sendEmail({
+      to: email,
+      subject: 'Password Reset Request',
+      templateName: 'reset-password',
+      context: {
+        resetLink,
+      },
+    });
   }
 }
