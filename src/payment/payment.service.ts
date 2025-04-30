@@ -4,10 +4,10 @@ import { Repository } from 'typeorm';
 import { Payment, PaymentMethod, PaymentStatus, PaymentType } from './entities/payment.entity';
 import { Subscription, SubscriptionStatus } from './entities/subscription.entity';
 import { ProcessPaymentDto } from './dto/process-payment.dto';
-import { StellarService } from './services/stellar.service';
+// import { StellarService } from './services/stellar.service';
 import { ConfigService } from '@nestjs/config';
 import { User } from '../users/entities/user.entity';
-import * as PDFDocument from 'pdfkit';
+import  PDFDocument from 'pdfkit';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -18,65 +18,65 @@ export class PaymentsService {
     private paymentsRepository: Repository<Payment>,
     @InjectRepository(Subscription)
     private subscriptionsRepository: Repository<Subscription>,
-    private stellarService: StellarService,
+    // private stellarService: StellarService,
     private configService: ConfigService,
   ) {}
 
-  async processPayment(user: User, dto: ProcessPaymentDto): Promise<Payment> {
-    const payment = this.paymentsRepository.create({
-      amount: dto.amount,
-      paymentMethod: dto.paymentMethod,
-      type: dto.type,
-      user,
-      status: PaymentStatus.PENDING,
-    });
+  // async processPayment(user: User, dto: ProcessPaymentDto): Promise<Payment> {
+  //   const payment = this.paymentsRepository.create({
+  //     amount: dto.amount,
+  //     paymentMethod: dto.paymentMethod,
+  //     type: dto.type,
+  //     user,
+  //     status: PaymentStatus.PENDING,
+  //   });
 
-    if (dto.courseId) {
-      payment.course = { id: dto.courseId } as any;
-    }
+  //   if (dto.courseId) {
+  //     payment.course = { id: dto.courseId } as any;
+  //   }
 
-    try {
-      // Handle different payment methods
-      switch (dto.paymentMethod) {
-        case PaymentMethod.XLM:
-          if (!dto.stellarPublicKey) {
-            throw new BadRequestException('Stellar public key is required for XLM payments');
-          }
-          payment.transactionId = await this.stellarService.processPayment(
-            dto.stellarPublicKey,
-            dto.amount
-          );
-          break;
+  //   try {
+  //     // Handle different payment methods
+  //     switch (dto.paymentMethod) {
+  //       case PaymentMethod.XLM:
+  //         if (!dto.stellarPublicKey) {
+  //           throw new BadRequestException('Stellar public key is required for XLM payments');
+  //         }
+  //         payment.transactionId = await this.stellarService.processPayment(
+  //           dto.stellarPublicKey,
+  //           dto.amount
+  //         );
+  //         break;
 
-        case PaymentMethod.CREDIT_CARD:
-        case PaymentMethod.PAYPAL:
-          if (!dto.paymentToken) {
-            throw new BadRequestException('Payment token is required for traditional payments');
-          }
-          // Process traditional payment (implement your payment gateway integration here)
-          payment.transactionId = 'mock_transaction_' + Date.now(); // Replace with actual implementation
-          break;
-      }
+  //       case PaymentMethod.CREDIT_CARD:
+  //       case PaymentMethod.PAYPAL:
+  //         if (!dto.paymentToken) {
+  //           throw new BadRequestException('Payment token is required for traditional payments');
+  //         }
+  //         // Process traditional payment (implement your payment gateway integration here)
+  //         payment.transactionId = 'mock_transaction_' + Date.now(); // Replace with actual implementation
+  //         break;
+  //     }
 
-      payment.status = PaymentStatus.COMPLETED;
+  //     payment.status = PaymentStatus.COMPLETED;
 
-      // Create subscription if payment type is subscription
-      if (dto.type === PaymentType.SUBSCRIPTION && dto.planName && dto.billingCycle) {
-        const subscription = await this.createSubscription(user, dto);
-        payment.subscription = subscription;
-      }
+  //     // Create subscription if payment type is subscription
+  //     if (dto.type === PaymentType.SUBSCRIPTION && dto.planName && dto.billingCycle) {
+  //       const subscription = await this.createSubscription(user, dto);
+  //       payment.subscription = subscription;
+  //     }
 
-      // Generate receipt
-      payment.receiptUrl = await this.generateReceipt(payment);
+  //     // Generate receipt
+  //     payment.receiptUrl = await this.generateReceipt(payment);
 
-      return this.paymentsRepository.save(payment);
-    } catch (error) {
-      payment.status = PaymentStatus.FAILED;
-      payment.metadata = { error: error.message };
-      await this.paymentsRepository.save(payment);
-      throw error;
-    }
-  }
+  //     return this.paymentsRepository.save(payment);
+  //   } catch (error) {
+  //     payment.status = PaymentStatus.FAILED;
+  //     payment.metadata = { error: error.message };
+  //     await this.paymentsRepository.save(payment);
+  //     throw error;
+  //   }
+  // }
 
   private async createSubscription(user: User, dto: ProcessPaymentDto): Promise<Subscription> {
     const nextBillingDate = new Date();
@@ -123,16 +123,16 @@ export class PaymentsService {
     return `/receipts/${fileName}`;
   }
 
-  async verifyPayment(id: string): Promise<boolean> {
-    const payment = await this.findOne(id);
+  // async verifyPayment(id: string): Promise<boolean> {
+  //   const payment = await this.findOne(id);
     
-    if (payment.paymentMethod === PaymentMethod.XLM) {
-      return this.stellarService.verifyPayment(payment.transactionId);
-    }
+  //   if (payment.paymentMethod === PaymentMethod.XLM) {
+  //     return this.stellarService.verifyPayment(payment.transactionId);
+  //   }
     
-    // Implement verification for other payment methods
-    return payment.status === PaymentStatus.COMPLETED;
-  }
+  //   // Implement verification for other payment methods
+  //   return payment.status === PaymentStatus.COMPLETED;
+  // }
 
   async processRefund(id: string, reason: string): Promise<Payment> {
     const payment = await this.findOne(id);

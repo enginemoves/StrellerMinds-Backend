@@ -36,6 +36,7 @@ export class AuthToken {
 
   // Many-to-One relationship with the User entity
   @ManyToOne(() => User, (user) => user.authTokens, {
+  @ManyToOne(() => User, (user) => user.id, {
     nullable: false,
     onDelete: 'CASCADE',
   })

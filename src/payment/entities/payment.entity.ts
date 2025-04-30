@@ -57,7 +57,7 @@ export class Payment {
   updatedAt: Date
 
   // Many-to-One relationships
-  @ManyToOne(() => User, (user) => user.payments, { nullable: false })
+  @ManyToOne(() => User, (user) => user.id, { nullable: false })
   @Index()
   user: User
 

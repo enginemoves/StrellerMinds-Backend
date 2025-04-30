@@ -1,6 +1,5 @@
-
 import { Module } from '@nestjs/common';
-import { ProgressModule } from './progress/progres.module';
+// import { ProgressModule } from './progress/progres.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
@@ -18,19 +17,18 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { LessonModule } from './lesson/lesson.module';
 import { IpfsModule } from './ipfs/ipfs.module';
-// import { Module } from '@nestjs/common';
 import { ModerationModule } from './moderation/moderation.module';
 import { CatogoryModule } from './catogory/catogory.module';
 import { PostModule } from './post/post.module';
 import { TopicModule } from './topic/topic.module';
-import { SubmissionModule } from './dry-run/submission/submission.module';
 import { SubmissionModule } from './submission/submission.module';
-import { SubmissionService } from './submission.service';
-import { SubmissionService } from './provider/submission/submission.service';
-import { SubmissionService } from './submissio/provider/submission/submission.service';
+// import { SubmissionService } from './submission/provider/submission.service';
+import { UserProfilesModule } from './user-profiles/user-profiles.module';
+import { SorobanModule } from './soroban/soroban.module';
 
 @Module({
-  imports: [ProgressModule,
+  imports: [
+    // ProgressModule,
     ConfigModule.forRoot({
       isGlobal: true, // Makes config available across all modules
       envFilePath: ['.env.development'], // Loads variables from .env file
@@ -69,8 +67,10 @@ import { SubmissionService } from './submissio/provider/submission/submission.se
     PostModule,
     TopicModule,
     SubmissionModule,
+    UserProfilesModule,
+    SorobanModule,
   ],
   controllers: [AppController],
-  providers: [AppService, SubmissionService],
+  providers: [AppService],
 })
 export class AppModule {}

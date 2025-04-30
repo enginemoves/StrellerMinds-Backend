@@ -7,19 +7,37 @@ import {
   Delete,
   Patch,
   ParseUUIDPipe,
+  ConflictException,
+  InternalServerErrorException,
+  UseInterceptors,
+  UploadedFile,
+  UseGuards,
 } from '@nestjs/common';
 
 import { CreateUsersDto } from './dtos/create.users.dto';
 import { updateUsersDto } from './dtos/update.users.dto';
-import { UsersService } from './users.service'; // Or UserService, adjust as needed
+import { UsersService } from './services/users.service';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { RateLimitGuard } from 'src/common/guards/rate-limiter.guard';
 
 @Controller('users')
-export class UnifiedUsersController {
+export class UsersController {
   constructor(private readonly userService: UsersService) {} // Or UserService
 
-  @Post()
-  public async create(@Body() createUsersDto: CreateUsersDto) {
-    return await this.userService.create(createUsersDto);
+  @UseInterceptors(FileInterceptor('file'))
+  @UseGuards(RateLimitGuard)
+  @Post('create')
+  async createUser(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() createUsersDto: CreateUsersDto,
+  ) {
+    try {
+      // Delegate the user creation and image upload to the service
+      const user = await this.userService.create(createUsersDto, file);
+      return user;
+    } catch (error) {
+      throw new InternalServerErrorException('Error creating user');
+    }
   }
 
   @Get()
@@ -43,5 +61,11 @@ export class UnifiedUsersController {
   @Delete(':id')
   public async delete(@Param('id', ParseUUIDPipe) id: string) {
     return await this.userService.delete(id);
+  }
+
+  @Post(':id/request-account-deletion')
+  async requestAccountDeletion(@Param('id') id: string) {
+    await this.userService.requestAccountDeletion(id);
+    return { message: 'Account deletion confirmation email sent' };
   }
 }

@@ -10,7 +10,7 @@ import { Course } from './entities/course.entity';
 import { CreateCourseDto } from './dtos/create.course.dto';
 import { UpdateCourseDto } from './dtos/update.course.dto';
 import { EmailService } from 'src/email/email.service';
-import { UsersService } from 'src/users/users.service';
+import { UsersService } from 'src/users/services/users.service';
 
 @Injectable()
 export class CourseService {
