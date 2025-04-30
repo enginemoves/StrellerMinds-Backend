@@ -1,4 +1,3 @@
-// src/users/entities/user.entity.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -7,11 +6,15 @@ import {
   OneToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
 import { UserProgress } from './user-progress.entity';
 import { WalletInfo } from './wallet-info.entity'; // Ensure this import is present
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { UserRole } from '../enums/userRole.enum';
+import { AccountStatus } from '../enums/accountStatus.enum';
+import { UserProfile } from 'src/user-profiles/entities/user-profile.entity';
+import { UserSettings } from './user-settings.entity';
 
 @Entity('users')
 export class User {
@@ -51,6 +54,22 @@ export class User {
   @UpdateDateColumn()
   updatedAt: Date;
 
+  @Column({
+    type: 'enum',
+    enum: AccountStatus,
+    default: AccountStatus.ACTIVE,
+  })
+  status: AccountStatus;
+
+  @Column({ nullable: true })
+  deactivatedAt: Date;
+
+  @Column({ nullable: true })
+  deletionRequestedAt: Date;
+
+  @DeleteDateColumn({ nullable: true })
+  deletedAt: Date;
+
   @OneToMany(() => UserProgress, (progress) => progress.user)
   progress: Promise<UserProgress[]>;
 
@@ -58,6 +77,21 @@ export class User {
   walletInfo: WalletInfo;
   gradesGiven: any;
   gradesReceived: any;
+
+  @Column({ nullable: true })
+  refreshToken?: string;
+
+  @Column({ default: false })
+  isEmailVerified: boolean;
+
+  @OneToOne(() => UserProfile, (profile) => profile.user, { cascade: true })
+  profile: UserProfile;
+
+  @OneToOne(() => UserSettings, (settings) => settings.user, {
+    cascade: true,
+    eager: true,
+  })
+  settings: UserSettings;
 
   async setPassword(password: string): Promise<void> {
     const salt = await bcrypt.genSalt();
@@ -68,3 +102,5 @@ export class User {
     return bcrypt.compare(password, this.password);
   }
 }
+
+

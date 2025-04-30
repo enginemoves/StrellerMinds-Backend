@@ -1,4 +1,3 @@
-
 import { Module } from '@nestjs/common';
 // import { ProgressModule } from './progress/progres.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -23,10 +22,16 @@ import { CatogoryModule } from './catogory/catogory.module';
 import { PostModule } from './post/post.module';
 import { TopicModule } from './topic/topic.module';
 import { SubmissionModule } from './submission/submission.module';
-import { SubmissionService } from './submission/provider/submission.service';
+// import { SubmissionService } from './submission/provider/submission.service';
+import { UserProfilesModule } from './user-profiles/user-profiles.module';
+
+import { AssignmentModule } from './assignment/assignment.module';
+import { SorobanModule } from './soroban/soroban.module';
+
 
 @Module({
-  imports: [ //ProgressModule,
+  imports: [
+    // ProgressModule,
     ConfigModule.forRoot({
       isGlobal: true, // Makes config available across all modules
       envFilePath: ['.env.development'], // Loads variables from .env file
@@ -44,8 +49,9 @@ import { SubmissionService } from './submission/provider/submission.service';
         database: configService.get<string>('DB_NAME'),
         autoLoadEntities: true, // Automatically loads entity files
         synchronize: true, // ⚠️ Auto-sync schema (disable in production)
+        // dropSchema: true,
       }),
-    }), 
+    }),
 
     UsersModule,
     CoursesModule,
@@ -65,6 +71,9 @@ import { SubmissionService } from './submission/provider/submission.service';
     PostModule,
     TopicModule,
     SubmissionModule,
+    UserProfilesModule,
+    AssignmentModule,
+    SorobanModule,
   ],
   controllers: [AppController],
   providers: [AppService],
