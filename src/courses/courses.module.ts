@@ -11,6 +11,8 @@ import { CourseController } from './courses.controller';
 import { User } from 'src/users/entities/user.entity';
 import { UsersModule } from 'src/users/users.module';
 import { EmailModule } from 'src/email/email.module';
+import { Lesson } from 'src/lesson/entity/lesson.entity';
+// import { Lesson } from 'src/modules/lesson/entities/lesson.entity';
 
 @Module({
   imports: [
@@ -21,6 +23,7 @@ import { EmailModule } from 'src/email/email.module';
       Tag,
       CourseReview,
       User,
+      Lesson,
     ]),
     UsersModule,
     EmailModule,

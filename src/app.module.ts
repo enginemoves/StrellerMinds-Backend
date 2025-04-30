@@ -24,6 +24,7 @@ import { TopicModule } from './topic/topic.module';
 import { SubmissionModule } from './submission/submission.module';
 import { SubmissionService } from './submission/provider/submission.service';
 import { UserProfilesModule } from './user-profiles/user-profiles.module';
+import { AssignmentModule } from './assignment/assignment.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { UserProfilesModule } from './user-profiles/user-profiles.module';
         database: configService.get<string>('DB_NAME'),
         autoLoadEntities: true, // Automatically loads entity files
         synchronize: true, // ⚠️ Auto-sync schema (disable in production)
+        // dropSchema: true,
       }),
     }),
 
@@ -67,6 +69,7 @@ import { UserProfilesModule } from './user-profiles/user-profiles.module';
     TopicModule,
     SubmissionModule,
     UserProfilesModule,
+    AssignmentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
