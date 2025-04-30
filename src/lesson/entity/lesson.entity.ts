@@ -1,4 +1,5 @@
 /* eslint-disable prettier/prettier */
+import { Course } from 'src/courses/entities/course.entity';
 import { CourseModule } from '../../courses/entities/course-module.entity';
 import { UserProgress } from '../../users/entities/user-progress.entity';
 import {
@@ -11,6 +12,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Assignment } from 'src/assignment/entities/assignment.entity';
+import { LessonType } from 'src/modules/lesson/enums/lesson-type.enum';
 
 @Entity('lessons')
 export class Lesson {
@@ -23,8 +26,15 @@ export class Lesson {
   @Column({ type: 'text' })
   content: string;
 
-  @Column({ default: 'text' })
-  type: string; // text, video, quiz, etc.
+  // @Column({ default: 'text' })
+  // type: string; // text, video, quiz, etc.
+
+  @Column({
+    type: 'enum',
+    enum: LessonType,
+    default: LessonType.TEXT,
+  })
+  type: LessonType;
 
   @Column({ nullable: true })
   videoUrl: string;
@@ -52,4 +62,10 @@ export class Lesson {
   // One-to-Many relationship
   @OneToMany(() => UserProgress, (progress) => progress.lesson)
   userProgress: Promise<UserProgress[]>;
+
+  @ManyToOne(() => Course, (course) => course.lessons, { onDelete: 'CASCADE' })
+  course: Course;
+
+  @OneToMany(() => Assignment, (assignment) => assignment.lesson)
+  assignments: Assignment[];
 }

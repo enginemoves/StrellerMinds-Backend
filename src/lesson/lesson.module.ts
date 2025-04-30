@@ -5,11 +5,23 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Lesson } from './entity/lesson.entity';
 import { CourseModule } from '../courses/entities/course-module.entity';
 import { UserProgress } from '../users/entities/user-progress.entity';
+import { Assignment } from 'src/assignment/entities/assignment.entity';
+import { Module as ModuleEntity } from 'src/module/entities/module.entity';
+
+// import { Lesson } from 'src/modules/lesson/entities/lesson.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Lesson, CourseModule, UserProgress])],
+  imports: [
+    TypeOrmModule.forFeature([
+      Lesson,
+      Assignment,
+      CourseModule,
+      UserProgress,
+      ModuleEntity,
+    ]),
+  ],
   controllers: [LessonController],
   providers: [LessonService],
-  exports: [TypeOrmModule],
+  exports: [LessonService],
 })
 export class LessonModule {}
