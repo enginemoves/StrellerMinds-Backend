@@ -24,7 +24,10 @@ import { TopicModule } from './topic/topic.module';
 import { SubmissionModule } from './submission/submission.module';
 // import { SubmissionService } from './submission/provider/submission.service';
 import { UserProfilesModule } from './user-profiles/user-profiles.module';
+
+import { AssignmentModule } from './assignment/assignment.module';
 import { SorobanModule } from './soroban/soroban.module';
+
 
 @Module({
   imports: [
@@ -46,6 +49,7 @@ import { SorobanModule } from './soroban/soroban.module';
         database: configService.get<string>('DB_NAME'),
         autoLoadEntities: true, // Automatically loads entity files
         synchronize: true, // ⚠️ Auto-sync schema (disable in production)
+        // dropSchema: true,
       }),
     }),
 
@@ -68,6 +72,7 @@ import { SorobanModule } from './soroban/soroban.module';
     TopicModule,
     SubmissionModule,
     UserProfilesModule,
+    AssignmentModule,
     SorobanModule,
   ],
   controllers: [AppController],
