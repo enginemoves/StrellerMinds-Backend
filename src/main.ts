@@ -14,7 +14,7 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('Mentor Grading API')
     .setDescription(
-      'APIs for mentors to grade student assignments and provide feedback.',
+      'APIs for mentors to grade student assignments and provide feedback.', 'Admin API for course management.'
     )
     .setVersion('1.0')
     .addBearerAuth() // This enables Authorization header (JWT tokens)
@@ -25,4 +25,5 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000);
 }
+
 bootstrap();
