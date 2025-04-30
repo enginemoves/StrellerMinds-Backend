@@ -4,14 +4,14 @@ import { PaymentsController } from './payment.controller';
 import { PaymentsService } from './payment.service';
 import { Payment } from './entities/payment.entity';
 import { Subscription } from './entities/subscription.entity';
-import { StellarService } from './services/stellar.service';
+// import { StellarService } from './services/stellar.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Payment, Subscription]),
   ],
   controllers: [PaymentsController],
-  providers: [PaymentsService, StellarService],
+  providers: [PaymentsService],
   exports: [PaymentsService],
 })
 export class PaymentModule {}
