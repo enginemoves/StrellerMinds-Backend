@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ProgressModule } from './progress/progres.module';
+// import { ProgressModule } from './progress/progres.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
@@ -17,22 +17,18 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { LessonModule } from './lesson/lesson.module';
 import { IpfsModule } from './ipfs/ipfs.module';
-// import { Module } from '@nestjs/common';
 import { ModerationModule } from './moderation/moderation.module';
 import { CatogoryModule } from './catogory/catogory.module';
 import { PostModule } from './post/post.module';
 import { TopicModule } from './topic/topic.module';
-import { SubmissionModule } from './dry-run/submission/submission.module';
 import { SubmissionModule } from './submission/submission.module';
-import { SubmissionService } from './submission.service';
-import { SubmissionService } from './provider/submission/submission.service';
-import { SubmissionService } from './submissio/provider/submission/submission.service';
-import { CourseEnrollmentModule } from './course-enrollment/course-enrollment.module';
+import { SubmissionService } from './submission/provider/submission.service';
+import { UserProfilesModule } from './user-profiles/user-profiles.module';
 import { EnrollmentModule } from './enrollment/enrollment.module';
 
 @Module({
   imports: [
-    ProgressModule,
+    // ProgressModule,
     ConfigModule.forRoot({
       isGlobal: true, // Makes config available across all modules
       envFilePath: ['.env.development'], // Loads variables from .env file
@@ -43,7 +39,11 @@ import { EnrollmentModule } from './enrollment/enrollment.module';
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         type: 'postgres',
-        url: 'postgresql://gg_xbkp_user:oIBp6SxjmvV3pPzexykI5fzm2vbhx9jW@dpg-d06intjuibrs73el09rg-a.oregon-postgres.render.com/gg_xbkp',
+        host: configService.get<string>('DB_HOST'),
+        port: configService.get<number>('DB_PORT'),
+        username: configService.get<string>('DB_USER'),
+        password: configService.get<string>('DB_PASSWORD'),
+        database: configService.get<string>('DB_NAME'),
         autoLoadEntities: true, // Automatically loads entity files
         synchronize: true, // ⚠️ Auto-sync schema (disable in production)
       }),
@@ -67,9 +67,10 @@ import { EnrollmentModule } from './enrollment/enrollment.module';
     PostModule,
     TopicModule,
     SubmissionModule,
+    UserProfilesModule,
     EnrollmentModule,
   ],
   controllers: [AppController],
-  providers: [AppService, SubmissionService],
+  providers: [AppService],
 })
 export class AppModule {}
