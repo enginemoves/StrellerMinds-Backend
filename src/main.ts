@@ -3,21 +3,39 @@ import { AppModule } from './app.module';
 import { RolesGuard } from './role/roles.guard';
 import { GlobalExceptionsFilter } from './common/filters/global-exception.filter';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { ValidationPipe } from '@nestjs/common';
+import {
+  I18nValidationExceptionFilter,
+  i18nValidationErrorFactory,
+} from 'nestjs-i18n';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.useGlobalGuards(new RolesGuard(new Reflector()));
-  app.useGlobalFilters(new GlobalExceptionsFilter());
+  // ✅ Global Validation Pipe with i18n error support
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      exceptionFactory: i18nValidationErrorFactory,
+    }),
+  );
 
-  // Setup Swagger Documentation
+  // ✅ Global exception and role guards
+  app.useGlobalFilters(
+    new GlobalExceptionsFilter(),
+    new I18nValidationExceptionFilter(), // 👈 Add i18n-aware error filter
+  );
+  app.useGlobalGuards(new RolesGuard(new Reflector()));
+
+  // ✅ Swagger setup
   const config = new DocumentBuilder()
     .setTitle('Mentor Grading API')
     .setDescription(
-      'APIs for mentors to grade student assignments and provide feedback.',
+      'APIs for mentors to grade student assignments and provide feedback.', 'Admin API for course management.'
     )
     .setVersion('1.0')
-    .addBearerAuth() // This enables Authorization header (JWT tokens)
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
@@ -25,4 +43,5 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000);
 }
+
 bootstrap();

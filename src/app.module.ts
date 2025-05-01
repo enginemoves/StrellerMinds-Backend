@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
-// import { ProgressModule } from './progress/progres.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { I18nModule, QueryResolver } from 'nestjs-i18n';
+import * as path from 'path';
 import { UsersModule } from './users/users.module';
 import { CoursesModule } from './courses/courses.module';
 import { AuthModule } from './auth/auth.module';
@@ -13,8 +14,6 @@ import { BlockchainModule } from './blockchain/blockchain.module';
 import { FilesModule } from './files/files.module';
 import { EmailModule } from './email/email.module';
 import { HealthModule } from './health/health.module';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { LessonModule } from './lesson/lesson.module';
 import { IpfsModule } from './ipfs/ipfs.module';
 import { ModerationModule } from './moderation/moderation.module';
@@ -22,28 +21,23 @@ import { CatogoryModule } from './catogory/catogory.module';
 import { PostModule } from './post/post.module';
 import { TopicModule } from './topic/topic.module';
 import { SubmissionModule } from './submission/submission.module';
-// import { SubmissionService } from './submission/provider/submission.service';
 import { UserProfilesModule } from './user-profiles/user-profiles.module';
-<<<<<<< HEAD
-<<<<<<< HEAD
-import { EnrollmentModule } from './enrollment/enrollment.module';
-=======
-=======
-
-import { AssignmentModule } from './assignment/assignment.module';
->>>>>>> d0b9a7f1d0a0e5c9702763d83e493d9c494e288e
 import { SorobanModule } from './soroban/soroban.module';
->>>>>>> 08b5361f7dcfe6a1faf60ae96f130acecfcf284f
+// import { EnrollmentModule } from './enrollment/enrollment.module';
+// import { AssignmentModule } from './assignment/assignment.module';
 
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
-    // ProgressModule,
+    // Global Config
     ConfigModule.forRoot({
-      isGlobal: true, // Makes config available across all modules
-      envFilePath: ['.env.development'], // Loads variables from .env file
+      isGlobal: true,
+      envFilePath: ['.env.development'],
     }),
 
+    // Database
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -54,10 +48,17 @@ import { SorobanModule } from './soroban/soroban.module';
         username: configService.get<string>('DB_USER'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        autoLoadEntities: true, // Automatically loads entity files
-        synchronize: true, // ⚠️ Auto-sync schema (disable in production)
-        // dropSchema: true,
+        autoLoadEntities: true,
+        synchronize: true,
       }),
+    }),
+    I18nModule.forRoot({
+      fallbackLanguage: 'en',
+      loaderOptions: {
+        path: path.join(__dirname, '../i18n/'),
+        watch: true,
+      },
+      resolvers: [QueryResolver],
     }),
 
     UsersModule,
@@ -79,15 +80,9 @@ import { SorobanModule } from './soroban/soroban.module';
     TopicModule,
     SubmissionModule,
     UserProfilesModule,
-<<<<<<< HEAD
-<<<<<<< HEAD
-    EnrollmentModule,
-=======
-=======
-    AssignmentModule,
->>>>>>> d0b9a7f1d0a0e5c9702763d83e493d9c494e288e
     SorobanModule,
->>>>>>> 08b5361f7dcfe6a1faf60ae96f130acecfcf284f
+    // EnrollmentModule,
+    // AssignmentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
