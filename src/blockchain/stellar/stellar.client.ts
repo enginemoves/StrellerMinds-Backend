@@ -1,11 +1,18 @@
-// src/blockchain/stellar/stellar.client.ts
-import * as StellarSdk from '@stellar/stellar-sdk';
+import {
+  Networks,
+  BASE_FEE,
+  Keypair,
+  TransactionBuilder,
+  Transaction,
+  Account,
+  Horizon,
+} from '@stellar/stellar-sdk';
 
 export class StellarClient {
-  private readonly server: StellarSdk.server;
+  private readonly server: Horizon.Server;
 
   constructor() {
-    this.server = new StellarSdk.Server(
+    this.server = new Horizon.Server(
       process.env.STELLAR_HORIZON_URL ?? 'https://horizon-testnet.stellar.org',
     );
   }
@@ -14,18 +21,18 @@ export class StellarClient {
     return this.server.loadAccount(publicKey);
   }
 
-  async submitTransaction(transaction: StellarSdk.Transaction) {
+  async submitTransaction(transaction: Transaction) {
     return this.server.submitTransaction(transaction);
   }
 
-  getTransactionBuilder(sourceAccount: StellarSdk.Account) {
-    return new StellarSdk.TransactionBuilder(sourceAccount, {
-      fee: StellarSdk.BASE_FEE,
-      networkPassphrase: StellarSdk.Networks.TESTNET,
+  getTransactionBuilder(sourceAccount: Account) {
+    return new TransactionBuilder(sourceAccount, {
+      fee: BASE_FEE,
+      networkPassphrase: Networks.TESTNET,
     });
   }
 
   getKeypair(secret: string) {
-    return StellarSdk.Keypair.fromSecret(secret);
+    return Keypair.fromSecret(secret);
   }
 }
