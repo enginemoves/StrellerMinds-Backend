@@ -1,0 +1,22 @@
+{
+  "errors": {
+    "UNAUTHORIZED": "Authentification requise pour accéder à cette ressource",
+    "INVALID_CREDENTIALS": "Email ou mot de passe invalide",
+    "TOKEN_EXPIRED": "Votre session a expiré. Veuillez vous reconnecter",
+    "FORBIDDEN": "Vous n'avez pas la permission d'accéder à cette ressource",
+    "NOT_FOUND": "La ressource demandée n'a pas été trouvée",
+    "ALREADY_EXISTS": "La ressource existe déjà",
+    "CONFLICT": "La requête est en conflit avec les données existantes",
+    "INVALID_INPUT": "Données d'entrée invalides",
+    "MISSING_REQUIRED_FIELD": "Champ requis manquant: {field}",
+    "INVALID_FORMAT": "Format invalide pour le champ: {field}",
+    "INSUFFICIENT_FUNDS": "Fonds insuffisants pour effectuer la transaction",
+    "PAYMENT_FAILED": "Le traitement du paiement a échoué",
+    "COURSE_NOT_AVAILABLE": "Le cours demandé n'est pas disponible",
+    "ENROLLMENT_CLOSED": "L'inscription au cours est fermée",
+    "INTERNAL_ERROR": "Une erreur interne du serveur s'est produite",
+    "SERVICE_UNAVAILABLE": "Le service est temporairement indisponible",
+    "DATABASE_ERROR": "L'opération de base de données a échoué",
+    "EXTERNAL_SERVICE_ERROR": "La requête au service externe a échoué"
+  }
+}
