@@ -28,6 +28,7 @@ import { SorobanModule } from './soroban/soroban.module';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { CredentialModule } from './credential/credential.module';
 
 @Module({
   imports: [
@@ -81,6 +82,7 @@ import { AppService } from './app.service';
     SubmissionModule,
     UserProfilesModule,
     SorobanModule,
+    CredentialModule,
     // EnrollmentModule,
     // AssignmentModule,
   ],
