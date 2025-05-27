@@ -1,10 +1,9 @@
-// src/enrollment/enrollment.controller.ts
 import { Controller, Post, Body, Delete, Param, Get, UseGuards } from '@nestjs/common';
 import { EnrollmentService } from './enrollment.service';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Enrollment } from './entities/enrollment.entity';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @ApiTags('Enrollment')
 @ApiBearerAuth()

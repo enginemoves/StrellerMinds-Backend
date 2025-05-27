@@ -7,14 +7,14 @@ import { SorobanService } from './soroban/soroban.service';
 import { SorobanClient } from './soroban/soroban.client';
 
 @Module({
-  controllers: [
-    BlockchainController,
+  controllers: [BlockchainController],
+  providers: [
+    BlockchainService,
     StellarService,
     StellarClient,
     SorobanService,
     SorobanClient,
   ],
-  providers: [BlockchainService],
-  exports: [StellarService, SorobanService],
+  exports: [StellarService, SorobanService, BlockchainService],
 })
 export class BlockchainModule {}

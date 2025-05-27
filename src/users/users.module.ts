@@ -15,6 +15,8 @@ import { UserProgress } from './entities/user-progress.entity';
 
 import { Course } from '../courses/entities/course.entity';
 import { Lesson } from '../lesson/entity/lesson.entity';
+// Import the CourseModule ENTITY (not the module)
+import { CourseModule as CourseModuleEntity } from '../courses/entities/course-module.entity';
 
 import { AuditLog } from 'src/audit/entities/audit.log.entity';
 import { AuditLogModule } from 'src/audit/audit.log.module';
@@ -34,6 +36,7 @@ import { EmailModule } from 'src/email/email.module';
       UserProgress,
       Course,
       Lesson,
+      CourseModuleEntity, // Add the CourseModule entity here
     ]),
     AuditLogModule,
     ConfigModule,

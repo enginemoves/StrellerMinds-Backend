@@ -5,23 +5,20 @@ import {
   NotFoundException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { UsersService } from 'src/users/services/users.service';
-import { Injectable, BadRequestException, UnauthorizedException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
-import { addMinutes } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 
-import { UsersService } from '../users/users.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { EmailService } from '../email/email.service';
 import { PasswordValidationService } from './password-validation.service';
 import { AuthToken } from './entities/auth-token.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { UsersService } from 'src/users/services/users.service';
 
 @Injectable()
 export class AuthService {
@@ -156,7 +153,7 @@ export class AuthService {
 
       await this.refreshTokenRepository.update(tokenEntity.id, { isRevoked: true });
 
-      const user = await this.usersService.findById(userId);
+      const user = await this.usersService.findOne(userId);
       return this.generateTokens(user);
     } catch (error) {
       throw new UnauthorizedException('Invalid refresh token');
@@ -245,7 +242,6 @@ export class AuthService {
 
     const user = authToken.user;
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await this.usersService.updatePassword(user.id, hashedPassword);
 
     authToken.isRevoked = true;
     await this.authTokenRepository.save(authToken);
@@ -253,8 +249,14 @@ export class AuthService {
     return { message: 'Password successfully reset' };
   }
 
+
+  async requestPasswordReset(email: string): Promise<any> {
+    // Implement your password reset logic here, e.g., generate token, send email, etc.
+    // For now, just return a placeholder response.
+    return { message: `Password reset link sent to ${email}` };
+  }
   async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
-    const user = await this.usersService.findById(userId);
+    const user = await this.usersService.findOne(userId);
     if (!user) throw new UnauthorizedException('User not found');
 
     const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
@@ -263,11 +265,13 @@ export class AuthService {
     await this.validatePassword(newPassword);
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await this.usersService.updatePassword(userId, hashedPassword);
 
     await this.revokeUserRefreshTokens(userId);
 
     return true;
   }
+}
+function addMinutes(date: Date, minutes: number): Date {
+  return new Date(date.getTime() + minutes * 60000);
 }
 

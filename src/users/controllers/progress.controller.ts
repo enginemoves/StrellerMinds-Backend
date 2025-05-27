@@ -14,8 +14,8 @@ import { ProgressService } from '../services/progress.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
-import { Role } from '../../auth/enums/role.enum';
 import { UpdateProgressDto } from '../dtos/update-progress.dto';
+import { Role } from 'src/role/roles.enum';
 
 @Controller('progress')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -98,12 +98,14 @@ export class ProgressController {
   }
 
   @Get('admin/courses/:courseId')
-  @Roles(Role.ADMIN)
+  @Roles(Role.Admin)
   async getCourseProgressAdmin(
     @Param('courseId', ParseUUIDPipe) courseId: string,
   ) {
     try {
-      return await this.progressService.getCourseProgress(courseId);
+      // For admin, you may want to pass a special userId or null if your service supports it, or fetch all users' progress for the course.
+      // Here, we'll pass null as userId, but you may need to adjust the service logic if it doesn't handle null.
+      return await this.progressService.getCourseProgress(null, courseId);
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;

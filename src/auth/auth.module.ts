@@ -18,7 +18,7 @@ import { RolesGuard } from './guards/roles.guard';
 @Module({
   imports: [
     EmailModule,
-    UsersModule,
+    UsersModule, // This imports the UsersModule which exports UsersService
     PassportModule,
     TypeOrmModule.forFeature([AuthToken, RefreshToken]),
     JwtModule.registerAsync({

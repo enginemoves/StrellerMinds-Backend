@@ -72,20 +72,15 @@ export class UsersService {
       const result = await this.userRepository.delete(id);
       if (result.affected === 0) {
         throw new NotFoundException(`User with ID ${id} not found`);
-
-  
-    public async delete(id: string): Promise<void> {
-      try {
-        const result = await this.userRepository.delete(id);
-        if (result.affected === 0) {
-          throw new NotFoundException(`User with ID ${id} not found`);
-        }
-      } catch (error) {
-        throw new InternalServerErrorException('Error deleting user');
       }
     } catch (error) {
       throw new InternalServerErrorException('Error deleting user');
     }
+  }
+
+    async updateRefreshToken(userId: string, refreshToken: string | null): Promise<void> {
+    await this.userRepository.update(userId, { refreshToken });
+  }
 
       async findByEmail(email: string): Promise<User | undefined> {
     return this.userRepository.findOne({ where: { email } });
@@ -94,18 +89,9 @@ export class UsersService {
   async findById(id: string): Promise<User | undefined> {
     return this.userRepository.findOne({ where: { id } });
   }
-
-  async updatePassword(userId: string, hashedPassword: string): Promise<User> {
-    const user = await this.findById(userId);
-    if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
-    }
-    
-    user.password = hashedPassword;
-    return this.userRepository.save(user);
-  }
-  }
+ 
   async updatePassword(userId: string, hashedPassword: string): Promise<void> {
     await this.userRepository.update(userId, { password: hashedPassword });
   }
+
 }

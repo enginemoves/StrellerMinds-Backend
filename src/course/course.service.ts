@@ -13,7 +13,9 @@ export class CourseService {
   ) {}
 
   create(createDto: CreateCourseDto) {
-    const course = this.courseRepo.create(createDto);
+    // Omit 'modules' property to avoid type incompatibility
+    const { modules, ...rest } = createDto as any;
+    const course = this.courseRepo.create(rest);
     return this.courseRepo.save(course);
   }
 
@@ -26,7 +28,9 @@ export class CourseService {
   }
 
   async update(id: string, updateDto: UpdateCourseDto) {
-    await this.courseRepo.update(id, updateDto);
+    // Omit 'modules' property when updating, as TypeORM cannot update relations this way
+    const { modules, ...rest } = updateDto as any;
+    await this.courseRepo.update(id, rest);
     return this.courseRepo.findOne({ where: { id } });
   }
 
