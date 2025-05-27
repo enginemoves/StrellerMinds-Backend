@@ -1,17 +1,17 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CredentialController } from './credential.controller';
 import { CredentialService } from './credential.service';
+import { CredentialController } from './credential.controller';
 import { Credential } from './entities/credential.entity';
 import { BlockchainModule } from '../blockchain/blockchain.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Credential]),
-    BlockchainModule,
+    BlockchainModule, // Import the BlockchainModule to make BlockchainService available
   ],
   controllers: [CredentialController],
   providers: [CredentialService],
-  exports: [CredentialService],
+  exports: [CredentialService], // Export if other modules need CredentialService
 })
 export class CredentialModule {}

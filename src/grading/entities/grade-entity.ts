@@ -7,7 +7,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
-import { Assignment } from '../../assignments/entities/assignment.entity'; // Assuming you have an Assignment entity
+import { Assignment } from 'src/assignment/entities/assignment.entity';
 
 @Entity()
 export class Grade {

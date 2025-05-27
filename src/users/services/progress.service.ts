@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { UserProgress } from '../entities/user-progress.entity';
 import { Course } from '../../courses/entities/course.entity';
 import { Lesson } from '../../lesson/entity/lesson.entity';
@@ -155,8 +155,9 @@ export class ProgressService {
       order: { lastAccessedAt: 'DESC' },
     });
 
+    const modules = await course.modules;
     const moduleProgress = await Promise.all(
-      course.modules.map(async (module) => {
+      modules.map(async (module) => {
         const moduleLessons = await this.lessonRepository.find({
           where: { module: { id: module.id } },
         });
@@ -221,6 +222,19 @@ export class ProgressService {
       totalModules: number;
     }>();
 
+    // Preload all courses with their modules
+    const courseIds = Array.from(new Set(progress.map(p => p.course?.id).filter(Boolean)));
+
+    const coursesWithModules = await this.courseRepository.find({
+      where: { id: In(courseIds) },
+      relations: ['modules'],
+    });
+    const courseModulesMap = new Map<string, number>();
+    for (const course of coursesWithModules) {
+      const modules = await course.modules;
+      courseModulesMap.set(course.id, modules ? modules.length : 0);
+    }
+
     progress.forEach((p) => {
       if (!p.course) return;
 
@@ -239,7 +253,7 @@ export class ProgressService {
           progress: p.progressPercentage,
           lastAccessed: p.lastAccessedAt,
           completedModules: moduleProgress.length,
-          totalModules: p.course.modules?.length || 0,
+          totalModules: courseModulesMap.get(p.course.id) || 0,
         });
       }
     });
@@ -261,7 +275,8 @@ export class ProgressService {
     }
 
     // Sync module progress
-    for (const module of course.modules) {
+    const modules = await course.modules;
+    for (const module of modules) {
       await this.updateModuleProgress(userId, courseId, module.id);
     }
   }

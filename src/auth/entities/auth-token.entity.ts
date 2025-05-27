@@ -35,11 +35,10 @@ export class AuthToken {
   createdAt: Date;
 
   // Many-to-One relationship with the User entity
+  @Index()
   @ManyToOne(() => User, (user) => user.authTokens, {
-  @ManyToOne(() => User, (user) => user.id, {
     nullable: false,
     onDelete: 'CASCADE',
   })
-  @Index()
   user: User;
 }
