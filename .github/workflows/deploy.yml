@@ -13,14 +13,13 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
       - name: Set NODE_ENV
         run: echo "NODE_ENV=${{ matrix.env }}" >> $GITHUB_ENV
 
       - name: Setup Node
-        uses: actions/upload-artifact@v2
-
+        uses: actions/setup-node@v3
         with:
           node-version: '18'
 
