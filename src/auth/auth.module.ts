@@ -15,6 +15,9 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 
+import { JwtLocalStrategy } from './strategies/jwt-local.strategy';
+import { IAuthStrategy } from './strategies/auth-strategy.interface';
+
 @Module({
   imports: [
     EmailModule,
@@ -37,6 +40,18 @@ import { RolesGuard } from './guards/roles.guard';
     AuthService,
     JwtStrategy,
     PasswordValidationService,
+    JwtLocalStrategy,
+    {
+      provide: 'AUTH_STRATEGY',
+      useExisting: JwtLocalStrategy, // Use the JwtLocalStrategy as the default auth strategy
+    },
+   {
+      provide: 'AUTH_STRATEGIES',
+      useFactory: (jwtLocalStrategy: JwtLocalStrategy): IAuthStrategy[] => [
+        jwtLocalStrategy,
+      ],
+      inject: [JwtLocalStrategy],
+    },
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

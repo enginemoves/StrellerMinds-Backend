@@ -45,7 +45,7 @@ jobs:
           fi
 
       - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
-          name: dist
+          name: build-artifacts
           path: dist/
