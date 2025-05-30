@@ -23,6 +23,7 @@ import { TopicModule } from './topic/topic.module';
 import { SubmissionModule } from './submission/submission.module';
 import { UserProfilesModule } from './user-profiles/user-profiles.module';
 import { CredentialModule } from './credential/credential.module';
+import { MentorshipModule } from './mentorship/mentorship.module';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -70,6 +71,7 @@ import { AppService } from './app.service';
     SubmissionModule,
     UserProfilesModule,
     CredentialModule,
+    MentorshipModule,
   ],
   controllers: [AppController],
   providers: [AppService],
