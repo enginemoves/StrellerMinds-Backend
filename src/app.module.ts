@@ -26,6 +26,7 @@ import { CredentialModule } from './credential/credential.module';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { FeedbackModule } from './feedback/feedback.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { AppService } from './app.service';
     SubmissionModule,
     UserProfilesModule,
     CredentialModule,
+    FeedbackModule,
   ],
   controllers: [AppController],
   providers: [AppService],
