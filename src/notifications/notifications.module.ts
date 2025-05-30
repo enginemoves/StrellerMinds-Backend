@@ -45,3 +45,8 @@ import { PreferenceService } from "./providers/preferences.service"
 })
 export class NotificationsModule {}
 
+
+//To be removed 
+//Later On 
+//I WANT TO CHANGE A PR 
+
