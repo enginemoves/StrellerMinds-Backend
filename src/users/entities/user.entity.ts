@@ -47,11 +47,18 @@ export class User {
   @Column({ nullable: true, type: 'text' })
   bio: string;
 
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.STUDENT })
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.STUDENT,
+  })
   role: UserRole;
 
   @Column({ nullable: true })
   profileImageUrl?: string;
+
+  @Column({ nullable: true })
+  preferredLanguage: string;
 
   @CreateDateColumn()
   createdAt: Date;
