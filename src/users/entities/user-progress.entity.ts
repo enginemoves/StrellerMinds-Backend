@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index, CreateDateCol
 import { User } from './user.entity';
 import { Course } from '../../courses/entities/course.entity';
 import { Lesson } from '../../lesson/entity/lesson.entity';
+import { CourseModule } from '../../courses/entities/course-module.entity';
 
 @Entity('user_progress')
 @Index(['user', 'course', 'lesson'], { unique: true }) // Ensure unique progress per user/course/lesson
@@ -18,11 +19,20 @@ export class UserProgress {
   @Column({ type: 'jsonb', nullable: true }) // Flexible metadata storage
   metadata: any;
 
+  @Column({ type: 'timestamp', nullable: true })
+  completedAt: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  lastAccessedAt: Date;
+
   @ManyToOne(() => User, (user) => user.progress)
   user: User;
 
   @ManyToOne(() => Course, (course) => course.userProgress)
   course: Course;
+
+  @ManyToOne(() => CourseModule, { nullable: true })
+  module: CourseModule;
 
   @ManyToOne(() => Lesson, { nullable: true }) // Optional relationship
   lesson: Lesson;

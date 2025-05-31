@@ -1,5 +1,5 @@
 import { User } from "../../users/entities/user.entity"
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index, CreateDateColumn } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index, CreateDateColumn, UpdateDateColumn } from "typeorm"
 
 
 @Entity("notifications")
@@ -7,10 +7,10 @@ export class Notification {
   @PrimaryGeneratedColumn("uuid")
   id: string
 
-  @Column({ length: 255 })
+  @Column()
   title: string
 
-  @Column({ type: "text", nullable: true })
+  @Column('text')
   message: string
 
   @Column({ default: false })
@@ -25,6 +25,9 @@ export class Notification {
   @CreateDateColumn()
   createdAt: Date
 
+  @UpdateDateColumn()
+  updatedAt: Date
+
   // Many-to-One relationship
   @ManyToOne(
     () => User,
@@ -33,5 +36,9 @@ export class Notification {
   )
   @Index()
   user: User
+
+  @Column()
+  recipientId: string;
+
 }
 
