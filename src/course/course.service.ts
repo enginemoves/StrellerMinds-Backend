@@ -1,79 +1,75 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Course } from './course.entity';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+  ParseIntPipe,
+  UseGuards,
+} from '@nestjs/common';
+import { CourseService } from './course.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateCourseDto, UpdateCourseDto } from './course.dto';
 
-@Injectable()
-export class CourseService {
-  constructor(
-    @InjectRepository(Course)
-    private readonly courseRepository: Repository<Course>,
-  ) {}
+@ApiTags('courses')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@Controller('courses')
+export class CourseController {
+  constructor(private readonly courseService: CourseService) {}
 
-  async create(createCourseDto: CreateCourseDto): Promise<Course> {
-    const course = this.courseRepository.create(createCourseDto);
-    return this.courseRepository.save(course);
+  @Post()
+  async create(@Body() courseData: CreateCourseDto) {
+    return this.courseService.create(courseData);
   }
 
-  async findAll(): Promise<Course[]> {
-    return this.courseRepository.find();
+  @Get()
+  async findAll() {
+    return this.courseService.findAll();
   }
 
-  async findOne(id: number): Promise<Course> {
-    const course = await this.courseRepository.findOneBy({ id });
-    if (!course) {
-      throw new NotFoundException(`Course with ID ${id} not found`);
-    }
-    return course;
+  @Get(':id')
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.courseService.findOne(id);
   }
 
-  async update(id: number, updateCourseDto: UpdateCourseDto): Promise<Course> {
-    const course = await this.findOne(id);
-    Object.assign(course, updateCourseDto);
-    return this.courseRepository.save(course);
+  @Put(':id')
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() courseData: UpdateCourseDto,
+  ) {
+    return this.courseService.update(id, courseData);
   }
 
-  async remove(id: number): Promise<void> {
-    const course = await this.findOne(id);
-    await this.courseRepository.remove(course);
+  @Delete(':id')
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    return this.courseService.remove(id);
   }
 
-  async bulkCreate(courses: CreateCourseDto[]): Promise<Course[]> {
-    const createdCourses = this.courseRepository.create(courses);
-    return this.courseRepository.save(createdCourses);
+  // Bulk Create
+  @Post('bulk')
+  async bulkCreate(@Body() courses: CreateCourseDto[]) {
+    return this.courseService.bulkCreate(courses);
   }
 
-  async bulkUpdate(courses: { id: number; data: UpdateCourseDto }[]): Promise<Course[]> {
-    const updatedCourses: Course[] = [];
-
-    for (const courseUpdate of courses) {
-      const course = await this.findOne(courseUpdate.id);
-      Object.assign(course, courseUpdate.data);
-      updatedCourses.push(course);
-    }
-
-    return this.courseRepository.save(updatedCourses);
+  // Bulk Update
+  @Put('bulk')
+  async bulkUpdate(@Body() courses: { id: number; data: UpdateCourseDto }[]) {
+    return this.courseService.bulkUpdate(courses);
   }
 
-  async bulkDelete(ids: number[]): Promise<void> {
-    const courses = await this.courseRepository.findByIds(ids);
-    await this.courseRepository.remove(courses);
+  // Bulk Delete
+  @Delete('bulk')
+  async bulkDelete(@Body() ids: number[]) {
+    return this.courseService.bulkDelete(ids);
   }
 
+  // Course Analytics
+  @Get('analytics/summary')
   async getCourseAnalytics() {
-    const [total, published, draft, archived] = await Promise.all([
-      this.courseRepository.count(),
-      this.courseRepository.count({ where: { status: 'published' } }),
-      this.courseRepository.count({ where: { status: 'draft' } }),
-      this.courseRepository.count({ where: { status: 'archived' } }),
-    ]);
-
-    return {
-      total,
-      published,
-      draft,
-      archived,
-    };
+    return this.courseService.getCourseAnalytics();
   }
 }
