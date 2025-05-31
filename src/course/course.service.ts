@@ -60,4 +60,20 @@ export class CourseService {
     const courses = await this.courseRepository.findByIds(ids);
     await this.courseRepository.remove(courses);
   }
+
+  async getCourseAnalytics() {
+    const [total, published, draft, archived] = await Promise.all([
+      this.courseRepository.count(),
+      this.courseRepository.count({ where: { status: 'published' } }),
+      this.courseRepository.count({ where: { status: 'draft' } }),
+      this.courseRepository.count({ where: { status: 'archived' } }),
+    ]);
+
+    return {
+      total,
+      published,
+      draft,
+      archived,
+    };
+  }
 }
