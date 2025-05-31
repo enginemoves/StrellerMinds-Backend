@@ -23,6 +23,8 @@ import { TopicModule } from './topic/topic.module';
 import { SubmissionModule } from './submission/submission.module';
 import { UserProfilesModule } from './user-profiles/user-profiles.module';
 import { CredentialModule } from './credential/credential.module';
+import { MentorshipModule } from './mentorship/mentorship.module';
+
 import { I18nModule } from './i18n/i18n.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -77,6 +79,7 @@ console.log('ENV:', ENV);
     SubmissionModule,
     UserProfilesModule,
     CredentialModule,
+    MentorshipModule,
     FeedbackModule,
     I18nModule,
   ],
