@@ -39,5 +39,25 @@ export class CourseService {
     await this.courseRepository.remove(course);
   }
 
-  // Bulk operations can be added later when ready
+  async bulkCreate(courses: CreateCourseDto[]): Promise<Course[]> {
+    const createdCourses = this.courseRepository.create(courses);
+    return this.courseRepository.save(createdCourses);
+  }
+
+  async bulkUpdate(courses: { id: number; data: UpdateCourseDto }[]): Promise<Course[]> {
+    const updatedCourses: Course[] = [];
+
+    for (const courseUpdate of courses) {
+      const course = await this.findOne(courseUpdate.id);
+      Object.assign(course, courseUpdate.data);
+      updatedCourses.push(course);
+    }
+
+    return this.courseRepository.save(updatedCourses);
+  }
+
+  async bulkDelete(ids: number[]): Promise<void> {
+    const courses = await this.courseRepository.findByIds(ids);
+    await this.courseRepository.remove(courses);
+  }
 }
