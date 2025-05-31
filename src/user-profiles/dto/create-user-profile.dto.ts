@@ -43,6 +43,11 @@ export class CreateUserProfileDto {
   country?: string
 
   @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  preferredLanguage?: string;
+
+  @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
   postalCode?: string

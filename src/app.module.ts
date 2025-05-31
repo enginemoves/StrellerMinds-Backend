@@ -29,8 +29,8 @@ import { UserProfilesModule } from './user-profiles/user-profiles.module';
   imports: [
     // ProgressModule,
     ConfigModule.forRoot({
-      isGlobal: true, // Makes config available across all modules
-      envFilePath: ['.env.development'], // Loads variables from .env file
+      isGlobal: true, 
+      envFilePath: ['.env.development'], 
     }),
 
     TypeOrmModule.forRootAsync({

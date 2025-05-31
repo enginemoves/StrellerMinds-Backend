@@ -11,6 +11,7 @@ import {
   Request,
   HttpCode,
   HttpStatus,
+  Headers,
 } from '@nestjs/common';
 import { UserProfilesService } from './user-profiles.service';
 import { CreateUserProfileDto } from './dto/create-user-profile.dto';
@@ -24,6 +25,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { detectLanguageFromHeader } from 'src/common/util/language-detector.util';
 
 @ApiTags('user-profiles')
 @Controller('user-profiles')
@@ -146,4 +148,18 @@ export class UserProfilesController {
     // Admin can delete any profile
     return this.userProfilesService.remove(id, req.user.id);
   }
+
+  @Get('detect-language')
+@UseGuards(JwtAuthGuard)
+@ApiOperation({ summary: 'Detect and store preferred language' })
+@ApiResponse({ status: 200, description: 'Detected language returned and saved.' })
+@ApiBearerAuth()
+async detectLanguage(@Request() req, @Headers('accept-language') acceptLanguage: string) {
+  const detectedLang = detectLanguageFromHeader(acceptLanguage) || 'en';
+
+  // Save to user's profile
+  await this.userProfilesService.setPreferredLanguage(req.user.id, detectedLang);
+
+  return { detectedLanguage: detectedLang };
+}
 }
