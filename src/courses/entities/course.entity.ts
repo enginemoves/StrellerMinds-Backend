@@ -9,78 +9,83 @@ import {
   Index,
   CreateDateColumn,
   UpdateDateColumn,
-} from "typeorm"
-import { Category } from "./category.entity"
-import { Tag } from "./tag.entity"
-import { CourseReview } from "./course-review.entity"
-import { User } from "../../users/entities/user.entity"
-import { CourseModule } from './course-module.entity'
-import { Certificate } from "../../certificate/entity/certificate.entity"
-import { Payment } from "../../payment/entities/payment.entity"
-import { UserProgress } from "../../users/entities/user-progress.entity"
+} from 'typeorm';
+import { Category } from './category.entity';
+import { Tag } from './tag.entity';
+import { CourseReview } from './course-review.entity';
+import { User } from '../../users/entities/user.entity';
+import { CourseModule } from './course-module.entity';
+import { Certificate } from '../../certificate/entity/certificate.entity';
+import { Payment } from '../../payment/entities/payment.entity';
+import { UserProgress } from '../../users/entities/user-progress.entity';
+// import { Lesson } from 'src/modules/lesson/entities/lesson.entity';
+import { Lesson } from 'src/lesson/entity/lesson.entity';
 
-
-@Entity("courses")
+@Entity('courses')
 export class Course {
-  @PrimaryGeneratedColumn("uuid")
-  id: string
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ length: 255 })
-  title: string
+  title: string;
 
-  @Column({ type: "text" })
-  description: string
+  @Column({ type: 'text' })
+  description: string;
 
-  @Column({ type: "decimal", precision: 10, scale: 2, default: 0 })
-  price: number
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  price: number;
 
   @Column({ default: 0 })
-  durationInHours: number
+  durationInHours: number;
 
-  @Column({ default: "draft" })
-  status: string // draft, published, archived
+  @Column({ default: 'draft' })
+  status: string; // draft, published, archived
 
   @Column({ nullable: true })
-  thumbnail: string
+  thumbnail: string;
 
   @CreateDateColumn()
-  createdAt: Date
+  createdAt: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date
+  updatedAt: Date;
 
   // Many-to-One relationships
-  @ManyToOne(() => User, (user) => user.instructorCourses, { nullable: false })
+  @ManyToOne(() => User, (user) => user.id, { nullable: false })
   @Index()
-  instructor: Promise<User>
+  instructor: Promise<User>;
 
-  @ManyToOne(() => Category, (category) => category.courses, { nullable: false })
+  @ManyToOne(() => Category, (category) => category.courses, {
+    nullable: false,
+  })
   @Index()
-  category: Promise<Category>
+  category: Promise<Category>;
 
   // One-to-Many relationships
   @OneToMany(() => CourseModule, (module) => module.course, { cascade: true })
-  modules: Promise<CourseModule[]>
+  modules: Promise<CourseModule[]>;
 
   @OneToMany(() => Certificate, (certificate) => certificate.course)
-  certificates: Promise<Certificate[]>
+  certificates: Promise<Certificate[]>;
 
   @OneToMany(() => CourseReview, (review) => review.course)
-  reviews: Promise<CourseReview[]>
+  reviews: Promise<CourseReview[]>;
 
   @OneToMany(() => Payment, (payment) => payment.course)
-  payments: Promise<Payment[]>
+  payments: Promise<Payment[]>;
 
   @OneToMany(() => UserProgress, (progress) => progress.course)
-  userProgress: Promise<UserProgress[]>
+  userProgress: Promise<UserProgress[]>;
 
   // Many-to-Many relationship
   @ManyToMany(() => Tag, (tag) => tag.courses)
   @JoinTable({
-    name: "course_tags",
-    joinColumn: { name: "course_id", referencedColumnName: "id" },
-    inverseJoinColumn: { name: "tag_id", referencedColumnName: "id" },
+    name: 'course_tags',
+    joinColumn: { name: 'course_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'tag_id', referencedColumnName: 'id' },
   })
-  tags: Promise<Tag[]>
-}
+  tags: Promise<Tag[]>;
 
+  @OneToMany(() => Lesson, (lesson) => lesson.course)
+  lessons: Lesson[];
+}

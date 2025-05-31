@@ -11,12 +11,12 @@ import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagg
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
-  @Post('process')
-  @ApiOperation({ summary: 'Process a payment' })
-  @ApiResponse({ status: 201, description: 'Payment processed successfully' })
-  async processPayment(@Req() req, @Body() dto: ProcessPaymentDto) {
-    return this.paymentsService.processPayment(req.user, dto);
-  }
+  // @Post('process')
+  // @ApiOperation({ summary: 'Process a payment' })
+  // @ApiResponse({ status: 201, description: 'Payment processed successfully' })
+  // async processPayment(@Req() req, @Body() dto: ProcessPaymentDto) {
+  //   return this.paymentsService.processPayment(req.user, dto);
+  // }
 
   @Get()
   @ApiOperation({ summary: 'Get all payments' })
@@ -30,11 +30,11 @@ export class PaymentsController {
     return this.paymentsService.findOne(id);
   }
 
-  @Get(':id/verify')
-  @ApiOperation({ summary: 'Verify payment status' })
-  async verifyPayment(@Param('id') id: string) {
-    return this.paymentsService.verifyPayment(id);
-  }
+  // @Get(':id/verify')
+  // @ApiOperation({ summary: 'Verify payment status' })
+  // async verifyPayment(@Param('id') id: string) {
+  //   return this.paymentsService.verifyPayment(id);
+  // }
 
   @Post(':id/refund')
   @ApiOperation({ summary: 'Process a refund' })

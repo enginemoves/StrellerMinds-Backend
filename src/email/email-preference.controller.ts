@@ -1,17 +1,20 @@
 import { Controller, Get, Post, Body, Request } from '@nestjs/common';
-import type { EmailService } from './email.service';
-import type { EmailType } from './entities/email-preference.entity';
+import { EmailService } from './email.service';
+import { EmailType } from './entities/email-preference.entity';
 
 @Controller('email-preferences')
 export class EmailPreferenceController {
   constructor(private readonly emailService: EmailService) {}
 
   @Get()
-  async getUserPreferences(@Request() req) {
-    const preferences = await this.emailService.getUserPreferences(
-      req.user.email,
-    );
-    return preferences;
+  async getUserPreferences(
+    @Request() req,
+  ): Promise<{ emailType: any; optOut: boolean }[]> {
+    const preferences = await this.emailService.getUserPreferences(req.user.email);
+    return preferences.map((pref) => ({
+      emailType: pref.emailType,
+      optOut: pref.optedOut,
+    }));
   }
 
   @Post()
@@ -33,12 +36,10 @@ export class EmailPreferenceController {
     return results;
   }
 
-  // Public endpoint for unsubscribe links in emails
   @Post('unsubscribe')
   async unsubscribe(
     @Body() body: { email: string; token: string; emailType: EmailType },
   ) {
-    // Verify the unsubscribe token first (security measure)
     const isValid = await this.emailService.verifyUnsubscribeToken(
       body.email,
       body.token,
@@ -51,7 +52,7 @@ export class EmailPreferenceController {
     await this.emailService.updateEmailPreference(
       body.email,
       body.emailType,
-      true, // opt out
+      true,
     );
 
     return { success: true, message: 'Successfully unsubscribed' };

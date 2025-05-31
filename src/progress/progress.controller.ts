@@ -3,7 +3,9 @@ import { ProgressService } from './progress.service';
 
 @Controller('progress')
 export class ProgressController {
-    constructor(private readonly progressService: ProgressService) {}
+    constructor(private readonly progressService: ProgressService
+        
+    ) {}
 
     @Post(':userId/complete/:lessonId')
     completeLesson(
