@@ -27,8 +27,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { FeedbackModule } from './feedback/feedback.module';
 import databaseConfig from './config/database.config';
+import { EventSignupModule } from './event-signup/event-signup.module';
 
-const ENV = process.env.NODE_ENV
+const ENV = process.env.NODE_ENV;
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('ENV:', ENV);
 
@@ -77,6 +78,7 @@ console.log('ENV:', ENV);
     UserProfilesModule,
     CredentialModule,
     FeedbackModule,
+    EventSignupModule,
   ],
   controllers: [AppController],
   providers: [AppService],
