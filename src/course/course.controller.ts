@@ -66,4 +66,10 @@ export class CourseController {
   async bulkDelete(@Body() ids: number[]) {
     return this.courseService.bulkDelete(ids);
   }
+
+  // Analytics
+  @Get('analytics/summary')
+  async getAnalytics() {
+    return this.courseService.getCourseAnalytics();
+  }
 }
