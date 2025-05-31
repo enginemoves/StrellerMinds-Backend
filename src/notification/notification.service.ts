@@ -8,7 +8,7 @@ import { CreateNotificationDto } from './dto/create-notification.dto';
 export class NotificationsService {
   constructor(
     @InjectRepository(Notification)
-    private notificationsRepository: Repository<Notification>,
+    private readonly notificationsRepository: Repository<Notification>,
   ) {}
 
   async create(dto: CreateNotificationDto): Promise<Notification> {
@@ -21,11 +21,7 @@ export class NotificationsService {
   }
 
   async findOne(id: string): Promise<Notification> {
-    const notification = await this.notificationsRepository.findOne({ where: { id } });
-    if (!notification) {
-      throw new NotFoundException(`Notification with id ${id} not found`);
-    }
-    return notification;
+    return this.notificationsRepository.findOneBy({ id });
   }
 
   async update(id: string, dto: Partial<CreateNotificationDto>): Promise<Notification> {
@@ -34,9 +30,27 @@ export class NotificationsService {
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.notificationsRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Notification with id ${id} not found`);
+    await this.notificationsRepository.delete(id);
+  }
+
+  async notifyUser(userId: string, message: string): Promise<Notification> {
+    const notification = this.notificationsRepository.create({
+      title: 'New Feedback',
+      message,
+      isRead: false,
+      recipientId: userId
+    });
+
+    return this.notificationsRepository.save(notification);
+  }
+
+  async markAsRead(id: string): Promise<Notification> {
+    const notification = await this.notificationsRepository.findOneBy({ id });
+    if (!notification) {
+      throw new Error('Notification not found');
     }
+    
+    notification.isRead = true;
+    return this.notificationsRepository.save(notification);
   }
 }

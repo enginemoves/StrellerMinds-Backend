@@ -16,19 +16,33 @@ import type { NotificationPreferenceDto } from './dto/notification-preference.dt
 import type { QueryNotificationsDto } from './dto/query-notifications.dto';
 import { UsersService } from 'src/users/services/users.service';
 import type { NotificationDeliveryService } from './notification-delivery.service';
+import { InAppService } from './providers/in-app.service';
+import { PreferenceService } from './providers/preferences.service';
+import { EmailService } from './providers/email.service';
 
 @Injectable()
 export class NotificationsService {
   constructor(
     @InjectRepository(Notification)
     private notificationsRepository: Repository<Notification>,
+
     @InjectRepository(NotificationTemplate)
     private templatesRepository: Repository<NotificationTemplate>,
+
     @InjectRepository(NotificationPreference)
     private preferencesRepository: Repository<NotificationPreference>,
+
     private usersService: UsersService,
+
     private deliveryService: NotificationDeliveryService,
+
     private eventEmitter: EventEmitter2,
+
+    private readonly inAppService: InAppService,
+
+    private readonly emailService: EmailService,
+
+    private readonly prefService: PreferenceService,
   ) {}
 
   async create(
@@ -296,5 +310,38 @@ export class NotificationsService {
     }
 
     return result;
+  }
+
+  async getUserEmail(userId: string): Promise<string> {
+    const user = await this.usersService.findByEmail(userId);
+    return user.email;
+  }
+
+  async sendNotification(
+    userId: string,
+    type: string,
+    payload: { title: string; message: string },
+  ) {
+    const prefs = await this.prefService.getOrCreate(userId);
+
+    if (prefs.preferences.email) {
+      const email = await this.getUserEmail(userId); // Make sure it's implemented
+      await this.emailService.sendEmail({
+        to: email,
+        subject: payload.title,
+        text: payload.message,
+        html: `<p>${payload.message}</p>`,
+        metadata: { headers: { 'X-Notification-Type': type } },
+      });
+    }
+
+    if (prefs.preferences.inApp) {
+      await this.inAppService.sendInAppNotification(userId, {
+        title: payload.title,
+        content: payload.message,
+        category: 'general',
+        metadata: {},
+      });
+    }
   }
 }
