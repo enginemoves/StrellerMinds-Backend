@@ -1,75 +1,91 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Param,
-  Body,
-  ParseIntPipe,
-  UseGuards,
-} from '@nestjs/common';
-import { CourseService } from './course.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Course } from './course.entity';
 import { CreateCourseDto, UpdateCourseDto } from './course.dto';
 
-@ApiTags('courses')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
-@Controller('courses')
-export class CourseController {
-  constructor(private readonly courseService: CourseService) {}
+@Injectable()
+export class CourseService {
+  constructor(
+    @InjectRepository(Course)
+    private readonly courseRepository: Repository<Course>,
+  ) {}
 
-  @Post()
-  async create(@Body() courseData: CreateCourseDto) {
-    return this.courseService.create(courseData);
+  async create(createCourseDto: CreateCourseDto): Promise<Course> {
+    const course = this.courseRepository.create(createCourseDto);
+    return this.courseRepository.save(course);
   }
 
-  @Get()
-  async findAll() {
-    return this.courseService.findAll();
+  async findAll(): Promise<Course[]> {
+    return this.courseRepository.find();
   }
 
-  @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.courseService.findOne(id);
+  async findOne(id: number): Promise<Course> {
+    const course = await this.courseRepository.findOneBy({ id });
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${id} not found`);
+    }
+    return course;
   }
 
-  @Put(':id')
-  async update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() courseData: UpdateCourseDto,
-  ) {
-    return this.courseService.update(id, courseData);
+  async update(id: number, updateCourseDto: UpdateCourseDto): Promise<Course> {
+    const course = await this.findOne(id);
+    Object.assign(course, updateCourseDto);
+    return this.courseRepository.save(course);
   }
 
-  @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    return this.courseService.remove(id);
+  async remove(id: number): Promise<void> {
+    const course = await this.findOne(id);
+    await this.courseRepository.remove(course);
   }
 
-  // Bulk Create
-  @Post('bulk')
-  async bulkCreate(@Body() courses: CreateCourseDto[]) {
-    return this.courseService.bulkCreate(courses);
+  async bulkCreate(courses: CreateCourseDto[]): Promise<Course[]> {
+    const createdCourses = this.courseRepository.create(courses);
+    return this.courseRepository.save(createdCourses);
   }
 
-  // Bulk Update
-  @Put('bulk')
-  async bulkUpdate(@Body() courses: { id: number; data: UpdateCourseDto }[]) {
-    return this.courseService.bulkUpdate(courses);
+  async bulkUpdate(courses: { id: number; data: UpdateCourseDto }[]): Promise<Course[]> {
+    const updatedCourses: Course[] = [];
+
+    for (const courseUpdate of courses) {
+      const course = await this.findOne(courseUpdate.id);
+      Object.assign(course, courseUpdate.data);
+      updatedCourses.push(course);
+    }
+
+    return this.courseRepository.save(updatedCourses);
   }
 
-  // Bulk Delete
-  @Delete('bulk')
-  async bulkDelete(@Body() ids: number[]) {
-    return this.courseService.bulkDelete(ids);
+  async bulkDelete(ids: number[]): Promise<void> {
+    const courses = await this.courseRepository.findByIds(ids);
+    await this.courseRepository.remove(courses);
   }
 
-  // Course Analytics
-  @Get('analytics/summary')
   async getCourseAnalytics() {
-    return this.courseService.getCourseAnalytics();
+    const [total, published, draft, archived] = await Promise.all([
+      this.courseRepository.count(),
+      this.courseRepository.count({ where: { status: 'published' } }),
+      this.courseRepository.count({ where: { status: 'draft' } }),
+      this.courseRepository.count({ where: { status: 'archived' } }),
+    ]);
+
+    return {
+      total,
+      published,
+      draft,
+      archived,
+    };
   }
-}
+
+  // New: Update course status only
+  async updateStatus(id: number, status: string): Promise<Course> {
+    const course = await this.findOne(id);
+    course.status = status;
+    return this.courseRepository.save(course);
+  }
+
+  // New: Find courses by status
+  async findByStatus(status: string): Promise<Course[]> {
+    return this.courseRepository.find({ where: { status } });
+  }
+} 
