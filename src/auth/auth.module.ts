@@ -45,7 +45,7 @@ import { IAuthStrategy } from './strategies/auth-strategy.interface';
       provide: 'AUTH_STRATEGY',
       useExisting: JwtLocalStrategy, // Use the JwtLocalStrategy as the default auth strategy
     },
-   {
+    {
       provide: 'AUTH_STRATEGIES',
       useFactory: (jwtLocalStrategy: JwtLocalStrategy): IAuthStrategy[] => [
         jwtLocalStrategy,
