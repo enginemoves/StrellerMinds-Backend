@@ -21,6 +21,8 @@ import { Certificate } from '../../certificate/entity/certificate.entity';
 import { Payment } from '../../payment/entities/payment.entity';
 import { UserProfile } from 'src/user-profiles/entities/user-profile.entity';
 import { UserSettings } from './user-settings.entity';
+import { EventSignup } from 'src/event-signup/entities/event-signup.entity';
+import { Notification } from 'src/notification/entities/notification.entity';
 
 @Entity('users')
 export class User {
@@ -118,6 +120,12 @@ export class User {
 
   gradesGiven: any;
   gradesReceived: any;
+
+  @OneToMany(() => EventSignup, (signup) => signup.user)
+  eventSignups: EventSignup[];
+
+  @OneToMany(() => Notification, (notification) => notification.user)
+  notifications: Notification[];
 
   async setPassword(password: string): Promise<void> {
     const salt = await bcrypt.genSalt();
