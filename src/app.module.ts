@@ -2,7 +2,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-// import * as path from 'path';
 
 import { UsersModule } from './users/users.module';
 import { CoursesModule } from './courses/courses.module';
