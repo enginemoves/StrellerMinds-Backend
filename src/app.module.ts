@@ -23,13 +23,17 @@ import { TopicModule } from './topic/topic.module';
 import { SubmissionModule } from './submission/submission.module';
 import { UserProfilesModule } from './user-profiles/user-profiles.module';
 import { CredentialModule } from './credential/credential.module';
+import { MentorshipModule } from './mentorship/mentorship.module';
+
 import { I18nModule } from './i18n/i18n.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { FeedbackModule } from './feedback/feedback.module';
+import { UserSettingsModule } from './user-settings/user-settings.module';
 import databaseConfig from './config/database.config';
+import { EventSignupModule } from './event-signup/event-signup.module';
 
-const ENV = process.env.NODE_ENV
+const ENV = process.env.NODE_ENV;
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('ENV:', ENV);
 
@@ -77,8 +81,11 @@ console.log('ENV:', ENV);
     SubmissionModule,
     UserProfilesModule,
     CredentialModule,
+    MentorshipModule,
     FeedbackModule,
+    EventSignupModule,
     I18nModule,
+    UserSettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
