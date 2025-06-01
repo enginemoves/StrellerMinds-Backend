@@ -1,7 +1,7 @@
-/* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import * as path from 'path';
 
 import { UsersModule } from './users/users.module';
 import { CoursesModule } from './courses/courses.module';
@@ -24,12 +24,12 @@ import { SubmissionModule } from './submission/submission.module';
 import { UserProfilesModule } from './user-profiles/user-profiles.module';
 import { CredentialModule } from './credential/credential.module';
 import { MentorshipModule } from './mentorship/mentorship.module';
-import { BackupModule } from './backup/backup.module';
 
 import { I18nModule } from './i18n/i18n.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { FeedbackModule } from './feedback/feedback.module';
+import { UserSettingsModule } from './user-settings/user-settings.module';
 import databaseConfig from './config/database.config';
 import { EventSignupModule } from './event-signup/event-signup.module';
 
@@ -85,7 +85,7 @@ console.log('ENV:', ENV);
     FeedbackModule,
     EventSignupModule,
     I18nModule,
-    BackupModule,
+    UserSettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

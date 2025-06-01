@@ -118,6 +118,9 @@ export class User {
   })
   settings: UserSettings;
 
+  @Column({ unique: true, nullable: false })
+  username: string;
+
   gradesGiven: any;
   gradesReceived: any;
 
