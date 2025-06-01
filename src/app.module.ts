@@ -29,6 +29,7 @@ import { I18nModule } from './i18n/i18n.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { FeedbackModule } from './feedback/feedback.module';
+import { UserSettingsModule } from './user-settings/user-settings.module';
 import databaseConfig from './config/database.config';
 import { EventSignupModule } from './event-signup/event-signup.module';
 
@@ -84,6 +85,7 @@ console.log('ENV:', ENV);
     FeedbackModule,
     EventSignupModule,
     I18nModule,
+    UserSettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
