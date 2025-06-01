@@ -1,8 +1,21 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+/* eslint-disable prettier/prettier */
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { MentorshipPreference, UserRole } from '../entities/mentorship-preference.entity';
-import { MentorshipMatch, MatchStatus, MatchType } from '../entities/mentorship-match.entity';
+import {
+  MentorshipPreference,
+  UserRole,
+} from '../entities/mentorship-preference.entity';
+import {
+  MentorshipMatch,
+  MatchStatus,
+  MatchType,
+} from '../entities/mentorship-match.entity';
 import { MentorAvailability } from '../entities/mentor-availability.entity';
 import { CreatePreferenceDto } from '../dto/create-preference.dto';
 import { CreateAvailabilityDto } from '../dto/create-availability.dto';
@@ -10,6 +23,7 @@ import { MatchRequestDto } from '../dto/match-request.dto';
 import { UpdateMatchStatusDto } from '../dto/update-match-status.dto';
 import { MatchingService } from './matching.service';
 import { NotificationsService } from '../../notifications/notifications.service';
+import { NotificationType } from '../../notifications/entities/notification.entity';
 
 @Injectable()
 export class MentorshipService {
@@ -61,7 +75,9 @@ export class MentorshipService {
     });
 
     if (!preference) {
-      throw new NotFoundException(`Mentorship preference not found for user ${userId}`);
+      throw new NotFoundException(
+        `Mentorship preference not found for user ${userId}`,
+      );
     }
 
     return preference;
@@ -80,7 +96,9 @@ export class MentorshipService {
     });
 
     if (!mentorPreference) {
-      throw new BadRequestException(`User ${mentorId} is not registered as a mentor`);
+      throw new BadRequestException(
+        `User ${mentorId} is not registered as a mentor`,
+      );
     }
 
     // Create availability slot
@@ -90,8 +108,8 @@ export class MentorshipService {
       endTime: new Date(createAvailabilityDto.endTime),
       recurrenceType: createAvailabilityDto.recurrenceType,
       recurrenceInterval: createAvailabilityDto.recurrenceInterval,
-      recurrenceEndDate: createAvailabilityDto.recurrenceEndDate 
-        ? new Date(createAvailabilityDto.recurrenceEndDate) 
+      recurrenceEndDate: createAvailabilityDto.recurrenceEndDate
+        ? new Date(createAvailabilityDto.recurrenceEndDate)
         : null,
       isActive: createAvailabilityDto.isActive ?? true,
       notes: createAvailabilityDto.notes,
@@ -116,7 +134,10 @@ export class MentorshipService {
   /**
    * Create a mentorship match (manual or automatic)
    */
-  async createMatch(userId: string, matchRequestDto: MatchRequestDto): Promise<MentorshipMatch | MentorshipMatch[]> {
+  async createMatch(
+    userId: string,
+    matchRequestDto: MatchRequestDto,
+  ): Promise<MentorshipMatch | MentorshipMatch[]> {
     const { matchType = MatchType.AUTOMATIC } = matchRequestDto;
 
     if (matchType === MatchType.MANUAL) {
@@ -136,7 +157,9 @@ export class MentorshipService {
     const { mentorId, menteeId } = matchRequestDto;
 
     if (!mentorId || !menteeId) {
-      throw new BadRequestException('Both mentorId and menteeId are required for manual matching');
+      throw new BadRequestException(
+        'Both mentorId and menteeId are required for manual matching',
+      );
     }
 
     // Verify mentor and mentee exist and have the correct roles
@@ -149,11 +172,15 @@ export class MentorshipService {
     });
 
     if (!mentorPreference) {
-      throw new BadRequestException(`User ${mentorId} is not registered as a mentor`);
+      throw new BadRequestException(
+        `User ${mentorId} is not registered as a mentor`,
+      );
     }
 
     if (!menteePreference) {
-      throw new BadRequestException(`User ${menteeId} is not registered as a mentee`);
+      throw new BadRequestException(
+        `User ${menteeId} is not registered as a mentee`,
+      );
     }
 
     // Check if a match already exists between these users
@@ -171,10 +198,11 @@ export class MentorshipService {
     }
 
     // Calculate compatibility score
-    const compatibilityScore = await this.matchingService.calculateCompatibilityScore(
-      menteePreference,
-      mentorPreference,
-    );
+    const compatibilityScore =
+      await this.matchingService.calculateCompatibilityScore(
+        menteePreference,
+        mentorPreference,
+      );
 
     // Create the match
     const match = this.matchRepository.create({
@@ -201,7 +229,12 @@ export class MentorshipService {
     userId: string,
     matchRequestDto: MatchRequestDto,
   ): Promise<MentorshipMatch[]> {
-    const { limit = 5, minScore = 70, prioritySkills, priorityInterests } = matchRequestDto;
+    const {
+      limit = 5,
+      minScore = 70,
+      prioritySkills,
+      priorityInterests,
+    } = matchRequestDto;
 
     // Get user's preference
     const userPreference = await this.preferenceRepository.findOne({
@@ -209,14 +242,16 @@ export class MentorshipService {
     });
 
     if (!userPreference) {
-      throw new NotFoundException(`Mentorship preference not found for user ${userId}`);
+      throw new NotFoundException(
+        `Mentorship preference not found for user ${userId}`,
+      );
     }
 
     // Determine if user is mentor or mentee
     if (userPreference.role === UserRole.MENTOR) {
       // Find matching mentees for this mentor
       const mentees = await this.matchingService.findActiveMentees();
-      
+
       const matchingResult = await this.matchingService.findMatches(
         userPreference,
         mentees,
@@ -245,13 +280,15 @@ export class MentorshipService {
       );
 
       // Send notifications for each match
-      await Promise.all(matches.map(match => this.sendMatchNotifications(match)));
+      await Promise.all(
+        matches.map((match) => this.sendMatchNotifications(match)),
+      );
 
       return matches;
     } else {
       // Find matching mentors for this mentee
       const mentors = await this.matchingService.findActiveMentors();
-      
+
       const matchingResult = await this.matchingService.findMatches(
         userPreference,
         mentors,
@@ -280,7 +317,9 @@ export class MentorshipService {
       );
 
       // Send notifications for each match
-      await Promise.all(matches.map(match => this.sendMatchNotifications(match)));
+      await Promise.all(
+        matches.map((match) => this.sendMatchNotifications(match)),
+      );
 
       return matches;
     }
@@ -304,7 +343,9 @@ export class MentorshipService {
 
     // Verify user is either the mentor or mentee in this match
     if (match.mentorId !== userId && match.menteeId !== userId) {
-      throw new BadRequestException('You are not authorized to update this match');
+      throw new BadRequestException(
+        'You are not authorized to update this match',
+      );
     }
 
     // Update match status
@@ -341,11 +382,11 @@ export class MentorshipService {
   /**
    * Get all matches for a user (as either mentor or mentee)
    */
-  async getUserMatches(userId: string, status?: MatchStatus): Promise<MentorshipMatch[]> {
-    const whereCondition: any = [
-      { mentorId: userId },
-      { menteeId: userId },
-    ];
+  async getUserMatches(
+    userId: string,
+    status?: MatchStatus,
+  ): Promise<MentorshipMatch[]> {
+    const whereCondition: any = [{ mentorId: userId }, { menteeId: userId }];
 
     if (status) {
       whereCondition[0].status = status;
@@ -361,7 +402,10 @@ export class MentorshipService {
   /**
    * Get a specific match by ID
    */
-  async getMatchById(userId: string, matchId: string): Promise<MentorshipMatch> {
+  async getMatchById(
+    userId: string,
+    matchId: string,
+  ): Promise<MentorshipMatch> {
     const match = await this.matchRepository.findOne({
       where: { id: matchId },
     });
@@ -372,7 +416,9 @@ export class MentorshipService {
 
     // Verify user is either the mentor or mentee in this match
     if (match.mentorId !== userId && match.menteeId !== userId) {
-      throw new BadRequestException('You are not authorized to view this match');
+      throw new BadRequestException(
+        'You are not authorized to view this match',
+      );
     }
 
     return match;
@@ -384,69 +430,76 @@ export class MentorshipService {
   private async sendMatchNotifications(match: MentorshipMatch): Promise<void> {
     try {
       // Notify mentor
-      await this.notificationsService.createNotification({
+      await this.notificationsService.create({
         userId: match.mentorId,
         title: 'New Mentorship Match',
-        message: `You have a new mentee match with compatibility score of ${match.compatibilityScore}%`,
-        type: 'mentorship_match',
-        data: { matchId: match.id },
+        content: `You have a new mentee match with compatibility score of ${match.compatibilityScore}%`,
+        types: [NotificationType.IN_APP], // Use enum value instead of string
+        category: 'mentorship',
+        metadata: { matchId: match.id },
       });
 
       // Notify mentee
-      await this.notificationsService.createNotification({
+      await this.notificationsService.create({
         userId: match.menteeId,
         title: 'New Mentorship Match',
-        message: `You have been matched with a mentor with compatibility score of ${match.compatibilityScore}%`,
-        type: 'mentorship_match',
-        data: { matchId: match.id },
+        content: `You have been matched with a mentor with compatibility score of ${match.compatibilityScore}%`,
+        types: [NotificationType.IN_APP], // Use enum value instead of string
+        category: 'mentorship',
+        metadata: { matchId: match.id },
       });
     } catch (error) {
-      this.logger.error(`Failed to send match notifications: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to send match notifications: ${error.message}`,
+        error.stack,
+      );
       // Don't throw the error, as we don't want to fail the match creation if notifications fail
     }
   }
 
-  /**
-   * Send notification about a match status update
-   */
   private async sendStatusUpdateNotification(
     match: MentorshipMatch,
     updatedByUserId: string,
   ): Promise<void> {
     try {
       // Determine recipient (the other user in the match)
-      const recipientId = match.mentorId === updatedByUserId ? match.menteeId : match.mentorId;
+      const recipientId =
+        match.mentorId === updatedByUserId ? match.menteeId : match.mentorId;
       const role = match.mentorId === updatedByUserId ? 'Mentor' : 'Mentee';
 
       // Create message based on status
-      let message = '';
+      let content = '';
       switch (match.status) {
         case MatchStatus.ACCEPTED:
-          message = `${role} has accepted your mentorship match request`;
+          content = `${role} has accepted your mentorship match request`;
           break;
         case MatchStatus.DECLINED:
-          message = `${role} has declined your mentorship match request`;
+          content = `${role} has declined your mentorship match request`;
           break;
         case MatchStatus.COMPLETED:
-          message = `${role} has marked your mentorship as completed`;
+          content = `${role} has marked your mentorship as completed`;
           break;
         case MatchStatus.CANCELED:
-          message = `${role} has canceled your mentorship match`;
+          content = `${role} has canceled your mentorship match`;
           break;
         default:
-          message = `${role} has updated your mentorship match status to ${match.status}`;
+          content = `${role} has updated your mentorship match status to ${match.status}`;
       }
 
       // Send notification
-      await this.notificationsService.createNotification({
+      await this.notificationsService.create({
         userId: recipientId,
         title: 'Mentorship Status Update',
-        message,
-        type: 'mentorship_status_update',
-        data: { matchId: match.id, status: match.status },
+        content,
+        types: [NotificationType.IN_APP], // Use enum value instead of string
+        category: 'mentorship',
+        metadata: { matchId: match.id, status: match.status },
       });
     } catch (error) {
-      this.logger.error(`Failed to send status update notification: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to send status update notification: ${error.message}`,
+        error.stack,
+      );
       // Don't throw the error, as we don't want to fail the status update if notification fails
     }
   }
