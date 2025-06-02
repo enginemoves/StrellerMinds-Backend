@@ -45,6 +45,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "cloudinary": "^1.41.3",
+    "ether": "^0.0.9",
     "firebase-admin": "^13.3.0",
     "handlebars": "^4.7.8",
     "ipfs-http-client": "^50.1.2",
