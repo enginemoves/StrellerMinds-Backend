@@ -32,6 +32,7 @@ import { FeedbackModule } from './feedback/feedback.module';
 import { UserSettingsModule } from './user-settings/user-settings.module';
 import databaseConfig from './config/database.config';
 import { EventSignupModule } from './event-signup/event-signup.module';
+import { GdprModule } from './gdpr/gdpr.module';
 
 const ENV = process.env.NODE_ENV;
 console.log('NODE_ENV:', process.env.NODE_ENV);
@@ -86,6 +87,7 @@ console.log('ENV:', ENV);
     EventSignupModule,
     I18nModule,
     UserSettingsModule,
+    GdprModule,
   ],
   controllers: [AppController],
   providers: [AppService],
