@@ -1,7 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
+import { HealthService } from './health.service';
 
 @Controller('health')
 export class HealthController {
+    constructor(private readonly healthService: HealthService) {}
+
     @Get()
     check() {
         return {
@@ -11,11 +14,7 @@ export class HealthController {
     }
 
     @Get('db')
-    checkDatabase() {
-        // This will be implemented later with actual DB health check
-        return {
-            database: 'connected',
-            timestamp: new Date().toISOString(),
-        };
+    async checkDatabase() {
+        return this.healthService.checkDatabase();
     }
 } 

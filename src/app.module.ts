@@ -60,6 +60,15 @@ console.log('ENV:', ENV);
         database: configService.get<string>('database.name'),
         autoLoadEntities: configService.get<boolean>('database.autoload'),
         synchronize: configService.get<boolean>('database.synchronize'),
+        // Connection Pool Settings
+        extra: {
+          max: configService.get<number>('database.maxPoolSize'),
+          min: configService.get<number>('database.minPoolSize'),
+          idleTimeoutMillis: configService.get<number>('database.poolIdleTimeout'),
+        },
+        // Retry Mechanism
+        retryAttempts: configService.get<number>('database.retryAttempts'),
+        retryDelay: configService.get<number>('database.retryDelay'),
       }),
     }),
     UsersModule,
