@@ -289,14 +289,14 @@ export class AnalyticsService {
     } else if (userRole === "instructor" && userId) {
       // Instructors can only see their own courses
       const instructorCourses = await this.courseRepository.find({
-        where: { instructorId: userId },
+        where: { instructor: { id: userId } },
         select: ["id"],
       })
       courseIds = instructorCourses.map((course) => course.id)
     } else if (query.instructorId) {
       // Admin can filter by instructor
       const instructorCourses = await this.courseRepository.find({
-        where: { instructorId: query.instructorId },
+        where: { instructor: { id: query.instructorId } },
         select: ["id"],
       })
       courseIds = instructorCourses.map((course) => course.id)
