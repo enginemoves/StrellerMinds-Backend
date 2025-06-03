@@ -1,9 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectMetric } from '@willsoto/nestjs-prometheus';
-import { Counter, Histogram, Gauge, Summary } from 'prom-client';
 import { InjectConnection } from '@nestjs/typeorm';
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { Connection } from 'typeorm';
-
+import { Counter, Histogram, Gauge, Summary } from 'prom-client';
 @Injectable()
 export class MetricsService {
   private readonly logger = new Logger(MetricsService.name);

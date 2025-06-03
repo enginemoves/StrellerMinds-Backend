@@ -32,7 +32,7 @@ export class MonitoringMiddleware implements NestMiddleware {
 
     // Override res.end to capture response data
     const originalEnd = res.end;
-    res.end = function(chunk: any, encoding?: any) {
+    res.end = function(chunk: any, encoding?: any, cb?: () => void): Response {
       const endTime = Date.now();
       const duration = endTime - startTime;
       const statusCode = res.statusCode.toString();
@@ -40,16 +40,16 @@ export class MonitoringMiddleware implements NestMiddleware {
       // Record metrics
       try {
         // HTTP request metrics
-        metricsService.incrementHttpRequests(method, route, statusCode);
-        metricsService.recordHttpRequestDuration(method, route, statusCode, duration);
+        this.metricsService.incrementHttpRequests(method, route, statusCode);
+        this.metricsService.recordHttpRequestDuration(method, route, statusCode, duration);
 
         // Business operation metrics
         const isSuccess = res.statusCode < 400;
-        metricsService.incrementBusinessOperation('http_request', isSuccess);
+        this.metricsService.incrementBusinessOperation('http_request', isSuccess);
 
         // Update error rate if needed
         if (!isSuccess) {
-          metricsService.updateErrorRate(calculateErrorRate());
+          this.metricsService.updateErrorRate(calculateErrorRate());
         }
       } catch (error) {
         // Don't let metrics recording break the response
@@ -69,9 +69,10 @@ export class MonitoringMiddleware implements NestMiddleware {
         success: res.statusCode < 400,
       });
 
-      // Call original end method
-      originalEnd.call(this, chunk, encoding);
-    };
+      // Call original end method and return its result
+      // Support all overloads of res.end
+      return originalEnd.call(this, chunk, encoding, cb);
+    } as typeof res.end;
 
     next();
   }
@@ -159,7 +160,7 @@ export class ErrorTrackingMiddleware implements NestMiddleware {
 
         // Record error metrics
         try {
-          metricsService.incrementBusinessOperation('http_error', false);
+          this.metricsService.incrementBusinessOperation('http_error', false);
         } catch (error) {
           console.error('Failed to record error metrics:', error);
         }
