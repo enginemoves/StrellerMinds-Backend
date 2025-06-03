@@ -1,4 +1,4 @@
-// test/verification.service.spec.ts
+// src/verification/test/verification.service.spec.ts
 import { Test, TestingModule } from '@nestjs/testing';
 import { VerificationService } from '../verification.service';
 import { EthSignatureStrategy } from '../strategies/eth-signature.strategy';
