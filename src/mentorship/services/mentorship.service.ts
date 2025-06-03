@@ -294,160 +294,132 @@ export class MentorshipService {
     matchId: string,
     updateMatchStatusDto: UpdateMatchStatusDto,
   ): Promise<MentorshipMatch> {
-    const match = await this.matchRepository.findOne({
-      where: { id: matchId },
-    });
+    const match = await this.matchRepository.findOne({ where: { id: matchId } });
 
     if (!match) {
-      throw new NotFoundException(`Match with ID ${matchId} not found`);
+      throw new NotFoundException(`Mentorship match ${matchId} not found`);
     }
 
-    // Verify user is either the mentor or mentee in this match
+    // Only mentor or mentee involved can update status
     if (match.mentorId !== userId && match.menteeId !== userId) {
-      throw new BadRequestException('You are not authorized to update this match');
+      throw new BadRequestException('User not authorized to update this match status');
     }
 
-    // Update match status
     match.status = updateMatchStatusDto.status;
-
-    // Update feedback based on who is updating the status
-    if (userId === match.mentorId && updateMatchStatusDto.feedback) {
-      match.mentorFeedback = updateMatchStatusDto.feedback;
-    } else if (userId === match.menteeId && updateMatchStatusDto.feedback) {
-      match.menteeFeedback = updateMatchStatusDto.feedback;
-    }
-
-    // If match is being accepted, set the start date
-    if (updateMatchStatusDto.status === MatchStatus.ACCEPTED) {
-      match.startDate = new Date();
-    }
-
-    // If match is being completed or canceled, set the end date
-    if (
-      updateMatchStatusDto.status === MatchStatus.COMPLETED ||
-      updateMatchStatusDto.status === MatchStatus.CANCELED
-    ) {
-      match.endDate = new Date();
-    }
-
     const updatedMatch = await this.matchRepository.save(match);
 
-    // Send notification about the status update
+    // Notify both parties about status change
     await this.sendStatusUpdateNotification(updatedMatch, userId);
 
     return updatedMatch;
   }
 
   /**
-   * Get all matches for a user (as either mentor or mentee)
-   */
-  async getUserMatches(userId: string, status?: MatchStatus): Promise<MentorshipMatch[]> {
-    const whereCondition: any = [
-      { mentorId: userId },
-      { menteeId: userId },
-    ];
-
-    if (status) {
-      whereCondition[0].status = status;
-      whereCondition[1].status = status;
-    }
-
-    return this.matchRepository.find({
-      where: whereCondition,
-      order: { createdAt: 'DESC' },
-    });
-  }
-
-  /**
-   * Get a specific match by ID
-   */
-  async getMatchById(userId: string, matchId: string): Promise<MentorshipMatch> {
-    const match = await this.matchRepository.findOne({
-      where: { id: matchId },
-    });
-
-    if (!match) {
-      throw new NotFoundException(`Match with ID ${matchId} not found`);
-    }
-
-    // Verify user is either the mentor or mentee in this match
-    if (match.mentorId !== userId && match.menteeId !== userId) {
-      throw new BadRequestException('You are not authorized to view this match');
-    }
-
-    return match;
-  }
-
-  /**
-   * Send notifications for a new match
+   * Internal helper to send notifications on match creation
    */
   private async sendMatchNotifications(match: MentorshipMatch): Promise<void> {
     try {
       // Notify mentor
-      await this.notificationsService.createNotification({
+      await this.notificationsService.sendNotification({
         userId: match.mentorId,
-        title: 'New Mentorship Match',
-        message: `You have a new mentee match with compatibility score of ${match.compatibilityScore}%`,
-        type: 'mentorship_match',
-        data: { matchId: match.id },
+        type: 'MENTORSHIP_MATCH_CREATED',
+        payload: {
+          menteeId: match.menteeId,
+          matchId: match.id,
+          compatibilityScore: match.compatibilityScore,
+          matchDetails: match.matchDetails,
+          matchType: match.matchType,
+        },
       });
 
       // Notify mentee
-      await this.notificationsService.createNotification({
+      await this.notificationsService.sendNotification({
         userId: match.menteeId,
-        title: 'New Mentorship Match',
-        message: `You have been matched with a mentor with compatibility score of ${match.compatibilityScore}%`,
-        type: 'mentorship_match',
-        data: { matchId: match.id },
+        type: 'MENTORSHIP_MATCH_CREATED',
+        payload: {
+          mentorId: match.mentorId,
+          matchId: match.id,
+          compatibilityScore: match.compatibilityScore,
+          matchDetails: match.matchDetails,
+          matchType: match.matchType,
+        },
       });
     } catch (error) {
-      this.logger.error(`Failed to send match notifications: ${error.message}`, error.stack);
-      // Don't throw the error, as we don't want to fail the match creation if notifications fail
+      this.logger.error(
+        `Failed to send mentorship match notifications for match ${match.id}: ${error.message}`,
+        error.stack,
+      );
     }
   }
 
   /**
-   * Send notification about a match status update
+   * Internal helper to send notifications on match status updates
    */
-  private async sendStatusUpdateNotification(
-    match: MentorshipMatch,
-    updatedByUserId: string,
-  ): Promise<void> {
+  private async sendStatusUpdateNotification(match: MentorshipMatch, updatedByUserId: string): Promise<void> {
     try {
-      // Determine recipient (the other user in the match)
-      const recipientId = match.mentorId === updatedByUserId ? match.menteeId : match.mentorId;
-      const role = match.mentorId === updatedByUserId ? 'Mentor' : 'Mentee';
-
-      // Create message based on status
-      let message = '';
-      switch (match.status) {
-        case MatchStatus.ACCEPTED:
-          message = `${role} has accepted your mentorship match request`;
-          break;
-        case MatchStatus.DECLINED:
-          message = `${role} has declined your mentorship match request`;
-          break;
-        case MatchStatus.COMPLETED:
-          message = `${role} has marked your mentorship as completed`;
-          break;
-        case MatchStatus.CANCELED:
-          message = `${role} has canceled your mentorship match`;
-          break;
-        default:
-          message = `${role} has updated your mentorship match status to ${match.status}`;
+      // Notify mentor except if mentor made the update
+      if (match.mentorId !== updatedByUserId) {
+        await this.notificationsService.sendNotification({
+          userId: match.mentorId,
+          type: 'MENTORSHIP_MATCH_STATUS_UPDATED',
+          payload: {
+            matchId: match.id,
+            newStatus: match.status,
+            updatedBy: updatedByUserId,
+          },
+        });
       }
 
-      // Send notification
-      await this.notificationsService.createNotification({
-        userId: recipientId,
-        title: 'Mentorship Status Update',
-        message,
-        type: 'mentorship_status_update',
-        data: { matchId: match.id, status: match.status },
-      });
+      // Notify mentee except if mentee made the update
+      if (match.menteeId !== updatedByUserId) {
+        await this.notificationsService.sendNotification({
+          userId: match.menteeId,
+          type: 'MENTORSHIP_MATCH_STATUS_UPDATED',
+          payload: {
+            matchId: match.id,
+            newStatus: match.status,
+            updatedBy: updatedByUserId,
+          },
+        });
+      }
     } catch (error) {
-      this.logger.error(`Failed to send status update notification: ${error.message}`, error.stack);
-      // Don't throw the error, as we don't want to fail the status update if notification fails
+      this.logger.error(
+        `Failed to send mentorship match status update notifications for match ${match.id}: ${error.message}`,
+        error.stack,
+      );
+    }
+  }
+
+  /**
+   * Run the automatic matching job, which performs matches for eligible users
+   */
+  async runMatchingJob(): Promise<void> {
+    try {
+      // Use the matching service to run automatic matching process
+      // It should return an array of created matches
+      const matches: MentorshipMatch[] = await this.matchingService.runAutoMatching();
+
+      for (const match of matches) {
+        try {
+          await this.sendMatchNotifications(match);
+        } catch (error) {
+          this.logger.error(
+            `Failed to send match notifications for mentor ${match.mentorId} and mentee ${match.menteeId}: ${error.message}`,
+            error.stack,
+          );
+        }
+
+        try {
+          await this.sendStatusUpdateNotification(match, 'system'); // 'system' as the updater user ID
+        } catch (error) {
+          this.logger.error(
+            `Failed to send status update notification for mentor ${match.mentorId} and mentee ${match.menteeId}: ${error.message}`,
+            error.stack,
+          );
+        }
+      }
+    } catch (err) {
+      this.logger.error(`runMatchingJob failed: ${err.message}`, err.stack);
     }
   }
 }
