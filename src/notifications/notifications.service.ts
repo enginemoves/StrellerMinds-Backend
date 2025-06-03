@@ -296,7 +296,10 @@ export class NotificationsService {
   }
 
   async getUserEmail(userId: string): Promise<string> {
-    const user = await this.usersService.findByEmail(userId);
+    const user = await this.usersService.findOne(userId);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
     return user.email;
   }
 
