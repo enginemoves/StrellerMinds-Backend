@@ -9,7 +9,7 @@ import { UpdateUserSettingDto } from './dto/update-user-setting.dto';
 export class UserSettingsService {
   constructor(
     @InjectRepository(UserSetting)
-    private repo: Repository<UserSetting>,
+    private readonly repo: Repository<UserSetting>,
   ) {}
 
   async findByUser(userId: string): Promise<UserSetting> {
