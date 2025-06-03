@@ -2,21 +2,24 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CourseService } from './course.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Course } from './entities/course.entity';
+import { Course } from './course.entity';
 
 describe('CourseService', () => {
   let service: CourseService;
   let repo: Repository<Course>;
 
   const mockCourse: Course = {
-    id: '1',
+    id: 'some-uuid',
     title: 'Test Course',
-    description: 'A course for testing',
-    // add other required properties here based on your Course entity
+    description: 'A course description',
+    status: 'draft',
+    enrollmentCount: 0,
+    completionCount: 0,
+    createdAt: new Date(),
   };
 
   const mockRepo = {
-    create: jest.fn().mockImplementation((dto) => dto),
+    create: jest.fn().mockImplementation((dto) => ({ ...dto })),
     save: jest.fn().mockResolvedValue(mockCourse),
     find: jest.fn().mockResolvedValue([mockCourse]),
   };
@@ -41,18 +44,16 @@ describe('CourseService', () => {
   });
 
   it('should create a course', async () => {
-    const dto = {
-      title: 'Test Course',
-      description: 'A course for testing',
-    };
-
-    const result = await repo.save(dto);
+    const dto = { title: 'Test Course', description: 'A course description' };
+    const result = await service.create(dto);
+    expect(mockRepo.create).toHaveBeenCalledWith(dto);
+    expect(mockRepo.save).toHaveBeenCalled();
     expect(result).toEqual(mockCourse);
-    expect(mockRepo.save).toHaveBeenCalledWith(dto);
   });
 
   it('should find all courses', async () => {
-    const result = await service.getAllCourses();
-    expect(result).toEqual('List of all courses'); // Adjust this if `getAllCourses()` changes
+    const result = await service.findAll();
+    expect(repo.find).toHaveBeenCalled();
+    expect(result).toEqual([mockCourse]);
   });
 });
