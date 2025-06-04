@@ -24,7 +24,7 @@ import { SubmissionModule } from './submission/submission.module';
 import { UserProfilesModule } from './user-profiles/user-profiles.module';
 import { CredentialModule } from './credential/credential.module';
 import { MentorshipModule } from './mentorship/mentorship.module';
-
+import { TranslationModule } from './translation/translation.module';
 import { I18nModule } from './i18n/i18n.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -95,6 +95,7 @@ console.log('ENV:', ENV);
     MentorshipModule,
     FeedbackModule,
     EventSignupModule,
+    TranslationModule,
     I18nModule,
     UserSettingsModule,
     GdprModule,
