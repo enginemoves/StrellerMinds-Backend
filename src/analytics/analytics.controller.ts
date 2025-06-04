@@ -25,4 +25,24 @@ export class AnalyticsController {
     res.setHeader('Content-Type', 'application/json');
     res.json(data);
   }
+
+  @Get('credential-issuance')
+  getCredentialIssuance() {
+    return this.analyticsService.getCredentialIssuance();
+  }
+
+  @Get('transactions')
+  getTransactionVolumes() {
+    return this.analyticsService.getTransactionVolumes();
+  }
+
+  @Get('costs')
+  getCostAnalysis() {
+    return this.analyticsService.getCostAnalysis();
+  }
+
+  @Get('usage-reports')
+  getUsageReports() {
+    return this.analyticsService.getUsageReports();
+  }
 }
