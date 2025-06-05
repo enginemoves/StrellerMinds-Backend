@@ -1,6 +1,6 @@
 // src/verification/strategies/eth-signature.strategy.ts
 import { Injectable } from '@nestjs/common';
-import { ethers } from 'ethers';
+import { verifyMessage } from 'ethers';
 
 @Injectable()
 export class EthSignatureStrategy {
@@ -9,7 +9,7 @@ export class EthSignatureStrategy {
     const address = '0xYourExpectedAddress';
 
     try {
-      const recoveredAddress = ethers.utils.verifyMessage(message, signature);
+      const recoveredAddress = verifyMessage(message, signature);
       const isValid = recoveredAddress.toLowerCase() === address.toLowerCase();
 
       return {
