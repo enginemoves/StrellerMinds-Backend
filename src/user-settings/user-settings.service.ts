@@ -1,15 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { UserSetting } from './entities/user-setting.entity';
 import { CreateUserSettingDto } from './dto/create-user-setting.dto';
 import { UpdateUserSettingDto } from './dto/update-user-setting.dto';
-import { UserSetting } from './entities/user-setting.entity';
 
 @Injectable()
 export class UserSettingsService {
   constructor(
     @InjectRepository(UserSetting)
-    private repo: Repository<UserSetting>,
+    private readonly repo: Repository<UserSetting>,
   ) {}
 
   async findByUser(userId: string): Promise<UserSetting> {

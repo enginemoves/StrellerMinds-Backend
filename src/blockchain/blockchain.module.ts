@@ -6,6 +6,7 @@ import { StellarClient } from './stellar/stellar.client';
 import { SorobanService } from './soroban/soroban.service';
 import { SorobanClient } from './soroban/soroban.client';
 import { BlockchainMonitoringService } from './monitoring.service';
+import { BlockchainBatchService } from './batchprocess/batchprocess.service';
 
 @Module({
   controllers: [BlockchainController],
@@ -16,6 +17,7 @@ import { BlockchainMonitoringService } from './monitoring.service';
     SorobanService,
     SorobanClient,
     BlockchainMonitoringService,
+    BlockchainBatchService,
   ],
   exports: [StellarService, SorobanService, BlockchainService],
 })

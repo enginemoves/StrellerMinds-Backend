@@ -7,6 +7,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { UserRole } from '../enums/userRole.enum';
+import { AccountStatus } from '../enums/accountStatus.enum';
 
 export class CreateUsersDto {
   @IsEmail()
@@ -41,4 +42,8 @@ export class CreateUsersDto {
   @IsEnum(UserRole)
   @IsOptional()
   role?: UserRole;
+
+  @IsEnum(AccountStatus)
+  @IsOptional()
+  status?: AccountStatus;
 }

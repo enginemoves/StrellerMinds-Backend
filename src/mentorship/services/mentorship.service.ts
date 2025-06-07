@@ -1,8 +1,21 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+/* eslint-disable prettier/prettier */
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { MentorshipPreference, UserRole } from '../entities/mentorship-preference.entity';
-import { MentorshipMatch, MatchStatus, MatchType } from '../entities/mentorship-match.entity';
+import {
+  MentorshipPreference,
+  UserRole,
+} from '../entities/mentorship-preference.entity';
+import {
+  MentorshipMatch,
+  MatchStatus,
+  MatchType,
+} from '../entities/mentorship-match.entity';
 import { MentorAvailability } from '../entities/mentor-availability.entity';
 import { CreatePreferenceDto } from '../dto/create-preference.dto';
 import { CreateAvailabilityDto } from '../dto/create-availability.dto';
@@ -10,6 +23,7 @@ import { MatchRequestDto } from '../dto/match-request.dto';
 import { UpdateMatchStatusDto } from '../dto/update-match-status.dto';
 import { MatchingService } from './matching.service';
 import { NotificationsService } from '../../notifications/notifications.service';
+import { NotificationType } from '../../notifications/entities/notification.entity';
 
 @Injectable()
 export class MentorshipService {
@@ -61,7 +75,9 @@ export class MentorshipService {
     });
 
     if (!preference) {
-      throw new NotFoundException(`Mentorship preference not found for user ${userId}`);
+      throw new NotFoundException(
+        `Mentorship preference not found for user ${userId}`,
+      );
     }
 
     return preference;
@@ -80,7 +96,9 @@ export class MentorshipService {
     });
 
     if (!mentorPreference) {
-      throw new BadRequestException(`User ${mentorId} is not registered as a mentor`);
+      throw new BadRequestException(
+        `User ${mentorId} is not registered as a mentor`,
+      );
     }
 
     // Create availability slot
@@ -90,8 +108,8 @@ export class MentorshipService {
       endTime: new Date(createAvailabilityDto.endTime),
       recurrenceType: createAvailabilityDto.recurrenceType,
       recurrenceInterval: createAvailabilityDto.recurrenceInterval,
-      recurrenceEndDate: createAvailabilityDto.recurrenceEndDate 
-        ? new Date(createAvailabilityDto.recurrenceEndDate) 
+      recurrenceEndDate: createAvailabilityDto.recurrenceEndDate
+        ? new Date(createAvailabilityDto.recurrenceEndDate)
         : null,
       isActive: createAvailabilityDto.isActive ?? true,
       notes: createAvailabilityDto.notes,
@@ -116,7 +134,10 @@ export class MentorshipService {
   /**
    * Create a mentorship match (manual or automatic)
    */
-  async createMatch(userId: string, matchRequestDto: MatchRequestDto): Promise<MentorshipMatch | MentorshipMatch[]> {
+  async createMatch(
+    userId: string,
+    matchRequestDto: MatchRequestDto,
+  ): Promise<MentorshipMatch | MentorshipMatch[]> {
     const { matchType = MatchType.AUTOMATIC } = matchRequestDto;
 
     if (matchType === MatchType.MANUAL) {
@@ -136,7 +157,9 @@ export class MentorshipService {
     const { mentorId, menteeId } = matchRequestDto;
 
     if (!mentorId || !menteeId) {
-      throw new BadRequestException('Both mentorId and menteeId are required for manual matching');
+      throw new BadRequestException(
+        'Both mentorId and menteeId are required for manual matching',
+      );
     }
 
     // Verify mentor and mentee exist and have the correct roles
@@ -149,11 +172,15 @@ export class MentorshipService {
     });
 
     if (!mentorPreference) {
-      throw new BadRequestException(`User ${mentorId} is not registered as a mentor`);
+      throw new BadRequestException(
+        `User ${mentorId} is not registered as a mentor`,
+      );
     }
 
     if (!menteePreference) {
-      throw new BadRequestException(`User ${menteeId} is not registered as a mentee`);
+      throw new BadRequestException(
+        `User ${menteeId} is not registered as a mentee`,
+      );
     }
 
     // Check if a match already exists between these users
@@ -171,10 +198,11 @@ export class MentorshipService {
     }
 
     // Calculate compatibility score
-    const compatibilityScore = await this.matchingService.calculateCompatibilityScore(
-      menteePreference,
-      mentorPreference,
-    );
+    const compatibilityScore =
+      await this.matchingService.calculateCompatibilityScore(
+        menteePreference,
+        mentorPreference,
+      );
 
     // Create the match
     const match = this.matchRepository.create({
@@ -201,7 +229,12 @@ export class MentorshipService {
     userId: string,
     matchRequestDto: MatchRequestDto,
   ): Promise<MentorshipMatch[]> {
-    const { limit = 5, minScore = 70, prioritySkills, priorityInterests } = matchRequestDto;
+    const {
+      limit = 5,
+      minScore = 70,
+      prioritySkills,
+      priorityInterests,
+    } = matchRequestDto;
 
     // Get user's preference
     const userPreference = await this.preferenceRepository.findOne({
@@ -209,14 +242,16 @@ export class MentorshipService {
     });
 
     if (!userPreference) {
-      throw new NotFoundException(`Mentorship preference not found for user ${userId}`);
+      throw new NotFoundException(
+        `Mentorship preference not found for user ${userId}`,
+      );
     }
 
     // Determine if user is mentor or mentee
     if (userPreference.role === UserRole.MENTOR) {
       // Find matching mentees for this mentor
       const mentees = await this.matchingService.findActiveMentees();
-      
+
       const matchingResult = await this.matchingService.findMatches(
         userPreference,
         mentees,
@@ -245,13 +280,15 @@ export class MentorshipService {
       );
 
       // Send notifications for each match
-      await Promise.all(matches.map(match => this.sendMatchNotifications(match)));
+      await Promise.all(
+        matches.map((match) => this.sendMatchNotifications(match)),
+      );
 
       return matches;
     } else {
       // Find matching mentors for this mentee
       const mentors = await this.matchingService.findActiveMentors();
-      
+
       const matchingResult = await this.matchingService.findMatches(
         userPreference,
         mentors,
@@ -280,7 +317,9 @@ export class MentorshipService {
       );
 
       // Send notifications for each match
-      await Promise.all(matches.map(match => this.sendMatchNotifications(match)));
+      await Promise.all(
+        matches.map((match) => this.sendMatchNotifications(match)),
+      );
 
       return matches;
     }
@@ -302,9 +341,7 @@ export class MentorshipService {
 
     // Only mentor or mentee involved can update status
     if (match.mentorId !== userId && match.menteeId !== userId) {
-      throw new BadRequestException('User not authorized to update this match status');
     }
-
     match.status = updateMatchStatusDto.status;
 
     const updatedMatch = await this.matchRepository.save(match);
@@ -318,35 +355,5 @@ export class MentorshipService {
   /**
    * Private helper: Send notifications on new match creation
    */
-  private async sendMatchNotifications(match: MentorshipMatch): Promise<void> {
-    // Notify mentee
-    await this.notificationsService.sendNotification({
-      userId: match.menteeId,
-      title: 'New Mentorship Match',
-      message: `You have a new mentorship match with mentor ${match.mentorId}.`,
-      metadata: { matchId: match.id },
-    });
-
-    // Notify mentor
-    await this.notificationsService.sendNotification({
-      userId: match.mentorId,
-      title: 'New Mentorship Match',
-      message: `You have a new mentorship match with mentee ${match.menteeId}.`,
-      metadata: { matchId: match.id },
-    });
-  }
-
-  /**
-   * Private helper: Notify match status updates
-   */
-  private async sendMatchStatusUpdateNotification(match: MentorshipMatch): Promise<void> {
-    const otherUserId = match.mentorId === match.lastUpdatedBy ? match.menteeId : match.mentorId;
-
-    await this.notificationsService.sendNotification({
-      userId: otherUserId,
-      title: 'Mentorship Match Status Updated',
-      message: `The mentorship match status has been updated to ${match.status}.`,
-      metadata: { matchId: match.id, status: match.status },
-    });
   }
 }

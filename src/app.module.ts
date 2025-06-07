@@ -24,7 +24,7 @@ import { SubmissionModule } from './submission/submission.module';
 import { UserProfilesModule } from './user-profiles/user-profiles.module';
 import { CredentialModule } from './credential/credential.module';
 import { MentorshipModule } from './mentorship/mentorship.module';
-
+import { TranslationModule } from './translation/translation.module';
 import { I18nModule } from './i18n/i18n.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -32,6 +32,8 @@ import { FeedbackModule } from './feedback/feedback.module';
 import { UserSettingsModule } from './user-settings/user-settings.module';
 import databaseConfig from './config/database.config';
 import { EventSignupModule } from './event-signup/event-signup.module';
+import { GdprModule } from './gdpr/gdpr.module';
+import { MonitoringModule } from './monitoring/monitoring-module';
 
 const ENV = process.env.NODE_ENV;
 console.log('NODE_ENV:', process.env.NODE_ENV);
@@ -59,6 +61,15 @@ console.log('ENV:', ENV);
         database: configService.get<string>('database.name'),
         autoLoadEntities: configService.get<boolean>('database.autoload'),
         synchronize: configService.get<boolean>('database.synchronize'),
+        // Connection Pool Settings
+        extra: {
+          max: configService.get<number>('database.maxPoolSize'),
+          min: configService.get<number>('database.minPoolSize'),
+          idleTimeoutMillis: configService.get<number>('database.poolIdleTimeout'),
+        },
+        // Retry Mechanism
+        retryAttempts: configService.get<number>('database.retryAttempts'),
+        retryDelay: configService.get<number>('database.retryDelay'),
       }),
     }),
     UsersModule,
@@ -84,8 +95,11 @@ console.log('ENV:', ENV);
     MentorshipModule,
     FeedbackModule,
     EventSignupModule,
+    TranslationModule,
     I18nModule,
     UserSettingsModule,
+    GdprModule,
+    MonitoringModule,
   ],
   controllers: [AppController],
   providers: [AppService],
