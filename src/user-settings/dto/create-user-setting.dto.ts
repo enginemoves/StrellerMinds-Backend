@@ -5,7 +5,7 @@ export class CreateUserSettingDto {
   userId: string;
 
   @IsOptional()
-  @IsIn(['en', 'fr', 'es'])
+  @IsIn(['en', 'fr', 'es', 'ar'])
   language?: string;
 
   @IsOptional()
@@ -19,4 +19,37 @@ export class CreateUserSettingDto {
   @IsOptional()
   @IsBoolean()
   pushNotifications?: boolean;
+
+  // Accessibility Settings
+  @IsOptional()
+  @IsIn(['small', 'medium', 'large', 'extra-large'])
+  fontSize?: 'small' | 'medium' | 'large' | 'extra-large';
+
+  @IsOptional()
+  @IsBoolean()
+  highContrastMode?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  reducedMotion?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  screenReaderOptimized?: boolean;
+
+  @IsOptional()
+  @IsIn(['normal', 'high', 'extra-high'])
+  contrast?: 'normal' | 'high' | 'extra-high';
+
+  @IsOptional()
+  @IsBoolean()
+  keyboardNavigationMode?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  audioDescriptions?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  captionsEnabled?: boolean;
 }
