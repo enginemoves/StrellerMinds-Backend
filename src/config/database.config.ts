@@ -8,11 +8,35 @@ export default registerAs('database', () => ({
     name: process.env.DATABASE_NAME,
     synchronize: process.env.DATABASE_SYNC === 'true' ? 'true' : 'false',
     autoload: process.env.DATABASE_LOAD === 'true' ? 'true' : 'false',
-    // Connection Pool Settings
-    maxPoolSize: parseInt(process.env.DATABASE_POOL_MAX) || 10,
-    minPoolSize: parseInt(process.env.DATABASE_POOL_MIN) || 1,
+    
+    // Connection Pool Settings - Optimized for production
+    maxPoolSize: parseInt(process.env.DATABASE_POOL_MAX) || 20,
+    minPoolSize: parseInt(process.env.DATABASE_POOL_MIN) || 5,
     poolIdleTimeout: parseInt(process.env.DATABASE_IDLE_TIMEOUT) || 30000,
+    
     // Retry Mechanism
     retryAttempts: parseInt(process.env.DATABASE_RETRY_ATTEMPTS) || 5,
     retryDelay: parseInt(process.env.DATABASE_RETRY_DELAY) || 3000,
+    
+    // Query Logging and Performance
+    logging: true,
+    logger: 'advanced-console',
+    maxQueryExecutionTime: 1000, 
+    
+    // Cache Settings  1 minute cache duration
+    cache: {
+        duration: 60000,
+    },
+    
+    // SSL Configuration
+    ssl: process.env.DATABASE_SSL === 'true' ? {
+        rejectUnauthorized: false,
+    } : false,
+
+    private metrics = {
+        totalQueries: 0,
+        slowQueries: 0,
+        averageExecutionTime: 0,
+        // Add more metrics as needed
+    },
 }))
