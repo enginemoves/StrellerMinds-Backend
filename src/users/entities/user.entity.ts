@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  Index,
 } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 
@@ -36,6 +37,7 @@ export class User {
   lastName: string;
 
   @Column({ unique: true })
+  @Index()
   email: string;
 
   @Column({ select: false })
@@ -52,6 +54,7 @@ export class User {
     enum: UserRole,
     default: UserRole.STUDENT,
   })
+  @Index()
   role: UserRole;
 
   @Column({ nullable: true })
@@ -61,6 +64,7 @@ export class User {
   preferredLanguage: string;
 
   @CreateDateColumn()
+  @Index()
   createdAt: Date;
 
   @UpdateDateColumn()
@@ -71,6 +75,7 @@ export class User {
     enum: AccountStatus,
     default: AccountStatus.ACTIVE,
   })
+  @Index()
   status: AccountStatus;
 
   @Column({ nullable: true })
