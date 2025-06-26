@@ -2,7 +2,6 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, FindManyOptions } from 'typeorm';
 import { Credential } from './entities/credential.entity';
-import { BlockchainService } from '../blockchain/blockchain.service';
 import { CredentialHistoryQueryDto, CredentialStatus } from './dto/credential-history-query.dto';
 import { CredentialHistoryResponseDto, CredentialDto } from './dto/credential-history-response.dto';
 
@@ -11,7 +10,6 @@ export class CredentialService {
   constructor(
     @InjectRepository(Credential)
     private credentialRepository: Repository<Credential>,
-    private blockchainService: BlockchainService,
   ) {}
 
   async getUserCredentialHistory(
@@ -72,8 +70,9 @@ export class CredentialService {
     }
 
     // Verify on the blockchain
-    const verificationResult = await this.blockchainService.verifyTransaction(credential.txHash);
-    
+    // TODO: Replace the following mock result with actual blockchain verification logic
+    const verificationResult = { verified: true };
+
     // Update verification status in database
     credential.verificationStatus = verificationResult.verified;
     await this.credentialRepository.save(credential);

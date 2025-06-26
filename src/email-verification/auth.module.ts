@@ -2,13 +2,13 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { User } from '../entities/user.entity';
 import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
 import { EmailVerificationService } from './email-verification.service';
 import { EmailVerificationController } from './email-verification.controller';
 import { EmailModule } from '../email/email.module';
-import { JwtStrategy } from './strategies/jwt.strategy';
+import { User } from 'src/credential/credential.controller';
+import { AuthController } from 'src/auth/auth.controller';
+import { JwtStrategy } from 'src/auth/jwt.strategy';
 
 @Module({
   imports: [

@@ -1,5 +1,10 @@
 import { registerAs } from '@nestjs/config';
-import { CacheStrategy } from '../cache/enums/cache-strategy.enum';
+
+enum CacheStrategy {
+  MEMORY = 'memory',
+  REDIS = 'redis',
+  MEMCACHED = 'memcached'
+}
 
 export default registerAs('cache', () => ({
   strategy: process.env.CACHE_STRATEGY || CacheStrategy.MEMORY,

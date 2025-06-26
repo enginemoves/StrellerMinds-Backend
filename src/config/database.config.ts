@@ -33,7 +33,7 @@ export default registerAs('database', () => ({
         rejectUnauthorized: false,
     } : false,
 
-    private metrics = {
+    metrics: {
         totalQueries: 0,
         slowQueries: 0,
         averageExecutionTime: 0,

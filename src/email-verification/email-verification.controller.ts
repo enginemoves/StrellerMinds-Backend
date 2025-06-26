@@ -19,10 +19,9 @@ import {
   import { EmailVerificationService } from './email-verification.service';
   import { 
     SendVerificationEmailDto, 
-    VerifyEmailDto, 
     ResendVerificationDto 
   } from './dto/email-verification.dto';
-  import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
   
   @ApiTags('Email Verification')
   @Controller('auth/email-verification')

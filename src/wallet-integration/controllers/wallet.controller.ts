@@ -13,10 +13,10 @@ import {
     HttpCode,
   } from '@nestjs/common';
   import { WalletService } from '../services/wallet.service';
-  import { JwtAuthGuard } from '../guards/jwt-auth.guard';
   import { ConnectWalletDto } from '../dto/connect-wallet.dto';
   import { ShareCredentialDto } from '../dto/share-credential.dto';
   import { CredentialFilterDto } from '../dto/credential-filter.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
   
   @Controller('wallet')
   export class WalletController {
@@ -76,17 +76,6 @@ import {
     }
   }
   
-  // src/wallet/guards/jwt-auth.guard.ts
-  import { Injectable, UnauthorizedException } from '@nestjs/common';
-  import { AuthGuard } from '@nestjs/passport';
-  
-  @Injectable()
-  export class JwtAuthGuard extends AuthGuard('jwt') {
-    handleRequest(err: any, user: any, info: any) {
-      if (err || !user) {
-        throw err || new UnauthorizedException('Invalid token');
-      }
-      return user;
-    }
-  }
+  // Remove this duplicate JwtAuthGuard declaration from the controller file.
+  // The JwtAuthGuard should only be declared and exported in src/wallet/guards/jwt-auth.guard.ts and imported here.
   

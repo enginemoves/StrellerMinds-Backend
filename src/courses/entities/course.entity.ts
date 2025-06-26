@@ -16,11 +16,8 @@ import { CourseReview } from './course-review.entity';
 import { User } from '../../users/entities/user.entity';
 import { CourseModule } from './course-module.entity';
 import { Certificate } from '../../certificate/entity/certificate.entity';
-import { Payment } from '../../payment/entities/payment.entity';
 import { UserProgress } from '../../users/entities/user-progress.entity';
-// import { Lesson } from 'src/modules/lesson/entities/lesson.entity';
 import { Lesson } from 'src/lesson/entity/lesson.entity';
-import { ForumTopic } from '../../topic/entities/forum-topic.entity';
 
 @Entity('courses')
 export class Course {
@@ -72,9 +69,6 @@ export class Course {
   @OneToMany(() => CourseReview, (review) => review.course)
   reviews: Promise<CourseReview[]>;
 
-  @OneToMany(() => Payment, (payment) => payment.course)
-  payments: Promise<Payment[]>;
-
   @OneToMany(() => UserProgress, (progress) => progress.course)
   userProgress: Promise<UserProgress[]>;
 
@@ -89,7 +83,4 @@ export class Course {
 
   @OneToMany(() => Lesson, (lesson) => lesson.course)
   lessons: Lesson[];
-
-  @OneToMany(() => ForumTopic, topic => topic.course)
-  forumTopics: ForumTopic[];
 }
