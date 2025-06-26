@@ -7,36 +7,20 @@ import { UsersModule } from './users/users.module';
 import { CoursesModule } from './courses/courses.module';
 import { AuthModule } from './auth/auth.module';
 import { CertificateModule } from './certificate/certificate.module';
-import { ForumModule } from './forum/forum.module';
-import { PaymentModule } from './payment/payment.module';
-import { NotificationModule } from './notification/notification.module';
-import { BlockchainModule } from './blockchain/blockchain.module';
 import { FilesModule } from './files/files.module';
 import { EmailModule } from './email/email.module';
-import { HealthModule } from './health/health.module';
 import { LessonModule } from './lesson/lesson.module';
 import { IpfsModule } from './ipfs/ipfs.module';
 import { ModerationModule } from './moderation/moderation.module';
-import { CatogoryModule } from './catogory/catogory.module';
-import { PostModule } from './post/post.module';
-import { TopicModule } from './topic/topic.module';
 import { SubmissionModule } from './submission/submission.module';
 import { UserProfilesModule } from './user-profiles/user-profiles.module';
 import { CredentialModule } from './credential/credential.module';
-import { MentorshipModule } from './mentorship/mentorship.module';
 import { TranslationModule } from './translation/translation.module';
-import { I18nModule } from './i18n/i18n.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { FeedbackModule } from './feedback/feedback.module';
-import { UserSettingsModule } from './user-settings/user-settings.module';
 import databaseConfig from './config/database.config';
-import { EventSignupModule } from './event-signup/event-signup.module';
 import { GdprModule } from './gdpr/gdpr.module';
 import { MonitoringModule } from './monitoring/monitoring-module';
-import { ProductsModule } from './products/products.module';
-import cacheConfig from './config/cache.config';
-import { CacheModule } from './cache/cache.module';
 
 
 
@@ -81,33 +65,18 @@ console.log('ENV:', ENV);
     CoursesModule,
     AuthModule,
     CertificateModule,
-    ForumModule,
-    PaymentModule,
-    NotificationModule,
-    BlockchainModule,
     FilesModule,
     EmailModule,
-    HealthModule,
     LessonModule,
     IpfsModule,
     ModerationModule,
-    CatogoryModule,
-    PostModule,
-    TopicModule,
     SubmissionModule,
     UserProfilesModule,
     CredentialModule,
-    MentorshipModule,
-    FeedbackModule,
-    EventSignupModule,
     TranslationModule,
-    I18nModule,
-    UserSettingsModule,
     GdprModule,
     MonitoringModule,
-    CacheModule,
     UsersModule,
-    ProductsModule,
 
   ],
   controllers: [AppController],

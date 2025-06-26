@@ -18,4 +18,9 @@ export class CourseService {
   async findAll(): Promise<Course[]> {
     return this.courseRepository.find();
   }
+
+
+  getAllCourses() {
+    return [];
+  }
 }

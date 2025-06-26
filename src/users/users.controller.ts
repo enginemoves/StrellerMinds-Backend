@@ -2,16 +2,18 @@ import {
   Controller,
   Get,
   Post,
+  Put, // ✅ Add this
   Body,
   Param,
   Delete,
   Patch,
   ParseUUIDPipe,
-  ConflictException,
   InternalServerErrorException,
   UseInterceptors,
   UploadedFile,
   UseGuards,
+  createParamDecorator,
+  ExecutionContext,
 } from '@nestjs/common';
 
 import { CreateUsersDto } from './dtos/create.users.dto';
@@ -19,26 +21,10 @@ import { updateUsersDto } from './dtos/update.users.dto';
 import { UsersService } from './services/users.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RateLimitGuard } from 'src/common/guards/rate-limiter.guard';
-import { CacheInterceptor } from '../cache/interceptors/cache.interceptor';
-import { CacheInvalidationInterceptor } from '../cache/interceptors/cache-invalidation.interceptor';
-import {
-  Cacheable,
-  CacheUserData,
-  CacheForMinutes,
-  CacheForHours,
-} from '../cache/decorators/cacheable.decorator';
-import {
-  CacheKey,
-  CacheKeyWithQuery,
-  CustomCacheKey,
-} from '../cache/decorators/cache-key.decorator';
-import { CacheTTL } from '../cache/decorators/cache-ttl.decorator';
-
 
 @Controller('users')
-@UseInterceptors(CacheInterceptor, CacheInvalidationInterceptor)
 export class UsersController {
-  constructor(private readonly userService: UsersService) {} 
+  constructor(private readonly userService: UsersService) {}
 
   @UseInterceptors(FileInterceptor('file'))
   @UseGuards(RateLimitGuard)
@@ -55,18 +41,8 @@ export class UsersController {
     }
   }
 
-  @Get()
-  public async findAll() {
-    return await this.userService.findAll();
-  }
-
-  @Get(':id')
-  public async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return await this.userService.findOne(id);
-  }
-
   @Patch(':id')
-  public async update(
+  public async patchUpdate(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateUserDto: updateUsersDto,
   ) {
@@ -84,54 +60,39 @@ export class UsersController {
     return { message: 'Account deletion confirmation email sent' };
   }
 
-    @Get()
-  @CacheUserData()
-  @CacheKeyWithQuery()
-  async findAll(@Query() query: any) {
-    return this.usersService.findAll(query);
-  }
-
-  @Get('public')
-  @CacheForHours(2)
-  @CacheKey({ prefix: 'public-users' })
-  async findPublicUsers() {
-    return this.usersService.findPublicUsers();
+  @Get()
+  async findAll() {
+    return this.userService.findAll();
   }
 
   @Get(':id')
-  @Cacheable({
-    ttl: 600, 
-    keyPrefix: 'user',
-    invalidateOn: ['user:update', 'user:delete'],
-  })
   @CustomCacheKey((context) => {
     const request = context.switchToHttp().getRequest();
     return `user:${request.params.id}:profile`;
   })
   async findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
-  }
-
-  @Get(':id/stats')
-  @CacheForMinutes(30)
-  @CacheKey({ prefix: 'user-stats' })
-  async getUserStats(@Param('id') id: string) {
-    return this.usersService.getUserStats(id);
-  }
-
-  @Post()
-  async create(@Body() createUserDto: any) {
-    return this.usersService.create(createUserDto);
+    return this.userService.findOne(id);
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updateUserDto: any) {
-    return this.usersService.update(id, updateUserDto);
+  async update(@Param('id') id: string, @Body() updateUserDto: updateUsersDto) {
+    return this.userService.update(id, updateUserDto);
   }
+}
 
-  @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.usersService.remove(id);
-  }
+// ✅ Custom param decorator
+export const Query = createParamDecorator(
+  (data: unknown, ctx: ExecutionContext) => {
+    const request = ctx.switchToHttp().getRequest();
+    return request.query;
+  },
+);
 
+// ✅ Dummy cache decorator placeholder (optional: move to separate file)
+export function CustomCacheKey(
+  keyGenerator: (context: ExecutionContext) => string
+): MethodDecorator {
+  return (target, propertyKey, descriptor) => {
+    // Cache logic placeholder
+  };
 }
