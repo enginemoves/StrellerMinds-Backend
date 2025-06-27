@@ -116,4 +116,52 @@ export class ProgressController {
       );
     }
   }
-} 
+
+  @Get('courses/:courseId/analytics')
+  async getLearningAnalytics(
+    @Request() req,
+    @Param('courseId', ParseUUIDPipe) courseId: string,
+  ) {
+    try {
+      return await this.progressService.getLearningAnalytics(req.user.id, courseId);
+    } catch (error) {
+      throw new HttpException('Failed to retrieve analytics', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Get('courses/:courseId/adaptive-next')
+  async getAdaptiveNextLessons(
+    @Request() req,
+    @Param('courseId', ParseUUIDPipe) courseId: string,
+  ) {
+    try {
+      return await this.progressService.getAdaptiveNextLessons(req.user.id, courseId);
+    } catch (error) {
+      throw new HttpException('Failed to retrieve adaptive next lessons', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Get('courses/:courseId/visualization')
+  async getProgressVisualization(
+    @Request() req,
+    @Param('courseId', ParseUUIDPipe) courseId: string,
+  ) {
+    try {
+      return await this.progressService.getProgressVisualization(req.user.id, courseId);
+    } catch (error) {
+      throw new HttpException('Failed to retrieve progress visualization', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Get('courses/:courseId/outcomes')
+  async getLearningOutcomeMetrics(
+    @Request() req,
+    @Param('courseId', ParseUUIDPipe) courseId: string,
+  ) {
+    try {
+      return await this.progressService.getLearningOutcomeMetrics(req.user.id, courseId);
+    } catch (error) {
+      throw new HttpException('Failed to retrieve learning outcome metrics', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+}
