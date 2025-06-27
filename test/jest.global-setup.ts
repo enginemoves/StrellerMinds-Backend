@@ -3,6 +3,7 @@ import { AppModule } from '../src/app.module';
 import { getDataSourceToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
+import { HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
 
 // Load test env
 config({ path: '.env.test' });
