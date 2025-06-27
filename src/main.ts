@@ -9,6 +9,8 @@ import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
+import fastifyHelmet from '@fastify/helmet';
+import fastifyCsrf from '@fastify/csrf-protection';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -22,6 +24,12 @@ async function bootstrap() {
     global: true,
     encodings: ['gzip', 'deflate', 'br'],
   });
+
+  // Register Helmet for security headers
+  await app.register(fastifyHelmet);
+
+  // Register CSRF protection globally
+  await app.register(fastifyCsrf);
 
   // Global Validation Pipe
   app.useGlobalPipes(
