@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  Index,
 } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 
@@ -18,7 +19,6 @@ import { AuthToken } from '../../auth/entities/auth-token.entity';
 import { Course } from '../../courses/entities/course.entity';
 import { CourseReview } from '../../courses/entities/course-review.entity';
 import { Certificate } from '../../certificate/entity/certificate.entity';
-import { Payment } from '../../payment/entities/payment.entity';
 import { UserProfile } from 'src/user-profiles/entities/user-profile.entity';
 import { UserSettings } from './user-settings.entity';
 
@@ -34,6 +34,7 @@ export class User {
   lastName: string;
 
   @Column({ unique: true })
+  @Index()
   email: string;
 
   @Column({ select: false })
@@ -50,6 +51,7 @@ export class User {
     enum: UserRole,
     default: UserRole.STUDENT,
   })
+  @Index()
   role: UserRole;
 
   @Column({ nullable: true })
@@ -59,6 +61,7 @@ export class User {
   preferredLanguage: string;
 
   @CreateDateColumn()
+  @Index()
   createdAt: Date;
 
   @UpdateDateColumn()
@@ -69,6 +72,7 @@ export class User {
     enum: AccountStatus,
     default: AccountStatus.ACTIVE,
   })
+  @Index()
   status: AccountStatus;
 
   @Column({ nullable: true })
@@ -92,9 +96,6 @@ export class User {
   @OneToMany(() => CourseReview, (courseReview) => courseReview.user)
   reviews: CourseReview[];
 
-  @OneToMany(() => Payment, (payment) => payment.user)
-  payments: Payment[];
-
   @OneToMany(() => AuthToken, (authToken) => authToken.user)
   authTokens: Promise<AuthToken[]>;
 
@@ -115,6 +116,9 @@ export class User {
     eager: true,
   })
   settings: UserSettings;
+
+  @Column({ unique: true, nullable: false })
+  username: string;
 
   gradesGiven: any;
   gradesReceived: any;

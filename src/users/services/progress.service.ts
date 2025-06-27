@@ -280,4 +280,96 @@ export class ProgressService {
       await this.updateModuleProgress(userId, courseId, module.id);
     }
   }
-} 
+
+  /**
+   * Learning Analytics: Get strengths, weaknesses, and trends for a user in a course
+   */
+  async getLearningAnalytics(userId: string, courseId: string) {
+    const progress = await this.progressRepository.find({
+      where: { user: { id: userId }, course: { id: courseId } },
+      relations: ['lesson'],
+    });
+    const completed = progress.filter(p => p.isCompleted);
+    const avgScore = completed.length
+      ? completed.reduce((sum, p) => sum + (p.metadata?.score || 0), 0) / completed.length
+      : 0;
+    const strengths = completed
+      .filter(p => (p.metadata?.score || 0) >= 80)
+      .map(p => p.lesson?.title || p.lesson?.id);
+    const weaknesses = completed
+      .filter(p => (p.metadata?.score || 0) < 50)
+      .map(p => p.lesson?.title || p.lesson?.id);
+    return {
+      totalLessons: progress.length,
+      completedLessons: completed.length,
+      avgScore,
+      strengths,
+      weaknesses,
+      progressOverTime: progress.map(p => ({
+        lesson: p.lesson?.title || p.lesson?.id,
+        completedAt: p.completedAt,
+        score: p.metadata?.score || null,
+      })),
+    };
+  }
+
+  /**
+   * Adaptive Learning Path: Recommend next lessons based on performance
+   */
+  async getAdaptiveNextLessons(userId: string, courseId: string) {
+    const course = await this.courseRepository.findOne({
+      where: { id: courseId },
+      relations: ['modules', 'modules.lessons'],
+    });
+    if (!course) throw new NotFoundException('Course not found');
+    const modules = await course.modules;
+    const allLessons = modules.flatMap(m => m.lessons);
+    const progress = await this.progressRepository.find({
+      where: { user: { id: userId }, course: { id: courseId } },
+      relations: ['lesson'],
+    });
+    const completedLessonIds = new Set(progress.filter(p => p.isCompleted).map(p => p.lesson?.id));
+    // Recommend next uncompleted lessons, prioritizing those after weak lessons
+    const weakLessons = progress.filter(p => (p.metadata?.score || 0) < 50).map(p => p.lesson?.id);
+    const nextLessons = allLessons.filter(l => !completedLessonIds.has(l.id));
+    // Prioritize lessons in the same module as weak lessons
+    const prioritized = nextLessons.sort((a, b) => {
+      if (weakLessons.includes(a.id)) return -1;
+      if (weakLessons.includes(b.id)) return 1;
+      return 0;
+    });
+    return prioritized.slice(0, 3).map(l => ({ id: l.id, title: l.title }));
+  }
+
+  /**
+   * Progress Visualization: Get progress data for charting
+   */
+  async getProgressVisualization(userId: string, courseId: string) {
+    const progress = await this.progressRepository.find({
+      where: { user: { id: userId }, course: { id: courseId } },
+      order: { completedAt: 'ASC' },
+    });
+    return progress.map(p => ({
+      lessonId: p.lesson?.id,
+      completedAt: p.completedAt,
+      progress: p.progressPercentage,
+      score: p.metadata?.score || null,
+    }));
+  }
+
+  /**
+   * Learning Outcome Metrics: Mastery, improvement, engagement
+   */
+  async getLearningOutcomeMetrics(userId: string, courseId: string) {
+    const progress = await this.progressRepository.find({
+      where: { user: { id: userId }, course: { id: courseId } },
+    });
+    const completed = progress.filter(p => p.isCompleted);
+    const mastery = completed.filter(p => (p.metadata?.score || 0) >= 80).length / (progress.length || 1);
+    const improvement = completed.length > 1
+      ? (completed[completed.length - 1].metadata?.score || 0) - (completed[0].metadata?.score || 0)
+      : 0;
+    const engagement = progress.length;
+    return { mastery, improvement, engagement };
+  }
+}

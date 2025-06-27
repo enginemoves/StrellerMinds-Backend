@@ -3,12 +3,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CredentialService } from './credential.service';
 import { CredentialController } from './credential.controller';
 import { Credential } from './entities/credential.entity';
-import { BlockchainModule } from '../blockchain/blockchain.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Credential]),
-    BlockchainModule, // Import the BlockchainModule to make BlockchainService available
   ],
   controllers: [CredentialController],
   providers: [CredentialService],

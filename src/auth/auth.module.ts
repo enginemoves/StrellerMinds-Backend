@@ -17,6 +17,9 @@ import { RolesGuard } from './guards/roles.guard';
 
 import { JwtLocalStrategy } from './strategies/jwt-local.strategy';
 import { IAuthStrategy } from './strategies/auth-strategy.interface';
+import { GoogleOAuthAdapter } from './adapters/google.strategy.adapter';
+import { FacebookOAuthAdapter } from './adapters/facebook.strategy.adapter';
+import { AppleOAuthAdapter } from './adapters/apple.strategy.adapter';
 
 @Module({
   imports: [
@@ -41,16 +44,27 @@ import { IAuthStrategy } from './strategies/auth-strategy.interface';
     JwtStrategy,
     PasswordValidationService,
     JwtLocalStrategy,
+    GoogleOAuthAdapter,
+    FacebookOAuthAdapter,
+    AppleOAuthAdapter,
     {
       provide: 'AUTH_STRATEGY',
       useExisting: JwtLocalStrategy, // Use the JwtLocalStrategy as the default auth strategy
     },
-   {
+    {
       provide: 'AUTH_STRATEGIES',
-      useFactory: (jwtLocalStrategy: JwtLocalStrategy): IAuthStrategy[] => [
-        jwtLocalStrategy,
+      useFactory: (
+        jwtLocalStrategy: JwtLocalStrategy,
+        google: GoogleOAuthAdapter,
+        facebook: FacebookOAuthAdapter,
+        apple: AppleOAuthAdapter,
+      ): IAuthStrategy[] => [jwtLocalStrategy, google, facebook, apple],
+      inject: [
+        JwtLocalStrategy,
+        GoogleOAuthAdapter,
+        FacebookOAuthAdapter,
+        AppleOAuthAdapter,
       ],
-      inject: [JwtLocalStrategy],
     },
     {
       provide: APP_GUARD,

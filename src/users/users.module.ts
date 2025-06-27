@@ -7,6 +7,7 @@ import { UsersService } from './services/users.service';
 import { AccountDeletionConfirmationService } from './services/account.deletion.confirmation.service';
 import { ProgressService } from './services/progress.service';
 import { ProgressController } from './controllers/progress.controller';
+import { AdminUsersController } from './admin.users.controller';
 
 import { User } from './entities/user.entity';
 import { WalletInfo } from './entities/wallet-info.entity';
@@ -43,7 +44,7 @@ import { EmailModule } from 'src/email/email.module';
     EmailModule,
     CloudinaryModule,
   ],
-  controllers: [UsersController, ProgressController],
+  controllers: [UsersController, ProgressController, AdminUsersController],
   providers: [
     UsersService,
     AccountDeletionConfirmationService,

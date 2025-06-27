@@ -2,16 +2,18 @@ import {
   Controller,
   Get,
   Post,
+  Put, // ✅ Add this
   Body,
   Param,
   Delete,
   Patch,
   ParseUUIDPipe,
-  ConflictException,
   InternalServerErrorException,
   UseInterceptors,
   UploadedFile,
   UseGuards,
+  createParamDecorator,
+  ExecutionContext,
 } from '@nestjs/common';
 
 import { CreateUsersDto } from './dtos/create.users.dto';
@@ -22,7 +24,7 @@ import { RateLimitGuard } from 'src/common/guards/rate-limiter.guard';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly userService: UsersService) {} // Or UserService
+  constructor(private readonly userService: UsersService) {}
 
   @UseInterceptors(FileInterceptor('file'))
   @UseGuards(RateLimitGuard)
@@ -32,7 +34,6 @@ export class UsersController {
     @Body() createUsersDto: CreateUsersDto,
   ) {
     try {
-      // Delegate the user creation and image upload to the service
       const user = await this.userService.create(createUsersDto, file);
       return user;
     } catch (error) {
@@ -40,18 +41,8 @@ export class UsersController {
     }
   }
 
-  @Get()
-  public async findAll() {
-    return await this.userService.findAll();
-  }
-
-  @Get(':id')
-  public async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return await this.userService.findOne(id);
-  }
-
   @Patch(':id')
-  public async update(
+  public async patchUpdate(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateUserDto: updateUsersDto,
   ) {
@@ -68,4 +59,40 @@ export class UsersController {
     await this.userService.requestAccountDeletion(id);
     return { message: 'Account deletion confirmation email sent' };
   }
+
+  @Get()
+  async findAll() {
+    return this.userService.findAll();
+  }
+
+  @Get(':id')
+  @CustomCacheKey((context) => {
+    const request = context.switchToHttp().getRequest();
+    return `user:${request.params.id}:profile`;
+  })
+  async findOne(@Param('id') id: string) {
+    return this.userService.findOne(id);
+  }
+
+  @Put(':id')
+  async update(@Param('id') id: string, @Body() updateUserDto: updateUsersDto) {
+    return this.userService.update(id, updateUserDto);
+  }
+}
+
+// ✅ Custom param decorator
+export const Query = createParamDecorator(
+  (data: unknown, ctx: ExecutionContext) => {
+    const request = ctx.switchToHttp().getRequest();
+    return request.query;
+  },
+);
+
+// ✅ Dummy cache decorator placeholder (optional: move to separate file)
+export function CustomCacheKey(
+  keyGenerator: (context: ExecutionContext) => string
+): MethodDecorator {
+  return (target, propertyKey, descriptor) => {
+    // Cache logic placeholder
+  };
 }
