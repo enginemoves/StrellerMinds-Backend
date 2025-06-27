@@ -27,6 +27,7 @@ import { I18nModule } from './i18n/i18n.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { FeedbackModule } from './feedback/feedback.module';
+import { MentorshipModule } from './mentorship/mentorship.module';
 import databaseConfig from './config/database.config';
 
 const ENV = process.env.NODE_ENV
@@ -79,6 +80,7 @@ console.log('ENV:', ENV);
     CredentialModule,
     FeedbackModule,
     I18nModule,
+    MentorshipModule,
   ],
   controllers: [AppController],
   providers: [AppService],
