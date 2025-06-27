@@ -18,6 +18,8 @@ import { CredentialModule } from './credential/credential.module';
 import { TranslationModule } from './translation/translation.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { FeedbackModule } from './feedback/feedback.module';
+import { MentorshipModule } from './mentorship/mentorship.module';
 import databaseConfig from './config/database.config';
 import { GdprModule } from './gdpr/gdpr.module';
 import { MonitoringModule } from './monitoring/monitoring-module';
@@ -73,11 +75,13 @@ console.log('ENV:', ENV);
     SubmissionModule,
     UserProfilesModule,
     CredentialModule,
+    FeedbackModule,
+    I18nModule,
+    MentorshipModule,
     TranslationModule,
     GdprModule,
     MonitoringModule,
     UsersModule,
-
   ],
   controllers: [AppController],
   providers: [AppService],
