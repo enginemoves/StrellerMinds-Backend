@@ -13,8 +13,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: configService.get<string>('JWT_SECRET'),
       ignoreExpiration: false,
+      secretOrKeyProvider: (request, rawJwtToken, done) => {
+        const currentSecret = configService.get<string>('JWT_SECRET');
+        const secrets = (configService.get<string>('JWT_SECRETS') || '')
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
+        for (const secret of [currentSecret, ...secrets]) {
+          try {
+            done(null, secret);
+            return;
+          } catch {}
+        }
+        done(new Error('Invalid JWT secret'));
+      },
     });
   }
 

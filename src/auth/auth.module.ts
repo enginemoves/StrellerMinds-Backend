@@ -20,6 +20,7 @@ import { IAuthStrategy } from './strategies/auth-strategy.interface';
 import { GoogleOAuthAdapter } from './adapters/google.strategy.adapter';
 import { FacebookOAuthAdapter } from './adapters/facebook.strategy.adapter';
 import { AppleOAuthAdapter } from './adapters/apple.strategy.adapter';
+import { SharedModule } from '../shared/shared.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { AppleOAuthAdapter } from './adapters/apple.strategy.adapter';
         },
       }),
     }),
+    SharedModule,
   ],
   controllers: [AuthController],
   providers: [
