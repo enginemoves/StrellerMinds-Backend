@@ -24,8 +24,6 @@ import databaseConfig from './config/database.config';
 import { GdprModule } from './gdpr/gdpr.module';
 import { MonitoringModule } from './monitoring/monitoring-module';
 
-
-
 const ENV = process.env.NODE_ENV;
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('ENV:', ENV);
@@ -56,7 +54,9 @@ console.log('ENV:', ENV);
         extra: {
           max: configService.get<number>('database.maxPoolSize'),
           min: configService.get<number>('database.minPoolSize'),
-          idleTimeoutMillis: configService.get<number>('database.poolIdleTimeout'),
+          idleTimeoutMillis: configService.get<number>(
+            'database.poolIdleTimeout',
+          ),
         },
         // Retry Mechanism
         retryAttempts: configService.get<number>('database.retryAttempts'),
