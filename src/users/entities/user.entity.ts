@@ -122,6 +122,7 @@ export class User {
 
   gradesGiven: any;
   gradesReceived: any;
+  reputation: number;
 
   async setPassword(password: string): Promise<void> {
     const salt = await bcrypt.genSalt();
