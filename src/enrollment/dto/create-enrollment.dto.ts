@@ -1,14 +1,18 @@
-// src/enrollment/dto/create-enrollment.dto.ts
+/**
+ * DTO for creating a new enrollment.
+ */
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateEnrollmentDto {
-  @ApiProperty()
+  /** Student ID */
+  @ApiProperty({ description: 'Student ID', example: 'uuid-student' })
   @IsString()
   @IsNotEmpty()
   studentId: string;
 
-  @ApiProperty()
+  /** Course ID */
+  @ApiProperty({ description: 'Course ID', example: 'uuid-course' })
   @IsString()
   @IsNotEmpty()
   courseId: string;

@@ -19,7 +19,11 @@ import { RolePermissionController } from './controllers/role-permission.controll
 import { UserRoleController } from './controllers/user-role.controller';
 import { UserPermissionController } from './controllers/user-permission.controller';
 import { AuditLogController } from './controllers/audit-log.controller';
+import { ApiTags } from '@nestjs/swagger';
 
+/**
+ * RBAC module for managing roles, permissions, and access control.
+ */
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -40,16 +44,15 @@ import { AuditLogController } from './controllers/audit-log.controller';
     AuditLogController,
   ],
   providers: [
-    PermissionsGuard,
     RoleService,
     PermissionService,
     RolePermissionService,
     UserRoleService,
     UserPermissionService,
     AuditLogService,
+    PermissionsGuard,
   ],
   exports: [
-    PermissionsGuard,
     RoleService,
     PermissionService,
     RolePermissionService,

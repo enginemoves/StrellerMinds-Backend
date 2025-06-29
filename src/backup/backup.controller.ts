@@ -6,6 +6,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 
+/**
+ * BackupController handles endpoints for managing and retrieving backups.
+ */
 @ApiTags('backup')
 @Controller('backup')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -38,8 +41,8 @@ export class BackupController {
   }
 
   @Get('info/:filename')
-  @ApiOperation({ summary: 'Get backup file information' })
-  @ApiResponse({ status: 200, description: 'Backup file information' })
+  @ApiOperation({ summary: 'Get backup file info' })
+  @ApiResponse({ status: 200, description: 'Backup file info' })
   async getBackupInfo(@Param('filename') filename: string) {
     return await this.backupService.getBackupInfo(filename);
   }

@@ -3,6 +3,9 @@ import { ConsentService } from './consent.service';
 import { DataExportService } from './data-export.service';
 import { DataDeletionService } from './data-deletion.service';
 
+/**
+ * GdprService provides logic for user consent, data export, and deletion requests.
+ */
 @Injectable()
 export class GdprService {
   constructor(
@@ -11,19 +14,32 @@ export class GdprService {
     private dataDeletionService: DataDeletionService,
   ) {}
 
-  // Expose all GDPR-related functionality through this main service
+  /**
+   * Get the consent service instance.
+   */
   getConsentService() {
     return this.consentService;
   }
 
+  /**
+   * Get the data export service instance.
+   */
   getDataExportService() {
     return this.dataExportService;
   }
 
+  /**
+   * Get the data deletion service instance.
+   */
   getDataDeletionService() {
     return this.dataDeletionService;
   }
 
+  /**
+   * Generate a compliance report for a user.
+   * @param userId - User ID
+   * @returns Compliance report object
+   */
   async generateComplianceReport(userId: string): Promise<any> {
     const consents = await this.consentService.getUserConsents(userId);
     const deletionRequests =

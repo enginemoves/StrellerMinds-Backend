@@ -19,6 +19,9 @@ export interface BackupResult {
   error?: string;
 }
 
+/**
+ * BackupService provides logic for creating, listing, and verifying backups.
+ */
 @Injectable()
 export class BackupService {
   private readonly logger = new Logger(BackupService.name);
@@ -91,6 +94,9 @@ export class BackupService {
     }
   }
 
+  /**
+   * Create a manual database backup.
+   */
   async createDatabaseBackup(): Promise<BackupResult> {
     const startTime = Date.now();
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -141,6 +147,9 @@ export class BackupService {
     }
   }
 
+  /**
+   * Create a manual application data backup.
+   */
   async createApplicationDataBackup(): Promise<BackupResult> {
     const startTime = Date.now(); // Add missing startTime variable
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -186,6 +195,9 @@ export class BackupService {
     }
   }
 
+  /**
+   * List all backup files.
+   */
   async listBackups(): Promise<string[]> {
     try {
       const files = await fs.readdir(this.backupDir);
@@ -198,6 +210,9 @@ export class BackupService {
     }
   }
 
+  /**
+   * Get information about a specific backup file.
+   */
   async getBackupInfo(filename: string): Promise<any> {
     try {
       const backupPath = path.join(this.backupDir, filename);

@@ -1,6 +1,12 @@
+/**
+ * UsersModule provides user management, authentication, and progress tracking features.
+ *
+ * @module Users
+ */
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { ApiTags } from '@nestjs/swagger';
 
 import { UsersController } from './users.controller';
 import { UsersService } from './services/users.service';

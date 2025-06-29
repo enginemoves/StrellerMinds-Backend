@@ -1,3 +1,8 @@
+/**
+ * GdprModule provides user consent, data export, and deletion request features.
+ *
+ * @module GDPR
+ */
 import { Module } from '@nestjs/common';
 import { GdprService } from './gdpr.service';
 import { GdprController } from './gdpr.controller';

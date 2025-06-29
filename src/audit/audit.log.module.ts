@@ -4,7 +4,11 @@ import { AuditLog } from './entities/audit.log.entity';
 import { AuditLogService } from './services/audit.log.service';
 import { AuditLogController } from './controllers/audit.log.controller';
 
-
+/**
+ * AuditLogModule provides audit logging features.
+ *
+ * @module AuditLog
+ */
 @Module({
   imports: [TypeOrmModule.forFeature([AuditLog])],
   controllers: [AuditLogController],

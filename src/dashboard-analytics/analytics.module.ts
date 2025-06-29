@@ -1,3 +1,8 @@
+/**
+ * AnalyticsModule provides analytics dashboard, export, and engagement tracking features.
+ *
+ * @module Analytics
+ */
 import { Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { AnalyticsController } from "./analytics.controller"

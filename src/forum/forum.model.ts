@@ -10,6 +10,11 @@ import { ReputationService } from 'src/reputation/reputation.service';
 import { ForumGateway } from './forum.gateway';
 import { ForumAnalyticsService } from './forum-analytics';
 
+/**
+ * ForumModule provides forum analytics, real-time events, and moderation features.
+ *
+ * @module Forum
+ */
 @Module({
   imports: [TypeOrmModule.forFeature([Topic, Thread, Reply, User])],
   providers: [

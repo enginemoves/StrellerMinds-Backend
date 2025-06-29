@@ -1,3 +1,8 @@
+/**
+ * WalletModule provides blockchain wallet integration, authentication, and credential sharing features.
+ *
+ * @module WalletIntegration
+ */
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
