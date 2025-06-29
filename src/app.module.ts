@@ -23,6 +23,7 @@ import { MentorshipModule } from './mentorship/mentorship.module';
 import databaseConfig from './config/database.config';
 import { GdprModule } from './gdpr/gdpr.module';
 import { MonitoringModule } from './monitoring/monitoring-module';
+import { CoursesAdvancesModule } from './courses-advances/courses-advances.module';
 
 const ENV = process.env.NODE_ENV;
 console.log('NODE_ENV:', process.env.NODE_ENV);
@@ -82,6 +83,7 @@ console.log('ENV:', ENV);
     GdprModule,
     MonitoringModule,
     UsersModule,
+    CoursesAdvancesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
