@@ -14,7 +14,6 @@ import {
 } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
 import { UserProgress } from './user-progress.entity';
 import { WalletInfo } from './wallet-info.entity';
 import { UserRole } from '../enums/userRole.enum';
@@ -25,6 +24,7 @@ import { CourseReview } from '../../courses/entities/course-review.entity';
 import { Certificate } from '../../certificate/entity/certificate.entity';
 import { UserProfile } from 'src/user-profiles/entities/user-profile.entity';
 import { UserSettings } from './user-settings.entity';
+import { CoursesAdvance } from 'src/courses-advances/entities/courses-advance.entity';
 
 @Entity('users')
 export class User {
@@ -63,6 +63,8 @@ export class User {
   role: UserRole;
 
   @ApiPropertyOptional({ description: 'Profile image URL', example: 'https://cdn.com/profile.jpg' })
+  @OneToMany(() => CoursesAdvance, (course) => course.instructor)
+  courses: CoursesAdvance;
   @Column({ nullable: true })
   profileImageUrl?: string;
 
