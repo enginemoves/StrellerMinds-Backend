@@ -1,14 +1,38 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef, Logger, NotFoundException } from '@nestjs/common';
+import { AchievementService } from '../gamification/services/achievement.service';
+import { RewardService } from '../gamification/services/reward.service';
+import { User } from '../users/entities/user.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class ProgressService {
     private userProgress = new Map<number, Set<number>>();
+    private readonly logger = new Logger(ProgressService.name);
 
-    completeLesson(userId: number, lessonId: number) {
+    constructor(
+        @Inject(forwardRef(() => AchievementService)) private readonly achievementService: AchievementService,
+        @Inject(forwardRef(() => RewardService)) private readonly rewardService: RewardService,
+        @InjectRepository(User) private readonly userRepository: Repository<User>,
+    ) {}
+
+    async completeLesson(userId: number, lessonId: number) {
         if (!this.userProgress.has(userId)) {
             this.userProgress.set(userId, new Set());
         }
         this.userProgress.get(userId).add(lessonId);
+
+        // Gamification logic: unlock achievements and grant rewards
+        try {
+            const user = await this.userRepository.findOneBy({ id: String(userId) });
+            if (!user) throw new NotFoundException('User not found');
+            // Example: unlock an achievement for completing a lesson
+            await this.achievementService.unlockAchievement(user, 1); 
+            // Example: grant a reward for completing a lesson
+            await this.rewardService.grantReward(user, 1); 
+        } catch (error) {
+            this.logger.error('Gamification error on lesson completion', error.stack);
+        }
     }
 
     getCompletionPercentage(userId: number, totalLessons: number): number {
