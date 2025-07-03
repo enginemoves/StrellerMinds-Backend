@@ -32,6 +32,7 @@ import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 import { EmailModule } from 'src/email/email.module';
+import { SharedModule } from 'src/shared/shared.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { EmailModule } from 'src/email/email.module';
     ConfigModule,
     EmailModule,
     CloudinaryModule,
+    SharedModule,
   ],
   controllers: [UsersController, ProgressController, AdminUsersController],
   providers: [

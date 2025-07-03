@@ -9,8 +9,11 @@ import { AuditLogController } from './controllers/audit.log.controller';
  *
  * @module AuditLog
  */
+
+import { SharedModule } from 'src/shared/shared.module';
+
 @Module({
-  imports: [TypeOrmModule.forFeature([AuditLog])],
+  imports: [TypeOrmModule.forFeature([AuditLog]), SharedModule],
   controllers: [AuditLogController],
   providers: [AuditLogService],
   exports: [AuditLogService],
