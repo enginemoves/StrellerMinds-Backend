@@ -22,6 +22,7 @@ import { MentorshipModule } from './mentorship/mentorship.module';
 import databaseConfig from './config/database.config';
 import { GdprModule } from './gdpr/gdpr.module';
 import { MonitoringModule } from './monitoring/monitoring-module';
+import { CoursesAdvancesModule } from './courses-advances/courses-advances.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { DeprecationWarningMiddleware } from './common/middleware/deprecation-warning.middleware';
 import { VersionTrackingInterceptor } from './common/interceptors/version-tracking.interceptor';
@@ -94,6 +95,7 @@ console.log('ENV:', ENV);
     GdprModule,
     MonitoringModule,
     UsersModule,
+    CoursesAdvancesModule,
     AuthControllerV1,
     AuthControllerV2,
     CoursesControllerV1,

@@ -21,6 +21,7 @@ import { CourseReview } from '../../courses/entities/course-review.entity';
 import { Certificate } from '../../certificate/entity/certificate.entity';
 import { UserProfile } from 'src/user-profiles/entities/user-profile.entity';
 import { UserSettings } from './user-settings.entity';
+import { CoursesAdvance } from 'src/courses-advances/entities/courses-advance.entity';
 
 @Entity('users')
 export class User {
@@ -53,6 +54,9 @@ export class User {
   })
   @Index()
   role: UserRole;
+
+  @OneToMany(() => CoursesAdvance, (course) => course.instructor)
+  courses: CoursesAdvance;
 
   @Column({ nullable: true })
   profileImageUrl?: string;
