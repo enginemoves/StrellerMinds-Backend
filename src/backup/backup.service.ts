@@ -8,6 +8,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { BackupVerificationService } from './backup-verification.service';
 import { BackupRetentionService } from './backup-retention.service';
+import { EmailService } from '../email/email.service';
 
 const execAsync = promisify(exec);
 
@@ -32,6 +33,7 @@ export class BackupService {
     private readonly configService: ConfigService,
     private readonly verificationService: BackupVerificationService,
     private readonly retentionService: BackupRetentionService,
+    private readonly emailService: EmailService,
   ) {
     this.backupDir = this.configService.get<string>('BACKUP_DIR', './backups');
     this.dbConfig = {
@@ -65,12 +67,14 @@ export class BackupService {
         await this.retentionService.cleanupOldBackups();
       } else {
         this.logger.error(`Scheduled backup failed: ${result.error}`);
+        await this.sendBackupFailureAlert(result.error);
       }
     } catch (error) {
       this.logger.error(
         `Scheduled backup error: ${error.message}`,
         error.stack,
       );
+      await this.sendBackupFailureAlert(error.message);
     }
   }
 
@@ -126,6 +130,7 @@ export class BackupService {
       const isValid =
         await this.verificationService.verifyDatabaseBackup(backupPath);
       if (!isValid) {
+        await this.sendBackupFailureAlert('Backup verification failed');
         throw new Error('Backup verification failed');
       }
 
@@ -140,6 +145,7 @@ export class BackupService {
         `Database backup failed: ${error.message}`,
         error.stack,
       );
+      await this.sendBackupFailureAlert(error.message);
       return {
         success: false,
         error: error.message,
@@ -227,5 +233,22 @@ export class BackupService {
       this.logger.error(`Failed to get backup info: ${error.message}`);
       return null;
     }
+  }
+
+  private async sendBackupFailureAlert(error: string): Promise<void> {
+    const adminEmail = this.configService.get<string>('BACKUP_ADMIN_EMAIL');
+    if (!adminEmail) {
+      this.logger.warn('No BACKUP_ADMIN_EMAIL configured, cannot send alert.');
+      return;
+    }
+    await this.emailService.sendImmediate({
+      to: adminEmail,
+      subject: 'Backup Failure Alert',
+      templateName: 'backup-failure',
+      context: {
+        error,
+        timestamp: new Date().toISOString(),
+      },
+    });
   }
 }
