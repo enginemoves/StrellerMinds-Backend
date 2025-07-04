@@ -202,3 +202,37 @@ This data retention policy is reviewed annually and updated as necessary to comp
 2. Create Adapter implementing `IAuthStrategy`
 3. Register Adapter and Strategy in AuthModule
 4. Add new route in AuthController
+
+# API Documentation
+
+The backend provides interactive OpenAPI (Swagger) documentation and supports SDK generation for client integration.
+
+### Swagger UI
+- Access the interactive API docs at: `/api` (e.g., http://localhost:3000/api)
+- All endpoints, request/response models, and modules are grouped and described for clarity.
+
+### SDK Generation
+
+You can generate client SDKs in various languages using the OpenAPI spec:
+
+#### Generate OpenAPI Spec
+
+```
+npm run generate:openapi
+```
+
+#### Generate SDK (example using openapi-generator-cli)
+
+```
+npx openapi-generator-cli generate -i http://localhost:3000/api-json -g typescript-axios -o ./sdk/typescript
+```
+
+Replace `typescript-axios` and output path as needed for your target language.
+
+### Scripts
+
+- `generate:openapi`: Exports the OpenAPI spec to `openapi.json` for SDK generation.
+
+## Contributing
+
+Please follow the contribution guidelines outlined in the **Getting Started** section. Additionally, ensure your code changes do not break the API contract and are reflected in the OpenAPI documentation.

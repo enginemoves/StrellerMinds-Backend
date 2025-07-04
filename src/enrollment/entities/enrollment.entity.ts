@@ -1,22 +1,31 @@
 // src/enrollment/entities/enrollment.entity.ts
 import { ApiProperty } from '@nestjs/swagger';
 
+/**
+ * Entity representing an enrollment record.
+ */
 export class Enrollment {
-  @ApiProperty()
+  /** Enrollment ID */
+  @ApiProperty({ description: 'Enrollment ID', example: 'uuid-enrollment' })
   id: string;
 
-  @ApiProperty()
+  /** Student ID */
+  @ApiProperty({ description: 'Student ID', example: 'uuid-student' })
   studentId: string;
 
-  @ApiProperty()
+  /** Course ID */
+  @ApiProperty({ description: 'Course ID', example: 'uuid-course' })
   courseId: string;
 
-  @ApiProperty()
+  /** Date/time when enrolled */
+  @ApiProperty({ description: 'Date/time when enrolled', type: String, format: 'date-time', example: '2025-06-29T12:00:00Z' })
   enrolledAt: Date;
 
-  @ApiProperty({ enum: ['ENROLLED', 'UNENROLLED'] })
+  /** Enrollment status */
+  @ApiProperty({ enum: ['ENROLLED', 'UNENROLLED'], description: 'Enrollment status', example: 'ENROLLED' })
   status: 'ENROLLED' | 'UNENROLLED';
 
-  @ApiProperty({ enum: ['PENDING', 'PAID'], required: false })
+  /** Payment status (optional) */
+  @ApiProperty({ enum: ['PENDING', 'PAID'], required: false, description: 'Payment status', example: 'PAID' })
   paymentStatus?: 'PENDING' | 'PAID';
 }

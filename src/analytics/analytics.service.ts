@@ -4,6 +4,9 @@ import { Repository } from 'typeorm';
 import { parse } from 'json2csv'; 
 import { Analytics } from './entities/analytics.entity';
 
+/**
+ * AnalyticsService provides analytics data and reporting logic.
+ */
 @Injectable()
 export class AnalyticsService {
   constructor(
@@ -11,15 +14,24 @@ export class AnalyticsService {
     private readonly analyticsRepository: Repository<Analytics>,
   ) {}
 
+  /**
+   * Get all analytics records.
+   */
   async getAllAnalytics(): Promise<Analytics[]> {
     return await this.analyticsRepository.find();
   }
 
+  /**
+   * Convert analytics data to CSV format.
+   */
   convertToCSV(data: Analytics[]): string {
     const fields = ['id', 'eventType', 'userId', 'courseId', 'additionalData', 'createdAt'];
     return parse(data, { fields });
   }
 
+  /**
+   * Get user engagement trends.
+   */
   async getUserEngagementTrends() {
     const rawData = await this.analyticsRepository.find();
 
@@ -34,6 +46,9 @@ export class AnalyticsService {
     return Object.values(trends);
   }
 
+  /**
+   * Get credential issuance analytics.
+   */
   async getCredentialIssuance() {
     // Simulate query or on-chain fetch
     return { totalIssued: 512, byDate: { '2025-05-01': 32 } };

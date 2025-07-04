@@ -1,3 +1,6 @@
+/**
+ * UsersController handles user CRUD operations and account management.
+ */
 import {
   Controller,
   Get,
@@ -15,6 +18,7 @@ import {
   createParamDecorator,
   ExecutionContext,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
 
 import { CreateUsersDto } from './dtos/create.users.dto';
 import { updateUsersDto } from './dtos/update.users.dto';
@@ -22,10 +26,21 @@ import { UsersService } from './services/users.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RateLimitGuard } from 'src/common/guards/rate-limiter.guard';
 
+@ApiTags('Users')
+@ApiBearerAuth()
 @Controller('users')
 export class UsersController {
   constructor(private readonly userService: UsersService) {}
 
+  /**
+   * Create a new user
+   * @param file - The file upload
+   * @param createUsersDto - The user data
+   * @returns The created user
+   */
+  @ApiOperation({ summary: 'Create a new user' })
+  @ApiBody({ type: CreateUsersDto })
+  @ApiResponse({ status: 201, description: 'User created successfully.' })
   @UseInterceptors(FileInterceptor('file'))
   @UseGuards(RateLimitGuard)
   @Post('create')
@@ -41,6 +56,16 @@ export class UsersController {
     }
   }
 
+  /**
+   * Update user (PATCH)
+   * @param id - The user ID
+   * @param updateUserDto - The updated user data
+   * @returns The updated user
+   */
+  @ApiOperation({ summary: 'Update user (PATCH)' })
+  @ApiParam({ name: 'id', type: 'string', description: 'User ID' })
+  @ApiBody({ type: updateUsersDto })
+  @ApiResponse({ status: 200, description: 'User updated.' })
   @Patch(':id')
   public async patchUpdate(
     @Param('id', ParseUUIDPipe) id: string,
@@ -49,22 +74,52 @@ export class UsersController {
     return await this.userService.update(id, updateUserDto);
   }
 
+  /**
+   * Delete user
+   * @param id - The user ID
+   * @returns Success message
+   */
+  @ApiOperation({ summary: 'Delete user' })
+  @ApiParam({ name: 'id', type: 'string', description: 'User ID' })
+  @ApiResponse({ status: 200, description: 'User deleted.' })
   @Delete(':id')
   public async delete(@Param('id', ParseUUIDPipe) id: string) {
     return await this.userService.delete(id);
   }
 
+  /**
+   * Request account deletion
+   * @param id - The user ID
+   * @returns Success message
+   */
+  @ApiOperation({ summary: 'Request account deletion' })
+  @ApiParam({ name: 'id', type: 'string', description: 'User ID' })
+  @ApiResponse({ status: 200, description: 'Account deletion confirmation email sent.' })
   @Post(':id/request-account-deletion')
   async requestAccountDeletion(@Param('id') id: string) {
     await this.userService.requestAccountDeletion(id);
     return { message: 'Account deletion confirmation email sent' };
   }
 
+  /**
+   * Get all users
+   * @returns List of users
+   */
+  @ApiOperation({ summary: 'Get all users' })
+  @ApiResponse({ status: 200, description: 'List of users.' })
   @Get()
   async findAll() {
     return this.userService.findAll();
   }
 
+  /**
+   * Get user by ID
+   * @param id - The user ID
+   * @returns The user data
+   */
+  @ApiOperation({ summary: 'Get user by ID' })
+  @ApiParam({ name: 'id', type: 'string', description: 'User ID' })
+  @ApiResponse({ status: 200, description: 'User found.' })
   @Get(':id')
   @CustomCacheKey((context) => {
     const request = context.switchToHttp().getRequest();
@@ -74,6 +129,16 @@ export class UsersController {
     return this.userService.findOne(id);
   }
 
+  /**
+   * Update user (PUT)
+   * @param id - The user ID
+   * @param updateUserDto - The updated user data
+   * @returns The updated user
+   */
+  @ApiOperation({ summary: 'Update user (PUT)' })
+  @ApiParam({ name: 'id', type: 'string', description: 'User ID' })
+  @ApiBody({ type: updateUsersDto })
+  @ApiResponse({ status: 200, description: 'User updated.' })
   @Put(':id')
   async update(@Param('id') id: string, @Body() updateUserDto: updateUsersDto) {
     return this.userService.update(id, updateUserDto);

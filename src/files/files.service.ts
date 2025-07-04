@@ -1,3 +1,6 @@
+/**
+ * FilesService provides logic for file management (upload, download, etc.).
+ */
 import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';

@@ -1,4 +1,9 @@
 /* eslint-disable prettier/prettier */
+/**
+ * BackupModule provides backup and recovery features.
+ *
+ * @module Backup
+ */
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';

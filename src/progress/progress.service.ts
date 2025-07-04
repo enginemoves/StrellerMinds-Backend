@@ -5,6 +5,10 @@ import { User } from '../users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
+/**
+ * Service for tracking and calculating user lesson progress.
+ */
+
 @Injectable()
 export class ProgressService {
     private userProgress = new Map<number, Set<number>>();
@@ -15,8 +19,15 @@ export class ProgressService {
         @Inject(forwardRef(() => RewardService)) private readonly rewardService: RewardService,
         @InjectRepository(User) private readonly userRepository: Repository<User>,
     ) {}
-
+    
+      /**
+     * Mark a lesson as completed for a user.
+     * @param userId - The ID of the user.
+     * @param lessonId - The ID of the lesson to be marked as completed.
+     */
+  
     async completeLesson(userId: number, lessonId: number) {
+
         if (!this.userProgress.has(userId)) {
             this.userProgress.set(userId, new Set());
         }
@@ -35,11 +46,23 @@ export class ProgressService {
         }
     }
 
+    /**
+     * Get the completion percentage of lessons for a user.
+     * @param userId - The ID of the user.
+     * @param totalLessons - The total number of lessons available.
+     * @returns The completion percentage as a number.
+     */
     getCompletionPercentage(userId: number, totalLessons: number): number {
         if (!this.userProgress.has(userId)) return 0;
         return (this.userProgress.get(userId).size / totalLessons) * 100;
     }
 
+    /**
+     * Get the progress data for a user, including completed lessons and completion percentage.
+     * @param userId - The ID of the user.
+     * @param totalLessons - The total number of lessons available.
+     * @returns An object containing the user's ID, an array of completed lessons, and the completion percentage.
+     */
     getProgressData(userId: number, totalLessons: number) {
         return {
             userId,

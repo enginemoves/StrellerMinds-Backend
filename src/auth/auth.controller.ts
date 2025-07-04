@@ -1,3 +1,6 @@
+/**
+ * AuthController handles authentication and authorization endpoints.
+ */
 import {
   Controller,
   Post,
@@ -29,6 +32,7 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
+  ApiBody,
 } from '@nestjs/swagger';
 import { UsersService } from 'src/users/services/users.service';
 import { RateLimitGuard } from 'src/common/guards/rate-limiter.guard';
@@ -37,7 +41,8 @@ import { JwtLocalStrategy } from './strategies/jwt-local.strategy';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 
-@ApiTags('authentication')
+@ApiTags('Authentication')
+@ApiBearerAuth()
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -50,7 +55,8 @@ export class AuthController {
   @UseGuards(RateLimitGuard)
   @Post('login')
   @ApiOperation({ summary: 'User login' })
-  @ApiResponse({ status: 200, description: 'Login successful' })
+  @ApiBody({ type: LoginDto })
+  @ApiResponse({ status: 200, description: 'Login successful.' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   @HttpCode(HttpStatus.OK)
   async login(@Body() body: LoginDto) {
@@ -65,6 +71,9 @@ export class AuthController {
   }
 
   @Post('register')
+  @ApiOperation({ summary: 'User registration' })
+  @ApiBody({ type: RegisterDto })
+  @ApiResponse({ status: 201, description: 'Registration successful.' })
   async register(@Body() registerDto: RegisterDto) {
     try {
       const { email, password, ...userData } = registerDto;
@@ -78,6 +87,8 @@ export class AuthController {
   }
 
   @Get('password-requirements')
+  @ApiOperation({ summary: 'Get password requirements' })
+  @ApiResponse({ status: 200, description: 'Password requirements retrieved' })
   getPasswordRequirements(): PasswordRequirementsDto {
     return {
       requirements: this.passwordValidationService.getPasswordRequirements(),
@@ -97,17 +108,24 @@ export class AuthController {
   }
 
   @Post('forgot-password')
+  @ApiOperation({ summary: 'Request password reset' })
+  @ApiResponse({ status: 200, description: 'Password reset requested' })
   async forgotPassword(@Body('email') email: string) {
     return this.jwtLocalStrategy.requestPasswordReset(email);
   }
 
   @Get('validate-reset-token')
+  @ApiOperation({ summary: 'Validate password reset token' })
+  @ApiResponse({ status: 200, description: 'Token is valid' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired token' })
   async validateToken(@Query('token') token: string) {
     await this.jwtLocalStrategy.validateResetToken(token);
     return { message: 'Token is valid' };
   }
 
   @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password' })
+  @ApiResponse({ status: 200, description: 'Password reset successful' })
   async resetPassword(@Body() resetDto: ResetPasswordDto) {
     return this.jwtLocalStrategy.resetPassword(
       resetDto.token,
@@ -117,6 +135,8 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post('change-password')
+  @ApiOperation({ summary: 'Change password' })
+  @ApiResponse({ status: 200, description: 'Password changed successfully' })
   async changePassword(
     @Request() req,
     @Body() body: { currentPassword: string; newPassword: string },

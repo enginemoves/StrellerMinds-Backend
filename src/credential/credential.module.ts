@@ -1,3 +1,8 @@
+/**
+ * CredentialModule provides credential management features, including issuing, querying, and verifying credentials.
+ *
+ * @module Credential
+ */
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CredentialService } from './credential.service';

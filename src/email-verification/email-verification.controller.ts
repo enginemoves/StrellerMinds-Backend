@@ -1,3 +1,6 @@
+/**
+ * EmailVerificationController handles endpoints for sending, verifying, and resending email verification.
+ */
 import { 
     Controller, 
     Post, 
@@ -30,6 +33,11 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
       private readonly emailVerificationService: EmailVerificationService,
     ) {}
   
+    /**
+     * Send a verification email to the user.
+     * @param dto - DTO containing the user's email
+     * @returns Success message
+     */
     @Post('send')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Send verification email' })
@@ -49,6 +57,11 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
       return await this.emailVerificationService.sendVerificationEmail(dto.email);
     }
   
+    /**
+     * Verify email using a verification token.
+     * @param token - Verification token
+     * @returns Success message
+     */
     @Get('verify')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Verify email using token' })
@@ -76,6 +89,11 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
       return await this.emailVerificationService.verifyEmail(token);
     }
   
+    /**
+     * Resend a verification email to the user.
+     * @param dto - DTO containing the user's email
+     * @returns Success message
+     */
     @Post('resend')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Resend verification email' })
@@ -114,4 +132,3 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
       return { isEmailVerified: isVerified };
     }
   }
-  

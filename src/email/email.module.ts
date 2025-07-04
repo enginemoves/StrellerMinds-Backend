@@ -1,3 +1,8 @@
+/**
+ * EmailModule provides email sending, analytics, preference management, and tracking features.
+ *
+ * @module Email
+ */
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bull';

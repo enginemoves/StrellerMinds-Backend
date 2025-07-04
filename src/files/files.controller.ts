@@ -1,3 +1,10 @@
+
+/**
+ * FilesController handles endpoints for file management (upload, download, etc.).
+ *
+ * @module Files
+ */
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Post,
@@ -9,12 +16,12 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-
 import { FilesService } from './files.service';
 import { UploadChunkDto } from './dto/upload-chunk.dto';
 import { CompleteUploadDto } from './dto/complete-upload.dto';
 import { UploadProgressDto } from './dto/upload-progress.dto';
 
+@ApiTags('Files')
 @Controller('files')
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}

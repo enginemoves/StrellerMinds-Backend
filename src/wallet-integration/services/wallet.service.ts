@@ -11,6 +11,10 @@ import { EthereumWalletProvider } from '../providers/ethereum-wallet.provider';
 import { WalletConnectionResult, CredentialShareResult } from '../interfaces/wallet-service.interface';
 import * as crypto from 'crypto';
 
+/**
+ * Service for blockchain wallet integration, authentication, and credential management.
+ * Handles wallet connection, credential sharing, and related business logic.
+ */
 @Injectable()
 export class WalletService {
   constructor(
@@ -22,6 +26,12 @@ export class WalletService {
     private ethereumProvider: EthereumWalletProvider,
   ) {}
 
+  /**
+   * Connect a wallet and authenticate the user.
+   * @param connectWalletDto Wallet connection details
+   * @returns Wallet connection result
+   * @throws UnauthorizedException if signature is invalid
+   */
   async connectWallet(connectWalletDto: ConnectWalletDto): Promise<WalletConnectionResult> {
     const { address, type, signature, message, ensName } = connectWalletDto;
 
@@ -79,6 +89,10 @@ export class WalletService {
     };
   }
 
+  /**
+   * Disconnect a wallet by ID.
+   * @param walletId Wallet ID
+   */
   async disconnectWallet(walletId: string): Promise<void> {
     const wallet = await this.walletRepository.findOne({
       where: { id: walletId }
@@ -92,6 +106,12 @@ export class WalletService {
     await this.walletRepository.save(wallet);
   }
 
+  /**
+   * Get credentials for a wallet with optional filters.
+   * @param walletId Wallet ID
+   * @param filters Credential filter options
+   * @returns List of credentials
+   */
   async getWalletCredentials(
     walletId: string,
     filters: CredentialFilterDto
@@ -132,6 +152,13 @@ export class WalletService {
     return await queryBuilder.getMany();
   }
 
+  /**
+   * Get a specific credential by ID for a wallet.
+   * @param credentialId Credential ID
+   * @param walletId Wallet ID
+   * @returns Credential entity
+   * @throws NotFoundException if not found
+   */
   async getCredentialById(credentialId: string, walletId: string): Promise<Credential> {
     const credential = await this.credentialRepository.findOne({
       where: { id: credentialId, walletId },
@@ -145,6 +172,12 @@ export class WalletService {
     return credential;
   }
 
+  /**
+   * Share credentials from a wallet.
+   * @param walletId Wallet ID
+   * @param shareDto Credential sharing details
+   * @returns Sharing result
+   */
   async shareCredentials(
     walletId: string,
     shareDto: ShareCredentialDto
@@ -194,6 +227,11 @@ export class WalletService {
     };
   }
 
+  /**
+   * Revoke a shared credential by ID for a wallet.
+   * @param credentialId Credential ID
+   * @param walletId Wallet ID
+   */
   async revokeCredentialShare(credentialId: string, walletId: string): Promise<void> {
     const credential = await this.getCredentialById(credentialId, walletId);
     
@@ -206,6 +244,11 @@ export class WalletService {
     await this.credentialRepository.save(credential);
   }
 
+  /**
+   * Get wallet statistics for a wallet.
+   * @param walletId Wallet ID
+   * @returns Wallet stats
+   */
   async getWalletStats(walletId: string): Promise<any> {
     const wallet = await this.walletRepository.findOne({
       where: { id: walletId },

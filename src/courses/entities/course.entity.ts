@@ -10,6 +10,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Category } from './category.entity';
 import { Tag } from './tag.entity';
 import { CourseReview } from './course-review.entity';
@@ -21,21 +22,31 @@ import { Lesson } from 'src/lesson/entity/lesson.entity';
 
 @Entity('courses')
 export class Course {
+  /**
+   * Course entity representing a course in the platform.
+   */
+
+  @ApiProperty({ description: 'Course ID', example: 'uuid-v4' })
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @ApiProperty({ description: 'Course title', example: 'Introduction to Blockchain' })
   @Column({ length: 255 })
   title: string;
 
+  @ApiProperty({ description: 'Course description', example: 'Learn the basics of blockchain technology.' })
   @Column({ type: 'text' })
   description: string;
 
+  @ApiProperty({ description: 'Course price', example: 99.99 })
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   price: number;
 
+  @ApiProperty({ description: 'Course duration in hours', example: 10 })
   @Column({ default: 0 })
   durationInHours: number;
 
+  @ApiProperty({ description: 'Course status', example: 'draft' })
   @Column({ default: 'draft' })
   status: string; // draft, published, archived
 

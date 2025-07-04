@@ -5,6 +5,9 @@ import { EmailService } from '../email/email.service';
 import * as crypto from 'crypto';
 import { User } from './entities/user.entity';
 
+/**
+ * EmailVerificationService provides logic for sending, verifying, and resending email verification.
+ */
 @Injectable()
 export class EmailVerificationService {
   private readonly logger = new Logger(EmailVerificationService.name);
@@ -17,14 +20,16 @@ export class EmailVerificationService {
   ) {}
 
   /**
-   * Generate a secure verification token
+   * Generate a secure verification token.
+   * @returns A random token string
    */
   private generateVerificationToken(): string {
     return crypto.randomBytes(32).toString('hex');
   }
 
   /**
-   * Calculate token expiry date
+   * Calculate token expiry date.
+   * @returns Date object for token expiry
    */
   private getTokenExpiry(): Date {
     const expiry = new Date();
@@ -33,7 +38,9 @@ export class EmailVerificationService {
   }
 
   /**
-   * Send verification email to user
+   * Send verification email to user.
+   * @param email - User email address
+   * @returns Success message
    */
   async sendVerificationEmail(email: string): Promise<{ message: string }> {
     try {
@@ -76,7 +83,9 @@ export class EmailVerificationService {
   }
 
   /**
-   * Verify email using token
+   * Verify email using a verification token.
+   * @param token - Verification token
+   * @returns Success message
    */
   async verifyEmail(token: string): Promise<{ message: string; user: Partial<User> }> {
     try {
@@ -121,7 +130,9 @@ export class EmailVerificationService {
   }
 
   /**
-   * Resend verification email
+   * Resend verification email to user.
+   * @param email - User email address
+   * @returns Success message
    */
   async resendVerificationEmail(email: string): Promise<{ message: string }> {
     try {
