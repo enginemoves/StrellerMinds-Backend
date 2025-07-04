@@ -84,7 +84,17 @@
     "stellar-sdk": "^13.1.0",
     "typeorm": "^0.3.25",
     "uuid": "^11.1.0",
-    "zxcvbn": "^4.4.2"
+    "zxcvbn": "^4.4.2",
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0",
+    "@nestjs/config": "^3.0.0",
+    "@nestjs/swagger": "^7.0.0",
+    "@nestjs/typeorm": "^10.0.0",
+    "@nestjs/jwt": "^10.0.0",
+    "typeorm": "^0.3.0",
+    "class-validator": "^0.14.0",
+    "class-transformer": "^0.5.0"
+
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",

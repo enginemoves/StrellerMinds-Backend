@@ -1,8 +1,7 @@
-import { Module } from '@nestjs/common';
+import { I18nModule } from './i18n/i18n.module';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import * as path from 'path';
-
 import { UsersModule } from './users/users.module';
 import { CoursesModule } from './courses/courses.module';
 import { AuthModule } from './auth/auth.module';
@@ -24,6 +23,19 @@ import databaseConfig from './config/database.config';
 import { GdprModule } from './gdpr/gdpr.module';
 import { MonitoringModule } from './monitoring/monitoring-module';
 import { CoursesAdvancesModule } from './courses-advances/courses-advances.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { DeprecationWarningMiddleware } from './common/middleware/deprecation-warning.middleware';
+import { VersionTrackingInterceptor } from './common/interceptors/version-tracking.interceptor';
+import { VersionAnalyticsService } from './common/services/version-analytics.service';
+import { ApiUsageLog } from './common/entities/api-usage-log.entity';
+import { AuthControllerV1 } from './modules/auth/controllers/auth.controller.v1';
+import { AuthControllerV2 } from './modules/auth/controllers/auth.controller.v2';
+import { CoursesControllerV1 } from './modules/courses/controllers/courses.controller.v1';
+import { CoursesControllerV2 } from './modules/courses/controllers/courses.controller.v2';
+import { VersionController } from './modules/version/version.controller';
+import { apiVersionConfig } from './config/api-version.config';
+import { VersionHeaderMiddleware } from './common/middleware/version-header.middleware';
+
 
 const ENV = process.env.NODE_ENV;
 console.log('NODE_ENV:', process.env.NODE_ENV);
@@ -35,7 +47,7 @@ console.log('ENV:', ENV);
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: !ENV ? '.env' : `.env.${ENV.trim()}`,
-      load: [databaseConfig],
+      load: [databaseConfig,() => ({ api: apiVersionConfig }) ],
     }),
 
     // Database
@@ -84,8 +96,26 @@ console.log('ENV:', ENV);
     MonitoringModule,
     UsersModule,
     CoursesAdvancesModule,
+    AuthControllerV1,
+    AuthControllerV2,
+    CoursesControllerV1,
+    CoursesControllerV2,
+    VersionController,
+
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, VersionAnalyticsService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: VersionTrackingInterceptor,
+    },
+],
 })
-export class AppModule {}
+
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(VersionHeaderMiddleware, DeprecationWarningMiddleware)
+      .forRoutes('*');
+  }
+}

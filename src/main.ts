@@ -12,6 +12,7 @@ import {
 import fastifyHelmet from '@fastify/helmet';
 import fastifyCsrf from '@fastify/csrf-protection';
 
+
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
