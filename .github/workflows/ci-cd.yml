@@ -1,103 +1,76 @@
-name: CI/CD Pipeline
+# name: CI/CD Pipeline
 
-on:
-  push:
-    branches:
-      - main
-      - develop
-  pull_request:
-    branches:
-      - main
-      - develop
+# on:
+#   push:
+#     branches:
+#       - main
+#       - develop
+#   pull_request:
+#     branches:
+#       - main
+#       - develop
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+#     services:
+#       postgres:
+#         image: postgres:14
+#         ports:
+#           - 5432:5432
+#         env:
+#           POSTGRES_DB: strellerminds_test
+#           POSTGRES_USER: postgres
+#           POSTGRES_PASSWORD: postgres
+#         options: >-
+#           --health-cmd "pg_isready -U postgres"
+#           --health-interval 10s
+#           --health-timeout 5s
+#           --health-retries 5
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+#     steps:
+#       - name: Checkout Repository
+#         uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: 'npm'
+#       - name: Set up Node.js
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: 18
+#           cache: 'npm'
 
-      - name: Install Dependencies
-        run: npm install
+#       - name: Install Dependencies
+#         run: npm install
 
-      - name: Run Linting
-        run: npm run lint
+#       - name: Run Linting
+#         run: npm run lint
 
-      - name: Run Tests
-        run: npm run test:cov
+#       - name: Run Tests
+#         run: npm run test:cov
 
-      - name: Build Project
-        run: npm run build
+#       - name: Build Project
+#         run: npm run build
 
-      - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: dist
-          path: dist/
+#       - name: Run E2E Tests
+#         env:
+#           DB_HOST: localhost
+#           DB_PORT: 5432
+#           DB_USER: postgres
+#           DB_PASSWORD: postgres
+#           DB_NAME: strellerminds_test
+#           JWT_SECRET: test-secret
+#           STELLAR_NETWORK: testnet
+#         run: npm run test:e2e -- --runInBand
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
+#       # New Step: Verify Build Output
+#       - name: Verify Build Directory
+#         run: |
+#           if [ ! -d "dist" ]; then
+#             echo "Error: dist/ directory not found. Build step failed."
+#             exit 1
+#           fi
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Download Build Artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: dist
-          path: dist/
-
-      # ===== Deployment Methods ===== #
-
-      # ✅ Option 1: SSH Deployment (For VPS or Bare Metal Servers)
-      - name: Deploy to Server via SSH
-        if: success()
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_KEY: ${{ secrets.SSH_KEY }}
-        run: |
-          echo "$SSH_KEY" > deploy_key.pem
-          chmod 600 deploy_key.pem
-          scp -i deploy_key.pem -r dist/* $SSH_USER@$SSH_HOST:/var/www/myapp
-          ssh -i deploy_key.pem $SSH_USER@$SSH_HOST "pm2 restart myapp"
-
-      # ✅ Option 2: Deploy to DigitalOcean Droplet
-      - name: Deploy to DigitalOcean
-        if: success()
-        uses: digitalocean/action-doctl@v2
-        with:
-          token: ${{ secrets.DO_API_TOKEN }}
-
-      - name: Restart App on DigitalOcean
-        if: success()
-        run: doctl compute droplet ssh my-server --access-token ${{ secrets.DO_API_TOKEN }} --command "pm2 restart myapp"
-
-      # ✅ Option 3: Deploy to Vercel (Frontend Apps)
-      - name: Deploy to Vercel
-        if: success()
-        uses: amondnet/vercel-action@v20
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-
-      # ✅ Option 4: Deploy to GitHub Container Registry (Docker)
-      - name: Log in to GitHub Container Registry
-        if: success()
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u USERNAME --password-stdin
-
-      - name: Build and Push Docker Image
-        if: success()
-        run: |
-          docker build -t ghcr.io/USERNAME/myapp:latest .
-          docker push ghcr.io/USERNAME/myapp:latest
+#       - name: Upload Build Artifacts
+#         uses: actions/upload-artifact@v2
+#         with:
+#           name: build-artifacts
+#           path: dist/

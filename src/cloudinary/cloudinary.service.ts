@@ -41,4 +41,30 @@ export class CloudinaryService {
   public async deleteImage(publicId: string): Promise<any> {
     return cloudinary.uploader.destroy(publicId);
   }
+
+  /**
+   * Uploads a video or generic file from a local file path to Cloudinary.
+   * @param filePath The path to the file on disk
+   * @returns The Cloudinary upload response
+   */
+  public async uploadVideoFromPath(
+    filePath: string,
+  ): Promise<UploadApiResponse> {
+    return new Promise((resolve, reject) => {
+      cloudinary.uploader.upload(
+        filePath,
+        {
+          resource_type: 'video',
+          // You can add more transformations or options here if needed
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        },
+      );
+    });
+  }
 }

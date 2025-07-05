@@ -147,4 +147,12 @@ export class UsersService {
       throw new InternalServerErrorException('Error updating refresh token');
     }
   }
+
+  public async findByUsername(username: string): Promise<User | undefined> {
+    try {
+      return await this.userRepo.findOne({ where: { username } });
+    } catch (error) {
+      throw new InternalServerErrorException('Error fetching user by username');
+    }
+  }
 }

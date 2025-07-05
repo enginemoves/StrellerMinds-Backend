@@ -1,95 +1,121 @@
-import { Module } from '@nestjs/common';
-// import { ProgressModule } from './progress/progres.module';
+import { I18nModule } from './i18n/i18n.module';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { CoursesModule } from './courses/courses.module';
 import { AuthModule } from './auth/auth.module';
 import { CertificateModule } from './certificate/certificate.module';
-import { ForumModule } from './forum/forum.module';
-import { PaymentModule } from './payment/payment.module';
-import { NotificationModule } from './notification/notification.module';
-import { BlockchainModule } from './blockchain/blockchain.module';
 import { FilesModule } from './files/files.module';
 import { EmailModule } from './email/email.module';
-import { HealthModule } from './health/health.module';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { LessonModule } from './lesson/lesson.module';
 import { IpfsModule } from './ipfs/ipfs.module';
 import { ModerationModule } from './moderation/moderation.module';
-import { CatogoryModule } from './catogory/catogory.module';
-import { PostModule } from './post/post.module';
-import { TopicModule } from './topic/topic.module';
 import { SubmissionModule } from './submission/submission.module';
-// import { SubmissionService } from './submission/provider/submission.service';
 import { UserProfilesModule } from './user-profiles/user-profiles.module';
-<<<<<<< HEAD
-<<<<<<< HEAD
-import { EnrollmentModule } from './enrollment/enrollment.module';
-=======
-=======
+import { CredentialModule } from './credential/credential.module';
+import { TranslationModule } from './translation/translation.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { FeedbackModule } from './feedback/feedback.module';
+import { MentorshipModule } from './mentorship/mentorship.module';
+import databaseConfig from './config/database.config';
+import { GdprModule } from './gdpr/gdpr.module';
+import { MonitoringModule } from './monitoring/monitoring-module';
+import { CoursesAdvancesModule } from './courses-advances/courses-advances.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { DeprecationWarningMiddleware } from './common/middleware/deprecation-warning.middleware';
+import { VersionTrackingInterceptor } from './common/interceptors/version-tracking.interceptor';
+import { VersionAnalyticsService } from './common/services/version-analytics.service';
+import { ApiUsageLog } from './common/entities/api-usage-log.entity';
+import { AuthControllerV1 } from './modules/auth/controllers/auth.controller.v1';
+import { AuthControllerV2 } from './modules/auth/controllers/auth.controller.v2';
+import { CoursesControllerV1 } from './modules/courses/controllers/courses.controller.v1';
+import { CoursesControllerV2 } from './modules/courses/controllers/courses.controller.v2';
+import { VersionController } from './modules/version/version.controller';
+import { apiVersionConfig } from './config/api-version.config';
+import { VersionHeaderMiddleware } from './common/middleware/version-header.middleware';
 
-import { AssignmentModule } from './assignment/assignment.module';
->>>>>>> d0b9a7f1d0a0e5c9702763d83e493d9c494e288e
-import { SorobanModule } from './soroban/soroban.module';
->>>>>>> 08b5361f7dcfe6a1faf60ae96f130acecfcf284f
 
+const ENV = process.env.NODE_ENV;
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('ENV:', ENV);
 
 @Module({
   imports: [
-    // ProgressModule,
+    // Global Config
     ConfigModule.forRoot({
-      isGlobal: true, // Makes config available across all modules
-      envFilePath: ['.env.development'], // Loads variables from .env file
+      isGlobal: true,
+      envFilePath: !ENV ? '.env' : `.env.${ENV.trim()}`,
+      load: [databaseConfig,() => ({ api: apiVersionConfig }) ],
     }),
 
+    // Database
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         type: 'postgres',
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USER'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_NAME'),
-        autoLoadEntities: true, // Automatically loads entity files
-        synchronize: true, // ⚠️ Auto-sync schema (disable in production)
-        // dropSchema: true,
+        host: configService.get<string>('database.host'),
+        port: configService.get<number>('database.port'),
+        username: configService.get<string>('database.user'),
+        password: configService.get<string>('database.password'),
+        database: configService.get<string>('database.name'),
+        autoLoadEntities: configService.get<boolean>('database.autoload'),
+        synchronize: configService.get<boolean>('database.synchronize'),
+        // Connection Pool Settings
+        extra: {
+          max: configService.get<number>('database.maxPoolSize'),
+          min: configService.get<number>('database.minPoolSize'),
+          idleTimeoutMillis: configService.get<number>(
+            'database.poolIdleTimeout',
+          ),
+        },
+        // Retry Mechanism
+        retryAttempts: configService.get<number>('database.retryAttempts'),
+        retryDelay: configService.get<number>('database.retryDelay'),
       }),
     }),
-
     UsersModule,
     CoursesModule,
     AuthModule,
     CertificateModule,
-    ForumModule,
-    PaymentModule,
-    NotificationModule,
-    BlockchainModule,
     FilesModule,
     EmailModule,
-    HealthModule,
     LessonModule,
     IpfsModule,
     ModerationModule,
-    CatogoryModule,
-    PostModule,
-    TopicModule,
     SubmissionModule,
     UserProfilesModule,
-<<<<<<< HEAD
-<<<<<<< HEAD
-    EnrollmentModule,
-=======
-=======
-    AssignmentModule,
->>>>>>> d0b9a7f1d0a0e5c9702763d83e493d9c494e288e
-    SorobanModule,
->>>>>>> 08b5361f7dcfe6a1faf60ae96f130acecfcf284f
+    CredentialModule,
+    FeedbackModule,
+    I18nModule,
+    MentorshipModule,
+    TranslationModule,
+    GdprModule,
+    MonitoringModule,
+    UsersModule,
+    CoursesAdvancesModule,
+    AuthControllerV1,
+    AuthControllerV2,
+    CoursesControllerV1,
+    CoursesControllerV2,
+    VersionController,
+
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, VersionAnalyticsService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: VersionTrackingInterceptor,
+    },
+],
 })
-export class AppModule {}
+
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(VersionHeaderMiddleware, DeprecationWarningMiddleware)
+      .forRoutes('*');
+  }
+}

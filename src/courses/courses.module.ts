@@ -1,5 +1,10 @@
 import { Module } from '@nestjs/common';
 
+/**
+ * CoursesModule provides course management features.
+ *
+ * @module Courses
+ */
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Course } from './entities/course.entity';
 import { CourseModule } from './entities/course-module.entity';

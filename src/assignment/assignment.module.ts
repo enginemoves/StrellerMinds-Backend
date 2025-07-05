@@ -1,3 +1,8 @@
+/**
+ * AssignmentModule provides assignment management features.
+ *
+ * @module Assignment
+ */
 import { Module } from '@nestjs/common';
 import { AssignmentService } from './assignment.service';
 import { AssignmentController } from './assignment.controller';

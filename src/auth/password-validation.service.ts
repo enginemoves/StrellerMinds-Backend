@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import * as zxcvbn from 'zxcvbn';
+import zxcvbn from 'zxcvbn';
 
 export interface PasswordValidationResult {
   isValid: boolean;

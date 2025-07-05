@@ -1,3 +1,8 @@
+/**
+ * AuthModule provides authentication and authorization features.
+ *
+ * @module Auth
+ */
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -15,14 +20,17 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 
-// ✅ NEW: Import social strategies
-import { GoogleStrategy } from './strategies/google.strategy';
-import { GitHubStrategy } from './strategies/github.strategy';
+import { JwtLocalStrategy } from './strategies/jwt-local.strategy';
+import { IAuthStrategy } from './strategies/auth-strategy.interface';
+import { GoogleOAuthAdapter } from './adapters/google.strategy.adapter';
+import { FacebookOAuthAdapter } from './adapters/facebook.strategy.adapter';
+import { AppleOAuthAdapter } from './adapters/apple.strategy.adapter';
+import { SharedModule } from '../shared/shared.module';
 
 @Module({
   imports: [
     EmailModule,
-    UsersModule,
+    UsersModule, // This imports the UsersModule which exports UsersService
     PassportModule,
     TypeOrmModule.forFeature([AuthToken, RefreshToken]),
     JwtModule.registerAsync({
@@ -35,17 +43,36 @@ import { GitHubStrategy } from './strategies/github.strategy';
         },
       }),
     }),
+    SharedModule,
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
     JwtStrategy,
     PasswordValidationService,
-    
-    // ✅ NEW: Register Google & GitHub strategies
-    GoogleStrategy,
-    GitHubStrategy,
-
+    JwtLocalStrategy,
+    GoogleOAuthAdapter,
+    FacebookOAuthAdapter,
+    AppleOAuthAdapter,
+    {
+      provide: 'AUTH_STRATEGY',
+      useExisting: JwtLocalStrategy, // Use the JwtLocalStrategy as the default auth strategy
+    },
+    {
+      provide: 'AUTH_STRATEGIES',
+      useFactory: (
+        jwtLocalStrategy: JwtLocalStrategy,
+        google: GoogleOAuthAdapter,
+        facebook: FacebookOAuthAdapter,
+        apple: AppleOAuthAdapter,
+      ): IAuthStrategy[] => [jwtLocalStrategy, google, facebook, apple],
+      inject: [
+        JwtLocalStrategy,
+        GoogleOAuthAdapter,
+        FacebookOAuthAdapter,
+        AppleOAuthAdapter,
+      ],
+    },
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

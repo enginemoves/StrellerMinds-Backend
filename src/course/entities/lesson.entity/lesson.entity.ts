@@ -15,4 +15,3 @@ export class Lesson {
   @ManyToOne(() => Module, (module) => module.lessons)
   module: Module;
 }
-
