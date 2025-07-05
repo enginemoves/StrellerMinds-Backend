@@ -26,6 +26,9 @@ import { UsersService } from 'src/users/services/users.service';
 import { RateLimitGuard } from 'src/common/guards/rate-limiter.guard';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 
+// ✅ NEW
+import { AuthGuard } from '@nestjs/passport';
+
 @ApiTags('authentication')
 @Controller('auth')
 export class AuthController {
@@ -122,6 +125,32 @@ export class AuthController {
   async logout(@Request() req) {
     await this.authService.logout(req.user.userId);
     return { message: 'Logout successful' };
+  }
+
+  // ✅ NEW: Google OAuth Routes
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleLogin() {
+    // Handled by Passport - redirects to Google
+  }
+
+  @Get('google/redirect')
+  @UseGuards(AuthGuard('google'))
+  async googleRedirect(@Request() req) {
+    return this.authService.loginWithRedirect(req.user);
+  }
+
+  // ✅ NEW: GitHub OAuth Routes
+  @Get('github')
+  @UseGuards(AuthGuard('github'))
+  async githubLogin() {
+    // Handled by Passport - redirects to GitHub
+  }
+
+  @Get('github/redirect')
+  @UseGuards(AuthGuard('github'))
+  async githubRedirect(@Request() req) {
+    return this.authService.loginWithRedirect(req.user);
   }
 }
 

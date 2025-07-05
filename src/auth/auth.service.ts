@@ -135,6 +135,44 @@ export class AuthService {
     };
   }
 
+  // 🔐 Used by Google/GitHub strategies
+async validateOAuthLogin(profile: any, provider: string) {
+  const email = profile.emails?.[0]?.value;
+  if (!email) throw new BadRequestException('Email not found in OAuth profile');
+
+  let user = await this.usersService.findByEmail(email);
+
+  if (!user) {
+    // Create new user from OAuth
+    user = await this.usersService.create({
+      email,
+      firstName: profile.name?.givenName || profile.displayName || '',
+      lastName: profile.name?.familyName || '',
+      provider,
+      providerId: profile.id,
+      isEmailVerified: true, // OAuth emails are assumed verified
+    });
+  }
+
+  return user;
+}
+
+// 🎟️ Return JWT & user after social login
+async loginWithRedirect(user: any): Promise<AuthResponseDto> {
+  const tokens = await this.generateTokens(user);
+  return {
+    access_token: tokens.accessToken,
+    refresh_token: tokens.refreshToken,
+    expires_in: tokens.expiresIn,
+    user: {
+      id: user.id,
+      email: user.email,
+      roles: user.roles,
+    },
+  };
+}
+
+
   async refreshToken(userId: string, refreshToken: string) {
     try {
       await this.jwtService.verify(refreshToken, {

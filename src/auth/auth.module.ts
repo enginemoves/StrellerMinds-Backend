@@ -15,6 +15,10 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 
+// ✅ NEW: Import social strategies
+import { GoogleStrategy } from './strategies/google.strategy';
+import { GitHubStrategy } from './strategies/github.strategy';
+
 @Module({
   imports: [
     EmailModule,
@@ -37,6 +41,11 @@ import { RolesGuard } from './guards/roles.guard';
     AuthService,
     JwtStrategy,
     PasswordValidationService,
+    
+    // ✅ NEW: Register Google & GitHub strategies
+    GoogleStrategy,
+    GitHubStrategy,
+
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
