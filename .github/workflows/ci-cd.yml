@@ -74,3 +74,15 @@
 #         with:
 #           name: build-artifacts
 #           path: dist/
+
+#       - name: Security Audit (npm audit)
+#         run: npm run security:audit
+#
+#       - name: Security Scan (Snyk)
+#         run: npm run security:snyk
+#
+#       - name: License Compliance
+#         run: npm run security:licenses
+#
+#       - name: Security Report
+#         run: npm run security:report
