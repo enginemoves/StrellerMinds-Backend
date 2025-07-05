@@ -1,4 +1,4 @@
-import { I18nModule } from './i18n/i18n.module';
+// import { I18nModule } from './i18n/i18n.module';
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -17,21 +17,24 @@ import { CredentialModule } from './credential/credential.module';
 import { TranslationModule } from './translation/translation.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { FeedbackModule } from './feedback/feedback.module';
+// import { FeedbackModule } from './feedback/feedback.module';
 import { MentorshipModule } from './mentorship/mentorship.module';
 import databaseConfig from './config/database.config';
 import { GdprModule } from './gdpr/gdpr.module';
 import { MonitoringModule } from './monitoring/monitoring-module';
 import { CoursesAdvancesModule } from './courses-advances/courses-advances.module';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
+import { ApiUsageLoggerMiddleware } from './common/middleware/api-usage-logger.middleware';
 import { DeprecationWarningMiddleware } from './common/middleware/deprecation-warning.middleware';
 import { VersionTrackingInterceptor } from './common/interceptors/version-tracking.interceptor';
 import { VersionAnalyticsService } from './common/services/version-analytics.service';
 import { ApiUsageLog } from './common/entities/api-usage-log.entity';
 import { AuthControllerV1 } from './modules/auth/controllers/auth.controller.v1';
 import { AuthControllerV2 } from './modules/auth/controllers/auth.controller.v2';
-import { CoursesControllerV1 } from './modules/courses/controllers/courses.controller.v1';
-import { CoursesControllerV2 } from './modules/courses/controllers/courses.controller.v2';
+// import { CoursesControllerV1 } from './modules/courses/controllers/courses.controller.v1';
+// import { CoursesControllerV2 } from './modules/courses/controllers/courses.controller.v2';
 import { VersionController } from './modules/version/version.controller';
 import { apiVersionConfig } from './config/api-version.config';
 import { VersionHeaderMiddleware } from './common/middleware/version-header.middleware';
@@ -43,6 +46,10 @@ console.log('ENV:', ENV);
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot({
+      ttl: 60, // 60 seconds
+      limit: 100,
+    }),
     // Global Config
     ConfigModule.forRoot({
       isGlobal: true,
@@ -88,8 +95,8 @@ console.log('ENV:', ENV);
     SubmissionModule,
     UserProfilesModule,
     CredentialModule,
-    FeedbackModule,
-    I18nModule,
+    // FeedbackModule,
+    // I18nModule,
     MentorshipModule,
     TranslationModule,
     GdprModule,
@@ -98,8 +105,8 @@ console.log('ENV:', ENV);
     CoursesAdvancesModule,
     AuthControllerV1,
     AuthControllerV2,
-    CoursesControllerV1,
-    CoursesControllerV2,
+    // CoursesControllerV1,
+    // CoursesControllerV2,
     VersionController,
 
   ],
@@ -109,13 +116,17 @@ console.log('ENV:', ENV);
       provide: APP_INTERCEPTOR,
       useClass: VersionTrackingInterceptor,
     },
+    {
+      provide: APP_GUARD,
+      useClass: CustomThrottlerGuard,
+    },
 ],
 })
 
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(VersionHeaderMiddleware, DeprecationWarningMiddleware)
+      .apply(VersionHeaderMiddleware, DeprecationWarningMiddleware, ApiUsageLoggerMiddleware)
       .forRoutes('*');
   }
 }
