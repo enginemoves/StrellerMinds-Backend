@@ -39,7 +39,17 @@
     "perf:bubbleprof": "clinic bubbleprof -- node dist/main.js",
     "stress:test": "autocannon -c 100 -d 30 http://localhost:3000/health",
     "stress:test:custom": "node scripts/stress-test.js",
-    "perf:demo": "node scripts/performance-demo.js"
+    "perf:demo": "node scripts/performance-demo.js",
+    "db:migrate": "node scripts/db-manager.js migrate",
+    "db:revert": "node scripts/db-manager.js revert",
+    "db:status": "node scripts/db-manager.js status",
+    "db:validate": "node scripts/db-manager.js validate",
+    "db:optimize": "node scripts/db-manager.js optimize",
+    "db:backup": "node scripts/db-manager.js backup",
+    "db:restore": "node scripts/db-manager.js restore",
+    "db:health": "node scripts/db-manager.js health",
+    "db:generate": "node scripts/db-manager.js generate",
+    "schema:analyze": "node scripts/schema-analysis.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.840.0",
