@@ -12,9 +12,12 @@ import { DatabaseHealthIndicator } from './database-health-indicator';
 import { CustomHealthIndicator } from './custom_health_indicator';
 import { MetricsCollectorService } from './metrics_collector_service';
 import { MetricsProviders } from './metrics.providers';
+import { PerformanceMonitoringService } from './performance-monitoring.service';
+import { PerformanceController } from './performance.controller';
+import { PerformanceInterceptor } from './performance.interceptor';
+import { BaselineService } from './baseline.service';
 import { Registry } from 'prom-client';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
-
 
 @Module({
   imports: [
@@ -30,7 +33,7 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
     }),
     ScheduleModule.forRoot(),
   ],
-  controllers: [HealthController, MetricsController],
+  controllers: [HealthController, MetricsController, PerformanceController],
   providers: [
     HealthService,
     MetricsService,
@@ -46,13 +49,19 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
     DatabaseHealthIndicator,
     CustomHealthIndicator,
     MetricsCollectorService,
-    ...MetricsProviders
+    PerformanceMonitoringService,
+    PerformanceInterceptor,
+    BaselineService,
+    ...MetricsProviders,
   ],
   exports: [
     HealthService,
     MetricsService,
     AlertingService,
     MonitoringService,
+    PerformanceMonitoringService,
+    PerformanceInterceptor,
+    BaselineService,
   ],
 })
 export class MonitoringModule {}
