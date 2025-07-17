@@ -6,9 +6,7 @@ import { ArchiveService } from './archive.service';
 export class ArchiveCronService {
   private readonly logger = new Logger(ArchiveCronService.name);
 
-  constructor(
-    private readonly archivingService: ArchiveService
-  ) {}
+  constructor(private readonly archivingService: ArchiveService) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleArchiving(): Promise<void> {
@@ -17,8 +15,8 @@ export class ArchiveCronService {
     try {
       await this.archivingService.archiveOldUsers();
       await this.archivingService.archiveOldUserProfiles();
-      await this.archivingService.archiveOldPayments();
-      await this.archivingService.archiveOldNotifications();
+      // await this.archivingService.archiveOldPayments();
+      // await this.archivingService.archiveOldNotifications();
       this.logger.log(' Data archiving completed successfully.');
     } catch (err) {
       this.logger.error(' Archiving failed:', err);

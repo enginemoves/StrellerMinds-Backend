@@ -3,11 +3,12 @@ import type { PuzzleRepository } from "../repositories/puzzle.repository"
 import type { PuzzleTranslationRepository } from "../repositories/puzzle-translation.repository"
 import type { LanguageRepository } from "../repositories/language.repository"
 import type { PuzzleTranslation } from "../entities/puzzle-translation.entity"
-// import type { CreatePuzzleTranslationDto } from "../dto/create-puzzle-translation.dto"
-// import type { UpdatePuzzleTranslationDto } from "../dto/update-puzzle-translation.dto"
 import type { CacheService } from "./cache.service"
 import type { EventEmitterService } from "./event-emitter.service"
 
+/**
+ * Service for managing puzzle translations in multiple languages.
+ */
 @Injectable()
 export class PuzzleTranslationService {
   constructor(
@@ -20,10 +21,17 @@ export class PuzzleTranslationService {
 
   private readonly CACHE_PREFIX = "puzzle_translation:"
 
+  /**
+   * Get all puzzle translations.
+   */
   async getAllPuzzleTranslations(): Promise<PuzzleTranslation[]> {
     return this.puzzleTranslationRepository.findAll()
   }
 
+  /**
+   * Get a specific puzzle translation by its ID.
+   * @param id - The ID of the puzzle translation.
+   */
   async getPuzzleTranslationById(id: string): Promise<PuzzleTranslation> {
     const translation = await this.puzzleTranslationRepository.findById(id)
     if (!translation) {
@@ -32,6 +40,11 @@ export class PuzzleTranslationService {
     return translation
   }
 
+  /**
+   * Get a puzzle translation for a specific puzzle and language.
+   * @param puzzleId - The ID of the puzzle.
+   * @param languageCode - The language code (e.g., 'en', 'fr').
+   */
   async getPuzzleTranslation(puzzleId: string, languageCode: string): Promise<PuzzleTranslation> {
     const cacheKey = `${this.CACHE_PREFIX}${puzzleId}:${languageCode}`
     const cached = await this.cacheService.get<PuzzleTranslation>(cacheKey)
@@ -85,6 +98,10 @@ export class PuzzleTranslationService {
     return translation
   }
 
+  /**
+   * Get all translations for a specific language.
+   * @param languageCode - The language code (e.g., 'en', 'fr').
+   */
   async getPuzzleTranslationsByLanguage(languageCode: string): Promise<PuzzleTranslation[]> {
     const language = await this.languageRepository.findByCode(languageCode)
     if (!language) {
@@ -157,6 +174,10 @@ export class PuzzleTranslationService {
   //   return updatedTranslation
   // }
 
+  /**
+   * Delete a puzzle translation by its ID.
+   * @param id - The ID of the puzzle translation to delete.
+   */
   async deletePuzzleTranslation(id: string): Promise<void> {
     const translation = await this.puzzleTranslationRepository.findById(id)
     if (!translation) {
@@ -179,6 +200,11 @@ export class PuzzleTranslationService {
     })
   }
 
+  /**
+   * Approve a puzzle translation.
+   * @param id - The ID of the puzzle translation to approve.
+   * @param approvedBy - The ID of the user approving the translation.
+   */
   async approvePuzzleTranslation(id: string, approvedBy: string): Promise<PuzzleTranslation> {
     const translation = await this.puzzleTranslationRepository.findById(id)
     if (!translation) {

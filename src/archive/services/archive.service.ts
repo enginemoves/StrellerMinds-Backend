@@ -1,17 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
-
 import { User } from '../../users/entities/user.entity';
 import { ArchivedUser } from '../../users/entities/archived-user.entity';
-
 import { UserProfile } from '../../user-profiles/entities/user-profile.entity';
 import { ArchivedUserProfile } from '../../user-profiles/entities/archived-user-profile.entity';
-
-import { Payment } from '../../payment/entities/payment.entity';
 import { ArchivedPayment } from '../../payment/entities/archived-payment.entity';
-
-import { Notification } from '../../notification/entities/notification.entity';
 import { ArchivedNotification } from '../../notification/entities/archived-notification.entity';
 
 @Injectable()
@@ -29,8 +23,7 @@ export class ArchiveService {
     @InjectRepository(ArchivedUserProfile)
     private archivedProfileRepo: Repository<ArchivedUserProfile>,
 
-    @InjectRepository(Payment)
-    private paymentRepo: Repository<Payment>,
+    
 
     @InjectRepository(ArchivedPayment)
     private archivedPaymentRepo: Repository<ArchivedPayment>,
@@ -86,43 +79,43 @@ export class ArchiveService {
 
   // __________________________________ Archive Payments _____________________________________
 
-  public async archiveOldPayments(): Promise<void> {
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  // public async archiveOldPayments(): Promise<void> {
+  //   const sixMonthsAgo = new Date();
+  //   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    const oldPayments = await this.paymentRepo.find({
-      where: { createdAt: LessThan(sixMonthsAgo) },
-    });
+  //   const oldPayments = await this.paymentRepo.find({
+  //     where: { createdAt: LessThan(sixMonthsAgo) },
+  //   });
 
-    const archived = oldPayments.map((payment) => {
-      const archivedPayment = new ArchivedPayment();
-      Object.assign(archivedPayment, payment);
-      archivedPayment.archivedAt = new Date();
-      return archivedPayment;
-    });
+  //   const archived = oldPayments.map((payment) => {
+  //     const archivedPayment = new ArchivedPayment();
+  //     Object.assign(archivedPayment, payment);
+  //     archivedPayment.archivedAt = new Date();
+  //     return archivedPayment;
+  //   });
 
-    await this.archivedPaymentRepo.save(archived);
-    await this.paymentRepo.remove(oldPayments);
-  }
+  //   await this.archivedPaymentRepo.save(archived);
+  //   await this.paymentRepo.remove(oldPayments);
+  // }
 
   //_____________________________________   Archive Notifications _____________________________
 
-  public async archiveOldNotifications(): Promise<void> {
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  // public async archiveOldNotifications(): Promise<void> {
+  //   const sixMonthsAgo = new Date();
+  //   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    const oldNotifications = await this.notificationRepo.find({
-      where: { createdAt: LessThan(sixMonthsAgo) },
-    });
+  //   const oldNotifications = await this.notificationRepo.find({
+  //     where: { createdAt: LessThan(sixMonthsAgo) },
+  //   });
 
-    const archived = oldNotifications.map((notification) => {
-      const archivedNotification = new ArchivedNotification();
-      Object.assign(archivedNotification, notification);
-      archivedNotification.archivedAt = new Date();
-      return archivedNotification;
-    });
+  //   const archived = oldNotifications.map((notification) => {
+  //     const archivedNotification = new ArchivedNotification();
+  //     Object.assign(archivedNotification, notification);
+  //     archivedNotification.archivedAt = new Date();
+  //     return archivedNotification;
+  //   });
 
-    await this.archivedNotificationRepo.save(archived);
-    await this.notificationRepo.remove(oldNotifications);
-  }
+  //   await this.archivedNotificationRepo.save(archived);
+  //   await this.notificationRepo.remove(oldNotifications);
+  // }
 }

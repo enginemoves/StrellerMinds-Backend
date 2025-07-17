@@ -1,3 +1,6 @@
+/**
+ * CredentialController handles endpoints for credential management and history.
+ */
 import {
   Controller,
   Get,
@@ -16,10 +19,13 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
-// ✅ Moved the User decorator above the class definition
+/**
+ * Custom decorator to extract the user object from the request.
+ */
 export const User = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest();
@@ -32,11 +38,22 @@ export const User = createParamDecorator(
 export class CredentialController {
   constructor(private readonly credentialService: CredentialService) {}
 
+  /**
+   * Get user credential history from Stellar blockchain.
+   *
+   * Retrieves the credential history for the authenticated user, with optional filters and pagination.
+   *
+   * @param user - The user object, automatically injected
+   * @param queryParams - The query parameters for credential history
+   * @returns The credential history response DTO
+   */
   @Get('history')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get user credential history from Stellar blockchain',
+    description:
+      'Retrieves the credential history for the authenticated user, with optional filters and pagination.',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -48,62 +65,43 @@ export class CredentialController {
     status: HttpStatus.BAD_REQUEST,
     description: 'Invalid query parameters',
   })
-  @ApiResponse({
-    status: HttpStatus.INTERNAL_SERVER_ERROR,
-    description: 'Internal server error',
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: 'Page number for pagination',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Number of items per page',
+  })
+  @ApiQuery({
+    name: 'credentialType',
+    required: false,
+    description: 'Credential type filter',
+  })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    description: 'Start date for issued credentials (ISO8601)',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    description: 'End date for issued credentials (ISO8601)',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    description: 'Credential status filter',
   })
   async getCredentialHistory(
-    @User() user: { id: string },
+    @User() user: any,
     @Query() queryParams: CredentialHistoryQueryDto,
   ): Promise<CredentialHistoryResponseDto> {
-    try {
-      return await this.credentialService.getUserCredentialHistory(
-        user.id,
-        queryParams,
-      );
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new HttpException(
-        'Failed to retrieve credential history',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+    if (!user || !user.id) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
     }
-  }
-
-  @Get('history/:id/verify')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Verify a specific credential on the blockchain',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Credential verification result',
-  })
-  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Credential not found',
-  })
-  async verifyCredential(
-    @User() user: { id: string },
-    @Query('id') credentialId: string,
-  ) {
-    try {
-      return await this.credentialService.verifyCredential(
-        user.id,
-        credentialId,
-      );
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new HttpException(
-        'Failed to verify credential',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    return this.credentialService.getUserCredentialHistory(user.id, queryParams);
   }
 }

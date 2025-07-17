@@ -1,3 +1,6 @@
+/**
+ * GradingController handles endpoints for grading assignments and updating grades.
+ */
 import {
   Controller,
   Post,
@@ -30,6 +33,9 @@ import {
 export class GradingController {
   constructor(private readonly gradingService: GradingService) {}
 
+  /**
+   * Mentor grades a student assignment.
+   */
   @Post(':studentId/:assignmentId')
   @Roles('mentor')
   @ApiOperation({ summary: 'Mentor grades a student assignment' })
@@ -55,10 +61,13 @@ export class GradingController {
     );
   }
 
+  /**
+   * Mentor updates an existing grade.
+   */
   @Patch(':gradeId')
   @Roles('mentor')
   @ApiOperation({ summary: 'Mentor updates an existing grade' })
-  @ApiParam({ name: 'gradeId', type: Number, example: 12 })
+  @ApiParam({ name: 'gradeId', type: Number, example: 10 })
   @ApiBody({ type: UpdateGradeDto })
   @ApiResponse({ status: 200, description: 'Grade successfully updated.' })
   @ApiResponse({ status: 404, description: 'Grade not found.' })
@@ -74,9 +83,12 @@ export class GradingController {
     return this.gradingService.updateGrade(req.user, gradeId, dto);
   }
 
+  /**
+   * Mentor retrieves grading history.
+   */
   @Get('history')
   @Roles('mentor')
-  @ApiOperation({ summary: 'Mentor views grading history' })
+  @ApiOperation({ summary: 'Mentor retrieves grading history' })
   @ApiResponse({
     status: 200,
     description: 'Returns a list of all grades submitted by the mentor.',

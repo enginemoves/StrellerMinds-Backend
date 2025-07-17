@@ -144,4 +144,16 @@ export class UserProfilesService {
 
     await this.userProfileRepository.delete(id);
   }
+
+  async setPreferredLanguage(userId: string, lang: string): Promise<void> {
+    const profile = await this.userProfileRepository.findOne({ where: { userId } });
+    if (!profile) {
+      throw new NotFoundException(`Profile for user ${userId} not found`);
+    }
+  
+    profile.preferredLanguage = lang;
+    await this.userProfileRepository.save(profile);
+  }
+
+  
 }

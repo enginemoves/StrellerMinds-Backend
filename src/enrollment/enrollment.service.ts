@@ -4,12 +4,20 @@ import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
 import { Enrollment } from './entities/enrollment.entity';
 import { v4 as uuidv4 } from 'uuid';
 
+/**
+ * EnrollmentService provides logic for enrolling, unenrolling, and listing enrollments.
+ */
 @Injectable()
 export class EnrollmentService {
   private enrollments: Enrollment[] = []; // Simulating DB
   private courseCapacities = { 'course1': 2, 'course2': 3 }; // example
   private prerequisites = { 'course2': ['course1'] }; // example
 
+  /**
+   * Enroll a student in a course.
+   * @param createEnrollmentDto - DTO containing student and course IDs
+   * @returns The created Enrollment entity
+   */
   async enroll(createEnrollmentDto: CreateEnrollmentDto): Promise<Enrollment> {
     const { studentId, courseId } = createEnrollmentDto;
 
@@ -46,6 +54,10 @@ export class EnrollmentService {
     return enrollment;
   }
 
+  /**
+   * Unenroll a student from a course.
+   * @param enrollmentId - Enrollment ID
+   */
   async unenroll(enrollmentId: string): Promise<void> {
     const enrollment = this.enrollments.find(e => e.id === enrollmentId);
     if (!enrollment) throw new NotFoundException('Enrollment not found.');
@@ -54,6 +66,10 @@ export class EnrollmentService {
     enrollment.status = 'UNENROLLED';
   }
 
+  /**
+   * List all enrollments.
+   * @returns Array of Enrollment entities
+   */
   findAll(): Enrollment[] {
     return this.enrollments;
   }

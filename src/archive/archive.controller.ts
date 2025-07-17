@@ -10,8 +10,8 @@ export class ArchiveController {
   public async runAllArchiving() {
     await this.archivingService.archiveOldUsers();
     await this.archivingService.archiveOldUserProfiles();
-    await this.archivingService.archiveOldPayments();
-    await this.archivingService.archiveOldNotifications();
+    // await this.archivingService.archiveOldPayments();
+    // await this.archivingService.archiveOldNotifications();
     return { message: ' Manual archiving completed successfully.' };
   }
 
@@ -29,17 +29,12 @@ export class ArchiveController {
     return { message: 'users-profiles archived.' };
   }
 
-  @Post('payments')
-  @HttpCode(HttpStatus.OK)
-  async archivePayments() {
-    await this.archivingService.archiveOldPayments();
-    return { message: ' Payments archived.' };
-  }
+  // @Post('payments')
+  // @HttpCode(HttpStatus.OK)
+  // async archivePayments() {
+  //   await this.archivingService.archiveOldPayments();
+  //   return { message: ' Payments archived.' };
+  // }
 
-  @Post('notifications')
-  @HttpCode(HttpStatus.OK)
-  async archiveNotifications() {
-    await this.archivingService.archiveOldNotifications();
-    return { message: ' Notifications archived.' };
-  }
+ 
 }

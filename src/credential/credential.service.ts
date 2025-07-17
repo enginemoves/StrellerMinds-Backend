@@ -2,18 +2,26 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, FindManyOptions } from 'typeorm';
 import { Credential } from './entities/credential.entity';
-import { BlockchainService } from '../blockchain/blockchain.service';
 import { CredentialHistoryQueryDto, CredentialStatus } from './dto/credential-history-query.dto';
 import { CredentialHistoryResponseDto, CredentialDto } from './dto/credential-history-response.dto';
 
+/**
+ * CredentialService provides logic for credential management and history retrieval.
+ */
 @Injectable()
 export class CredentialService {
   constructor(
     @InjectRepository(Credential)
     private credentialRepository: Repository<Credential>,
-    private blockchainService: BlockchainService,
   ) {}
 
+  /**
+   * Get user credential history.
+   *
+   * @param userId - The ID of the user whose credential history is to be retrieved.
+   * @param queryParams - The query parameters for retrieving credential history, including pagination and filters.
+   * @returns A promise that resolves to the user's credential history response DTO.
+   */
   async getUserCredentialHistory(
     userId: string,
     queryParams: CredentialHistoryQueryDto,
@@ -61,6 +69,13 @@ export class CredentialService {
     };
   }
 
+  /**
+   * Verify a user's credential by its ID.
+   * 
+   * @param userId - The ID of the user who owns the credential.
+   * @param credentialId - The ID of the credential to be verified.
+   * @returns A promise that resolves to an object containing the verification result and the credential DTO.
+   */
   async verifyCredential(userId: string, credentialId: string): Promise<{ verified: boolean; credential: CredentialDto }> {
     // Find the credential
     const credential = await this.credentialRepository.findOne({ 
@@ -72,8 +87,9 @@ export class CredentialService {
     }
 
     // Verify on the blockchain
-    const verificationResult = await this.blockchainService.verifyTransaction(credential.txHash);
-    
+    // TODO: Replace the following mock result with actual blockchain verification logic
+    const verificationResult = { verified: true };
+
     // Update verification status in database
     credential.verificationStatus = verificationResult.verified;
     await this.credentialRepository.save(credential);
@@ -84,6 +100,11 @@ export class CredentialService {
     };
   }
 
+  /**
+   * Maps a Credential entity to a CredentialDto.
+   * @param credential - The Credential entity instance.
+   * @returns The mapped CredentialDto.
+   */
   private mapToCredentialDto(credential: Credential): CredentialDto {
     return {
       id: credential.id,

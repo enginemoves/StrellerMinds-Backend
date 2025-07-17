@@ -40,6 +40,14 @@ test/
 - Use test database
 - Test API endpoints
 
+#### E2E Tests Setup
+- Test files: `*.e2e-spec.ts` in `test/e2e/`
+- `.env.test`: defines DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, JWT_SECRET, STELLAR_NETWORK
+- Global setup/teardown (`jest.global-setup.ts` / `jest.global-teardown.ts`) to reset and teardown test database
+- `tsconfig.e2e.json`: extends base `tsconfig.json`, includes `node` and `jest` types
+- `jest-e2e.json`: configured with `globalSetup`, `globalTeardown`, and `ts-jest` pointing to `tsconfig.e2e.json`
+- CI Workflow: `.github/workflows/e2e.yml` runs E2E tests on push/pull_request to main
+
 ## Best Practices
 
 1. **Arrange-Act-Assert**: Structure tests in three parts

@@ -14,21 +14,30 @@ import {
 } from 'typeorm';
 import { Assignment } from 'src/assignment/entities/assignment.entity';
 import { LessonType } from 'src/modules/lesson/enums/lesson-type.enum';
+import { ApiProperty } from '@nestjs/swagger';
 
+/**
+ * Entity representing a lesson within a course module.
+ */
 @Entity('lessons')
 export class Lesson {
+  /** Unique lesson ID */
+  @ApiProperty({ description: 'Unique lesson ID', example: 'uuid-lesson' })
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  /** Lesson title */
+  @ApiProperty({ description: 'Lesson title', example: 'Introduction to Algebra' })
   @Column({ length: 255 })
   title: string;
 
+  /** Lesson content (text, HTML, etc.) */
+  @ApiProperty({ description: 'Lesson content', example: '<p>Welcome to Algebra!</p>' })
   @Column({ type: 'text' })
   content: string;
 
-  // @Column({ default: 'text' })
-  // type: string; // text, video, quiz, etc.
-
+  /** Lesson type (text, video, quiz, etc.) */
+  @ApiProperty({ description: 'Lesson type', enum: LessonType, default: LessonType.TEXT })
   @Column({
     type: 'enum',
     enum: LessonType,
@@ -36,22 +45,33 @@ export class Lesson {
   })
   type: LessonType;
 
+  /** Video URL (if applicable) */
+  @ApiProperty({ description: 'Video URL', required: false })
   @Column({ nullable: true })
   videoUrl: string;
 
+  /** Order of the lesson within the module */
+  @ApiProperty({ description: 'Order of the lesson within the module', example: 1 })
   @Column()
   order: number;
 
+  /** Duration of the lesson in minutes */
+  @ApiProperty({ description: 'Duration in minutes', example: 30 })
   @Column({ default: 0 })
   durationInMinutes: number;
 
+  /** Date lesson was created */
+  @ApiProperty({ description: 'Creation date' })
   @CreateDateColumn()
   createdAt: Date;
 
+  /** Date lesson was last updated */
+  @ApiProperty({ description: 'Last update date' })
   @UpdateDateColumn()
   updatedAt: Date;
 
-  // Many-to-One relationship
+  /** Module this lesson belongs to */
+  @ApiProperty({ description: 'Module this lesson belongs to', type: () => CourseModule })
   @ManyToOne(() => CourseModule, (module) => module.lessons, {
     nullable: false,
     onDelete: 'CASCADE',

@@ -1,3 +1,6 @@
+/**
+ * EmailService provides logic for sending emails, managing preferences, analytics, and tracking.
+ */
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -50,6 +53,9 @@ export class EmailService {
     this.initializeTransporter();
   }
 
+  /**
+   * Initialize the nodemailer transporter using config values.
+   */
   private initializeTransporter() {
     this.transporter = nodemailer.createTransport({
       host: this.configService.get<string>('EMAIL_HOST'),
@@ -62,13 +68,22 @@ export class EmailService {
     });
   }
 
+  /**
+   * Send an email using the specified options. Queues the email for sending.
+   * @param options - Email options
+   * @returns True if the email was successfully queued, false otherwise
+   */
   async sendEmail(options: EmailOptions): Promise<boolean> {
+    const emailEnabled = this.configService.get<string>('EMAIL_ENABLED');
+    if (emailEnabled === 'false' || emailEnabled === '0') {
+      this.logger.log('Email sending is disabled by EMAIL_ENABLED flag. Skipping email.');
+      return false;
+    }
     try {
       if (await this.hasUserOptedOut(options.to, options.templateName)) {
         this.logger.log(`User ${options.to} has opted out of ${options.templateName} emails`);
         return false;
       }
-
       await this.emailQueue.add('send', options, {
         attempts: 3,
         backoff: {
@@ -76,7 +91,6 @@ export class EmailService {
           delay: 5000,
         },
       });
-
       return true;
     } catch (error) {
       this.logger.error(`Failed to queue email: ${error.message}`, error.stack);
@@ -84,7 +98,17 @@ export class EmailService {
     }
   }
 
+  /**
+   * Send an email immediately using the specified options. Bypasses the queue.
+   * @param options - Email options
+   * @returns True if the email was successfully sent, false otherwise
+   */
   async sendImmediate(options: EmailOptions): Promise<boolean> {
+    const emailEnabled = this.configService.get<string>('EMAIL_ENABLED');
+    if (emailEnabled === 'false' || emailEnabled === '0') {
+      this.logger.log('Email sending is disabled by EMAIL_ENABLED flag. Skipping immediate email.');
+      return false;
+    }
     try {
       const template = await this.getTemplate(options.templateName);
       const compiledTemplate = Handlebars.compile(template);
@@ -132,6 +156,11 @@ export class EmailService {
     }
   }
 
+  /**
+   * Get the email template content by name. First checks the database, then falls back to file system.
+   * @param templateName - Name of the template
+   * @returns The template content
+   */
   async getTemplate(templateName: string): Promise<string> {
     const dbTemplate = await this.emailTemplateRepository.findOne({ where: { name: templateName } });
     if (dbTemplate) return dbTemplate.content;
@@ -140,11 +169,21 @@ export class EmailService {
     return fs.readFileSync(templatePath, 'utf8');
   }
 
+  /**
+   * Log an email event to the database.
+   * @param logData - Partial email log data
+   */
   private async logEmail(logData: Partial<EmailLog>): Promise<void> {
     const log = this.emailLogRepository.create(logData);
     await this.emailLogRepository.save(log);
   }
 
+  /**
+   * Check if a user has opted out of a specific email type.
+   * @param recipient - Recipient email address
+   * @param templateType - Email template type
+   * @returns True if the user has opted out, false otherwise
+   */
   private async hasUserOptedOut(
     recipient: string | string[],
     templateType: string,
@@ -161,6 +200,13 @@ export class EmailService {
     return !!preference;
   }
 
+  /**
+   * Update a user's email preference for a specific email type.
+   * @param email - User email address
+   * @param emailType - Type of email
+   * @param optOut - Whether the user opts out
+   * @returns The updated EmailPreference entity
+   */
   async updateEmailPreference(email: string, emailType: string, optOut: boolean): Promise<EmailPreference> {
     let preference = await this.emailPreferenceRepository.findOne({ where: { email } });
 
@@ -173,6 +219,13 @@ export class EmailService {
     return this.emailPreferenceRepository.save(preference);
   }
 
+  /**
+   * Get email analytics for a date range and optional template name.
+   * @param startDate - Start date
+   * @param endDate - End date
+   * @param templateName - Optional template name
+   * @returns Analytics data
+   */
   async getEmailAnalytics(startDate: Date, endDate: Date, templateName?: string): Promise<any> {
     const query = this.emailLogRepository
       .createQueryBuilder('log')
@@ -190,6 +243,13 @@ export class EmailService {
     return query.getRawMany();
   }
 
+  /**
+   * Send a verification email to the user.
+   * @param user - User object
+   * @param verificationCode - Verification code
+   * @param verificationToken - Verification token
+   * @returns True if the email was successfully sent, false otherwise
+   */
   async sendVerificationEmail(user: any, verificationCode: string, verificationToken: string): Promise<boolean> {
     const verificationUrl = `${this.configService.get<string>('FRONTEND_URL')}/verify-email?token=${verificationToken}`;
     const unsubscribeUrl = `${this.configService.get<string>('FRONTEND_URL')}/preferences?email=${user.email}`;
@@ -209,6 +269,12 @@ export class EmailService {
     });
   }
 
+  /**
+   * Send a course enrollment email to the user.
+   * @param user - User object
+   * @param course - Course object
+   * @returns True if the email was successfully sent, false otherwise
+   */
   async sendCourseEnrollmentEmail(user: any, course: any): Promise<boolean> {
     const courseUrl = `${this.configService.get<string>('FRONTEND_URL')}/courses/${course.id}`;
     const unsubscribeUrl = `${this.configService.get<string>('FRONTEND_URL')}/preferences?email=${user.email}`;
@@ -230,6 +296,13 @@ export class EmailService {
     });
   }
 
+  /**
+   * Send a course completion email to the user.
+   * @param user - User object
+   * @param course - Course object
+   * @param score - Completion score
+   * @returns True if the email was successfully sent, false otherwise
+   */
   async sendCourseCompletionEmail(user: any, course: any, score: number): Promise<boolean> {
     const certificateUrl = `${this.configService.get<string>('FRONTEND_URL')}/certificates/${course.id}`;
     const courseCatalogUrl = `${this.configService.get<string>('FRONTEND_URL')}/courses`;
@@ -252,6 +325,12 @@ export class EmailService {
     });
   }
 
+  /**
+   * Send a forum notification email to the user.
+   * @param user - User object
+   * @param notification - Notification object
+   * @returns True if the email was successfully sent, false otherwise
+   */
   async sendForumNotificationEmail(user: any, notification: any): Promise<boolean> {
     const postUrl = `${this.configService.get<string>('FRONTEND_URL')}/forum/posts/${notification.postId}`;
     const unsubscribeUrl = `${this.configService.get<string>('FRONTEND_URL')}/preferences?email=${user.email}`;
@@ -274,24 +353,51 @@ export class EmailService {
     });
   }
 
+  /**
+   * Mark an email as clicked by its log ID.
+   * @param id - Email log ID
+   * @param url - URL that was clicked
+   */
   async markEmailAsClicked(id: string, url: string): Promise<void> {
   }
 
+  /**
+   * Mark an email as opened by its log ID.
+   * @param id - Email log ID
+   */
   async markEmailAsOpened(id: string): Promise<void> {
   }
 
+  /**
+   * Verify the unsubscribe token for a given email.
+   * @param email - User email address
+   * @param token - Unsubscribe token
+   * @returns True if the token is valid, false otherwise
+   */
    async verifyUnsubscribeToken(email: string, token: string): Promise<boolean> {
     // TODO: Implement actual token verification logic
     // For now, return true as a placeholder
     return true;
   }
 
+  /**
+   * Get daily email statistics for a date range and optional template name.
+   * @param start - Start date
+   * @param end - End date
+   * @param templateName - Optional template name
+   * @returns Daily email statistics
+   */
    async getDailyEmailStats(start: Date, end: Date, templateName?: string): Promise<any> {
     // Implement your logic here or return a mock for now
     return [];
   }
 
-  async getUserPreferences(email: string): Promise<{ emailType: EmailType; optedOut: boolean }[]> {
+  /**
+   * Get the user's email preferences for all email types.
+   * @param email - User email address
+   * @returns Array of email preferences
+   */
+   async getUserPreferences(email: string): Promise<{ emailType: EmailType; optedOut: boolean }[]> {
     const preferences = await this.emailPreferenceRepository.find({ where: { email } });
 
     return Object.values(EmailType).map((type) => {
