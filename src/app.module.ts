@@ -25,15 +25,18 @@ import { UserProfilesModule } from './user-profiles/user-profiles.module';
 import { CredentialModule } from './credential/credential.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ArchiveModule } from './archive/archive.module';
 import databaseConfig from './config/database.config';
+import { ScheduleModule } from '@nestjs/schedule';
 
-const ENV = process.env.NODE_ENV
+const ENV = process.env.NODE_ENV;
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('ENV:', ENV);
 
 @Module({
   imports: [
     // Global Config
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: !ENV ? '.env' : `.env.${ENV.trim()}`,
@@ -75,6 +78,7 @@ console.log('ENV:', ENV);
     SubmissionModule,
     UserProfilesModule,
     CredentialModule,
+    ArchiveModule,
   ],
   controllers: [AppController],
   providers: [AppService],
