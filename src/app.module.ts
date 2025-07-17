@@ -19,7 +19,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 // import { FeedbackModule } from './feedback/feedback.module';
 import { MentorshipModule } from './mentorship/mentorship.module';
+import { ArchiveModule } from './archive/archive.module';
 import databaseConfig from './config/database.config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { GdprModule } from './gdpr/gdpr.module';
 import { MonitoringModule } from './monitoring/monitoring-module';
 import { CoursesAdvancesModule } from './courses-advances/courses-advances.module';
@@ -41,7 +43,7 @@ import { apiVersionConfig } from './config/api-version.config';
 import { VersionHeaderMiddleware } from './common/middleware/version-header.middleware';
 import { StellarService } from './blockchain/stellar/stellar.service';
 
-const ENV = process.env.NODE_ENV;
+const ENV = process.env.NODE_ENV;;
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('ENV:', ENV);
 
@@ -52,6 +54,7 @@ console.log('ENV:', ENV);
       limit: 100,
     }),
     // Global Config
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: !ENV ? '.env' : `.env.${ENV.trim()}`,
@@ -96,6 +99,7 @@ console.log('ENV:', ENV);
     SubmissionModule,
     UserProfilesModule,
     CredentialModule,
+    ArchiveModule,
     // FeedbackModule,
     // I18nModule,
     MentorshipModule,
