@@ -19,7 +19,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 // import { FeedbackModule } from './feedback/feedback.module';
 import { MentorshipModule } from './mentorship/mentorship.module';
+import { ArchiveModule } from './archive/archive.module';
 import databaseConfig from './config/database.config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { GdprModule } from './gdpr/gdpr.module';
 import { MonitoringModule } from './monitoring/monitoring-module';
 import { CoursesAdvancesModule } from './courses-advances/courses-advances.module';
@@ -30,6 +32,7 @@ import { ApiUsageLoggerMiddleware } from './common/middleware/api-usage-logger.m
 import { DeprecationWarningMiddleware } from './common/middleware/deprecation-warning.middleware';
 import { VersionTrackingInterceptor } from './common/interceptors/version-tracking.interceptor';
 import { VersionAnalyticsService } from './common/services/version-analytics.service';
+import { PerformanceInterceptor } from './monitoring/performance.interceptor';
 import { ApiUsageLog } from './common/entities/api-usage-log.entity';
 import { AuthControllerV1 } from './modules/auth/controllers/auth.controller.v1';
 import { AuthControllerV2 } from './modules/auth/controllers/auth.controller.v2';
@@ -38,10 +41,8 @@ import { AuthControllerV2 } from './modules/auth/controllers/auth.controller.v2'
 import { VersionController } from './modules/version/version.controller';
 import { apiVersionConfig } from './config/api-version.config';
 import { VersionHeaderMiddleware } from './common/middleware/version-header.middleware';
-import { CmsModule } from './cms/cms.module';
 
-
-const ENV = process.env.NODE_ENV;
+const ENV = process.env.NODE_ENV;;
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('ENV:', ENV);
 
@@ -52,10 +53,11 @@ console.log('ENV:', ENV);
       limit: 100,
     }),
     // Global Config
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: !ENV ? '.env' : `.env.${ENV.trim()}`,
-      load: [databaseConfig,() => ({ api: apiVersionConfig }) ],
+      load: [databaseConfig, () => ({ api: apiVersionConfig })],
     }),
 
     // Database
@@ -96,6 +98,7 @@ console.log('ENV:', ENV);
     SubmissionModule,
     UserProfilesModule,
     CredentialModule,
+    ArchiveModule,
     // FeedbackModule,
     // I18nModule,
     MentorshipModule,
@@ -110,25 +113,34 @@ console.log('ENV:', ENV);
     // CoursesControllerV2,
     VersionController,
     CmsModule,
-
   ],
   controllers: [AppController],
-  providers: [AppService, VersionAnalyticsService,
+  providers: [
+    AppService,
+    VersionAnalyticsService,
     {
       provide: APP_INTERCEPTOR,
       useClass: VersionTrackingInterceptor,
     },
     {
+      provide: APP_INTERCEPTOR,
+      useClass: PerformanceInterceptor,
+    },
+    {
       provide: APP_GUARD,
       useClass: CustomThrottlerGuard,
     },
-],
+    StellarService,
+  ],
 })
-
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(VersionHeaderMiddleware, DeprecationWarningMiddleware, ApiUsageLoggerMiddleware)
+      .apply(
+        VersionHeaderMiddleware,
+        DeprecationWarningMiddleware,
+        ApiUsageLoggerMiddleware,
+      )
       .forRoutes('*');
   }
 }
