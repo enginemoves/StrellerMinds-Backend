@@ -1,28 +1,299 @@
-# Testing Guide
+# Comprehensive Testing Guide
 
-This document outlines the testing practices and patterns used in the StrellerMinds Backend project.
+This document outlines the comprehensive testing strategy and practices used in the StrellerMinds Backend project.
+
+## Overview
+
+Our testing strategy follows a multi-layered approach to ensure code quality, reliability, and performance:
+
+- **Unit Tests**: Test individual components in isolation
+- **Integration Tests**: Test component interactions and API endpoints
+- **End-to-End Tests**: Test complete user workflows
+- **Performance Tests**: Test system performance under load
+- **Security Tests**: Test for vulnerabilities and security issues
+- **Accessibility Tests**: Test for accessibility compliance
+- **Visual Tests**: Test for visual regressions
 
 ## Test Structure
 
 ```
 test/
-├── unit/               # Unit tests
-│   ├── services/      # Service tests
-│   ├── controllers/   # Controller tests
-│   └── utils/         # Utility function tests
-├── integration/       # Integration tests
-├── e2e/              # End-to-end tests
-└── utils/            # Test utilities and helpers
+├── unit/                    # Unit tests
+│   ├── auth/               # Authentication tests
+│   ├── users/              # User management tests
+│   ├── courses/            # Course management tests
+│   ├── video-streaming/    # Video streaming tests
+│   └── utils/              # Utility function tests
+├── integration/            # Integration tests
+│   ├── auth/               # Auth API integration tests
+│   ├── courses/            # Course API integration tests
+│   └── video-streaming/    # Video streaming integration tests
+├── e2e/                    # End-to-end tests
+│   ├── specs/              # Test specifications
+│   │   ├── auth/           # Authentication flows
+│   │   ├── courses/        # Course management flows
+│   │   ├── video/          # Video streaming flows
+│   │   ├── accessibility/  # Accessibility tests
+│   │   └── visual/         # Visual regression tests
+│   ├── support/            # Test support files
+│   ├── fixtures/           # Test data fixtures
+│   └── screenshots/        # Visual test screenshots
+├── factories/              # Test data factories
+├── fixtures/               # Static test data
+├── utils/                  # Test utilities and helpers
+├── setup/                  # Test setup and configuration
+└── reports/                # Test reports and coverage
 ```
 
 ## Running Tests
 
+### Basic Commands
 - `npm test` - Run all unit tests
 - `npm run test:watch` - Run tests in watch mode
 - `npm run test:cov` - Run tests with coverage
-- `npm run test:e2e` - Run end-to-end tests
+- `npm run test:unit` - Run only unit tests
+- `npm run test:integration` - Run only integration tests
+- `npm run test:e2e` - Run Jest E2E tests
+- `npm run test:cypress` - Run Cypress E2E tests
+- `npm run test:all` - Run all test suites
+
+### Advanced Commands
+- `npm run test:cypress:open` - Open Cypress test runner
+- `npm run test:cypress:ci` - Run Cypress tests in CI mode
+- `npm run test:visual` - Run visual regression tests
+- `npm run test:a11y` - Run accessibility tests
+- `npm run test:mutation` - Run mutation tests
+- `npm run test:report` - Generate comprehensive test report
+- `npm run test:ci` - Run full CI test suite
 
 ## Testing Patterns
+
+### Unit Testing
+
+Unit tests focus on testing individual components in isolation. We use Jest as our testing framework with comprehensive mocking.
+
+#### Example Unit Test
+
+```typescript
+import { Test, TestingModule } from '@nestjs/testing';
+import { UserService } from './user.service';
+import { userFactory } from '../../test/factories';
+
+describe('UserService', () => {
+  let service: UserService;
+  let repository: Repository<User>;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        UserService,
+        {
+          provide: getRepositoryToken(User),
+          useValue: global.testUtils.createMockRepository(),
+        },
+      ],
+    }).compile();
+
+    service = module.get<UserService>(UserService);
+    repository = module.get<Repository<User>>(getRepositoryToken(User));
+  });
+
+  describe('create', () => {
+    it('should create a new user', async () => {
+      const userData = userFactory.build();
+      const createdUser = userFactory.create();
+
+      jest.spyOn(repository, 'create').mockReturnValue(createdUser);
+      jest.spyOn(repository, 'save').mockResolvedValue(createdUser);
+
+      const result = await service.create(userData);
+
+      expect(result).toEqual(createdUser);
+      expect(repository.create).toHaveBeenCalledWith(userData);
+      expect(repository.save).toHaveBeenCalledWith(createdUser);
+    });
+  });
+});
+```
+
+### Integration Testing
+
+Integration tests verify that different components work together correctly, including API endpoints and database operations.
+
+#### Example Integration Test
+
+```typescript
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
+import { userFactory } from '../../test/factories';
+import { DatabaseTestModule } from '../../test/utils/database-test.module';
+
+describe('Auth Integration Tests', () => {
+  let app: INestApplication;
+
+  beforeAll(async () => {
+    const moduleRef: TestingModule = await Test.createTestingModule({
+      imports: [DatabaseTestModule, AuthModule],
+    }).compile();
+
+    app = moduleRef.createNestApplication();
+    await app.init();
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  beforeEach(async () => {
+    await global.testUtils.cleanupDatabase();
+  });
+
+  describe('POST /auth/register', () => {
+    it('should register a new user', async () => {
+      const userData = userFactory.build();
+
+      const response = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send(userData)
+        .expect(201);
+
+      expect(response.body).toMatchObject({
+        access_token: expect.any(String),
+        user: expect.objectContaining({
+          email: userData.email,
+        }),
+      });
+    });
+  });
+});
+```
+
+### End-to-End Testing
+
+E2E tests verify complete user workflows using Cypress for browser automation.
+
+#### Example E2E Test
+
+```typescript
+describe('User Registration Flow', () => {
+  beforeEach(() => {
+    cy.clearDatabase();
+    cy.visit('/register');
+  });
+
+  it('should register a new user successfully', () => {
+    const userData = {
+      email: 'test@example.com',
+      password: 'password123',
+      name: 'Test User',
+    };
+
+    cy.fillForm(userData);
+    cy.get('[data-cy=register-button]').click();
+
+    cy.checkToast('Registration successful', 'success');
+    cy.url().should('include', '/dashboard');
+    cy.get('[data-cy=user-menu]').should('be.visible');
+  });
+});
+```
+
+### Test Data Management
+
+We use factories to generate consistent test data across all test types.
+
+#### Using Factories
+
+```typescript
+import { userFactory, courseFactory } from '../factories';
+
+// Create single instances
+const user = userFactory.create();
+const course = courseFactory.create();
+
+// Create with traits
+const admin = userFactory.admin();
+const premiumCourse = courseFactory.premium();
+
+// Create with overrides
+const specificUser = userFactory.create({
+  overrides: { email: 'specific@example.com' }
+});
+
+// Create multiple instances
+const users = userFactory.createMany(5);
+const courses = courseFactory.createCatalog(10);
+
+// Create test scenarios
+const scenario = testData.scenarios.learningPlatform();
+```
+
+### Performance Testing
+
+Performance tests ensure the system can handle expected load and identify bottlenecks.
+
+#### Load Testing with Artillery
+
+```yaml
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 50
+      name: "Load test"
+
+scenarios:
+  - name: "API Load Test"
+    flow:
+      - post:
+          url: "/auth/login"
+          json:
+            email: "{{ $randomEmail() }}"
+            password: "password123"
+      - get:
+          url: "/courses"
+```
+
+### Accessibility Testing
+
+Accessibility tests ensure our application is usable by everyone.
+
+```typescript
+describe('Accessibility Tests', () => {
+  it('should be accessible', () => {
+    cy.visit('/login');
+    cy.checkA11y();
+  });
+
+  it('should support keyboard navigation', () => {
+    cy.visit('/login');
+    cy.get('body').tab();
+    cy.focused().should('have.attr', 'data-cy', 'email-input');
+  });
+});
+```
+
+### Visual Regression Testing
+
+Visual tests catch unintended UI changes.
+
+```typescript
+describe('Visual Tests', () => {
+  it('should match login page design', () => {
+    cy.visit('/login');
+    cy.visualSnapshot('login-page');
+  });
+
+  it('should be responsive', () => {
+    cy.visit('/dashboard');
+    cy.checkResponsive(['mobile', 'tablet', 'desktop']);
+  });
+});
+```
 
 ### Unit Tests
 - Test individual components in isolation
