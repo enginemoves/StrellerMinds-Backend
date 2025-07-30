@@ -33,4 +33,7 @@ export class ErrorResponseDto {
 
   @ApiProperty({ required: false })
   stack?: string;
+
+  @ApiProperty({ required: false })
+  correlationId?: string;
 }
