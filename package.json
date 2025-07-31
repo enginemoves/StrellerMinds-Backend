@@ -61,6 +61,7 @@
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.0.0",
     "@nestjs/core": "^10.0.0",
+    "@nestjs/cqrs": "^10.2.7",
     "@nestjs/event-emitter": "^3.0.1",
     "@nestjs/jwt": "^10.0.0",
     "@nestjs/mapped-types": "^2.1.0",
