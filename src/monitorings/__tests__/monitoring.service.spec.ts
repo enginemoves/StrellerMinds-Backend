@@ -65,8 +65,10 @@ describe("MonitoringModule", () => {
       metricsCollector.recordRequest("/api/users")
       metricsCollector.recordRequest("/api/posts")
 
-      const metrics = metricsCollector.getMetrics()
-      expect(metrics).toBeDefined()
+     const metrics = metricsCollector.getMetrics();
+     expect(metrics.requests['/api/users']).toBe(2);
+     expect(metrics.requests['/api/posts']).toBe(1);
+     expect(metrics.totalRequests).toBe(3);
     })
 
     it("should record response time metrics", () => {
@@ -220,16 +222,28 @@ describe("MonitoringModule", () => {
       expect(context2Logs.length).toBeGreaterThan(0)
     })
 
-    it("should filter logs by date", () => {
-      const since = new Date()
-
-      // Wait a bit to ensure timestamp difference
-      setTimeout(() => {
-        loggerService.log("Recent message", "TestContext")
-        const recentLogs = loggerService.getLogs(since)
-        expect(recentLogs.length).toBeGreaterThan(0)
-      }, 10)
+   it("should filter logs by date", async () => {
+  const since = new Date()
+  await new Promise(resolve => setTimeout(resolve, 10))
+  
+  loggerService.log("Recent message", "TestContext")
+  const recentLogs = loggerService.getLogs(since)
+  expect(recentLogs.length).toBeGreaterThan(0)
+})
     })
+
+it("should handle invalid metrics gracefully", () => {
+  expect(() => metricsCollector.recordResponseTime(-1)).toThrow()
+  expect(() => metricsCollector.recordResponseTime("invalid")).toThrow()
+})
+
+it("should handle health check failures", async () => {
+  const failingCheck = jest.fn().mockRejectedValue(new Error("Service down"))
+  healthCheckService.registerHealthCheck("failing-service", failingCheck)
+  
+  const result = await healthCheckService.performImmediateHealthCheck("failing-service")
+  expect(result.status).toBe(HealthStatus.UNHEALTHY)
+})
 
     it("should get logs by trace ID", () => {
       const traceId = "test-trace-123"
@@ -270,10 +284,11 @@ describe("MonitoringModule", () => {
   })
 
   describe("Integration Tests", () => {
-    it("should work together for monitoring workflow", async () => {
-      // Record some metrics
-      metricsCollector.recordRequest("/api/test")
-      metricsCollector.recordResponseTime(500)
+it("should trigger alerts based on metrics thresholds", async () => {
+  // Record high response times
+  for (let i = 0; i < 10; i++) {
+    metricsCollector.recordResponseTime(1500) // Above threshold
+  }
 
       // Perform health checks
       await healthCheckService.performImmediateHealthCheck()
@@ -287,9 +302,11 @@ describe("MonitoringModule", () => {
       // Verify everything is working
       const metrics = metricsCollector.getMetrics()
       const health = healthCheckService.getOverallHealth()
-      const alerts = alertService.getAlerts()
+      const alerts = alertService.getAlertsByType(AlertType.PERFORMANCE)
       const logs = loggerService.getLogs()
 
+      expect(alerts.length).toBeGreaterThan(0)
+  expect(alerts[0].message).toContain("response time")
       expect(metrics).toBeDefined()
       expect(health.status).toBeDefined()
       expect(Array.isArray(alerts)).toBe(true)
