@@ -289,7 +289,6 @@ it("should trigger alerts based on metrics thresholds", async () => {
   for (let i = 0; i < 10; i++) {
     metricsCollector.recordResponseTime(1500) // Above threshold
   }
-
       // Perform health checks
       await healthCheckService.performImmediateHealthCheck()
 
