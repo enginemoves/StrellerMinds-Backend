@@ -1,13 +1,21 @@
-import { Injectable, Logger, Type } from '@nestjs/common';
+import { Injectable, Logger, Type, BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 
 /**
  * Service for managing dependency injection and service resolution
  */
+export interface ServiceResolutionError extends Error {
+  serviceName: string;
+  token?: string | symbol;
+  originalError: Error;
+}
+
 @Injectable()
 export class DependencyInjectionService {
   private readonly logger = new Logger(DependencyInjectionService.name);
   private readonly serviceCache = new Map<string, any>();
+  private readonly cacheEnabled = true;
+  private readonly maxCacheSize = 100;
 
   constructor(private readonly moduleRef: ModuleRef) {}
 
@@ -15,11 +23,33 @@ export class DependencyInjectionService {
    * Get a service instance by type
    */
   async getService<T>(serviceType: Type<T>): Promise<T> {
+    const cacheKey = `type:${serviceType.name}`;
+    
+    // Check cache first
+    if (this.cacheEnabled && this.serviceCache.has(cacheKey)) {
+      this.logger.debug(`Service ${serviceType.name} found in cache`);
+      return this.serviceCache.get(cacheKey);
+    }
+
     try {
-      return await this.moduleRef.get(serviceType, { strict: false });
+      const service = await this.moduleRef.get(serviceType, { strict: false });
+      
+      // Cache the service if caching is enabled
+      if (this.cacheEnabled) {
+        this.setCacheEntry(cacheKey, service);
+      }
+      
+      return service;
     } catch (error) {
+      const serviceError: ServiceResolutionError = {
+        name: 'ServiceResolutionError',
+        message: `Failed to resolve service ${serviceType.name}: ${error.message}`,
+        serviceName: serviceType.name,
+        originalError: error,
+      };
+      
       this.logger.error(`Failed to resolve service ${serviceType.name}: ${error.message}`);
-      throw error;
+      throw new ServiceUnavailableException(serviceError.message, { cause: serviceError });
     }
   }
 
@@ -27,11 +57,34 @@ export class DependencyInjectionService {
    * Get a service instance by token
    */
   async getServiceByToken<T>(token: string | symbol): Promise<T> {
+    const cacheKey = `token:${String(token)}`;
+    
+    // Check cache first
+    if (this.cacheEnabled && this.serviceCache.has(cacheKey)) {
+      this.logger.debug(`Service with token ${String(token)} found in cache`);
+      return this.serviceCache.get(cacheKey);
+    }
+
     try {
-      return await this.moduleRef.get(token, { strict: false });
+      const service = await this.moduleRef.get(token, { strict: false });
+      
+      // Cache the service if caching is enabled
+      if (this.cacheEnabled) {
+        this.setCacheEntry(cacheKey, service);
+      }
+      
+      return service;
     } catch (error) {
+      const serviceError: ServiceResolutionError = {
+        name: 'ServiceResolutionError',
+        message: `Failed to resolve service by token ${String(token)}: ${error.message}`,
+        serviceName: String(token),
+        token,
+        originalError: error,
+      };
+      
       this.logger.error(`Failed to resolve service by token ${String(token)}: ${error.message}`);
-      throw error;
+      throw new ServiceUnavailableException(serviceError.message, { cause: serviceError });
     }
   }
 
@@ -49,14 +102,15 @@ export class DependencyInjectionService {
 
   /**
    * Get all available services of a specific type
+   * Note: This is a basic implementation. For production use, consider using a service registry
    */
   async getAllServices<T>(serviceType: Type<T>): Promise<T[]> {
     try {
-      // This is a simplified approach - in a real implementation,
-      // you might want to use reflection or a service registry
-      return [];
+      // Try to get the service first to see if it exists
+      const service = await this.getService(serviceType);
+      return service ? [service] : [];
     } catch (error) {
-      this.logger.error(`Failed to get all services of type ${serviceType.name}: ${error.message}`);
+      this.logger.debug(`No services of type ${serviceType.name} found: ${error.message}`);
       return [];
     }
   }
@@ -157,6 +211,24 @@ export class DependencyInjectionService {
   }
 
   /**
+   * Set cache entry with size management
+   */
+  private setCacheEntry(key: string, value: any): void {
+    if (!this.cacheEnabled) return;
+    
+    // Implement LRU-like behavior by removing oldest entries if cache is full
+    if (this.serviceCache.size >= this.maxCacheSize) {
+      const firstKey = this.serviceCache.keys().next().value;
+      if (firstKey) {
+        this.serviceCache.delete(firstKey);
+      }
+    }
+    
+    this.serviceCache.set(key, value);
+    this.logger.debug(`Service cached: ${key}`);
+  }
+
+  /**
    * Clear service cache
    */
   clearCache(): void {
@@ -167,10 +239,23 @@ export class DependencyInjectionService {
   /**
    * Get cache statistics
    */
-  getCacheStats(): { size: number; keys: string[] } {
+  getCacheStats(): { size: number; keys: string[]; maxSize: number; enabled: boolean } {
     return {
       size: this.serviceCache.size,
       keys: Array.from(this.serviceCache.keys()),
+      maxSize: this.maxCacheSize,
+      enabled: this.cacheEnabled,
     };
+  }
+
+  /**
+   * Enable or disable caching
+   */
+  setCacheEnabled(enabled: boolean): void {
+    (this as any).cacheEnabled = enabled;
+    if (!enabled) {
+      this.clearCache();
+    }
+    this.logger.debug(`Service caching ${enabled ? 'enabled' : 'disabled'}`);
   }
 }

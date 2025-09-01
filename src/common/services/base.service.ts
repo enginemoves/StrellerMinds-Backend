@@ -2,8 +2,10 @@ import { Injectable, Logger, InternalServerErrorException, NotFoundException } f
 import { Repository, FindOptionsWhere, FindManyOptions } from 'typeorm';
 
 export interface PaginationOptions {
-  page: number;
-  limit: number;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
 }
 
 export interface PaginatedResult<T> {
@@ -17,6 +19,8 @@ export interface PaginatedResult<T> {
 @Injectable()
 export abstract class BaseService<T> {
   protected readonly logger = new Logger(this.constructor.name);
+  protected readonly defaultPageSize = 10;
+  protected readonly maxPageSize = 100;
 
   constructor(protected readonly repository: Repository<T>) {}
 
@@ -28,8 +32,7 @@ export abstract class BaseService<T> {
       const entity = this.repository.create(data);
       return await this.repository.save(entity);
     } catch (error) {
-      this.logger.error(`Error creating entity: ${error.message}`, error.stack);
-      throw new InternalServerErrorException('Error creating entity');
+      this.handleError(error, 'create entity');
     }
   }
 
@@ -50,8 +53,7 @@ export abstract class BaseService<T> {
       return entity;
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
-      this.logger.error(`Error finding entity by ID ${id}: ${error.message}`, error.stack);
-      throw new InternalServerErrorException('Error fetching entity');
+      this.handleError(error, 'find entity by ID', `ID: ${id}`);
     }
   }
 
@@ -62,23 +64,35 @@ export abstract class BaseService<T> {
     options: FindManyOptions<T> & PaginationOptions
   ): Promise<PaginatedResult<T>> {
     try {
-      const { page, limit, ...findOptions } = options;
+      const { 
+        page = 1, 
+        limit = this.defaultPageSize, 
+        sortBy, 
+        sortOrder = 'ASC', 
+        ...findOptions 
+      } = options;
+      
+      // Ensure page and limit are within reasonable bounds
+      const safePage = Math.max(1, page);
+      const safeLimit = Math.min(Math.max(1, limit), this.maxPageSize);
+      const skip = (safePage - 1) * safeLimit;
+
       const [data, total] = await this.repository.findAndCount({
         ...findOptions,
-        skip: (page - 1) * limit,
-        take: limit,
+        skip,
+        take: safeLimit,
+        order: sortBy ? { [sortBy]: sortOrder } : undefined,
       });
 
       return {
         data,
         total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+        page: safePage,
+        limit: safeLimit,
+        totalPages: Math.ceil(total / safeLimit),
       };
     } catch (error) {
-      this.logger.error(`Error finding entities: ${error.message}`, error.stack);
-      throw new InternalServerErrorException('Error fetching entities');
+      this.handleError(error, 'find entities with pagination');
     }
   }
 
@@ -92,24 +106,38 @@ export abstract class BaseService<T> {
       return await this.findEntityById(id);
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
-      this.logger.error(`Error updating entity ${id}: ${error.message}`, error.stack);
-      throw new InternalServerErrorException('Error updating entity');
+      this.handleError(error, 'update entity', `ID: ${id}`);
     }
   }
 
   /**
-   * Delete entity by ID (soft delete if available)
+   * Delete entity by ID (soft delete if available, with fallback to hard delete)
    */
-  protected async deleteEntity(id: string): Promise<void> {
+  protected async deleteEntity(id: string, forceHardDelete = false): Promise<void> {
     try {
-      const result = await this.repository.softDelete(id);
-      if (result.affected === 0) {
-        throw new NotFoundException(`Entity with ID ${id} not found`);
+      if (forceHardDelete) {
+        const result = await this.repository.delete(id);
+        if (result.affected === 0) {
+          throw new NotFoundException(`Entity with ID ${id} not found`);
+        }
+      } else {
+        // Try soft delete first, fallback to hard delete if not supported
+        try {
+          const result = await this.repository.softDelete(id);
+          if (result.affected === 0) {
+            throw new NotFoundException(`Entity with ID ${id} not found`);
+          }
+        } catch (softDeleteError) {
+          this.logger.warn(`Soft delete not supported for entity ${id}, using hard delete`);
+          const result = await this.repository.delete(id);
+          if (result.affected === 0) {
+            throw new NotFoundException(`Entity with ID ${id} not found`);
+          }
+        }
       }
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
-      this.logger.error(`Error deleting entity ${id}: ${error.message}`, error.stack);
-      throw new InternalServerErrorException('Error deleting entity');
+      this.handleError(error, 'delete entity', `ID: ${id}`);
     }
   }
 
@@ -121,8 +149,7 @@ export abstract class BaseService<T> {
       const count = await this.repository.count({ where });
       return count > 0;
     } catch (error) {
-      this.logger.error(`Error checking entity existence: ${error.message}`, error.stack);
-      throw new InternalServerErrorException('Error checking entity existence');
+      this.handleError(error, 'check entity existence');
     }
   }
 

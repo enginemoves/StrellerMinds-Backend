@@ -1,8 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 
 @Injectable()
 export class SharedUtilityService {
   private readonly logger = new Logger(SharedUtilityService.name);
+  private readonly maxRecursionDepth = 100;
+  private readonly maxObjectSize = 1000000; // 1MB limit for safety
 
   /**
    * Validate email format
@@ -58,15 +60,29 @@ export class SharedUtilityService {
 
   /**
    * Sanitize input string to prevent injection attacks
+   * Note: For production use, consider using a dedicated sanitization library like DOMPurify
    */
   sanitizeInput(input: string): string {
     if (!input) return input;
     
-    // Remove potentially dangerous characters
+    // Basic XSS protection - remove script tags and dangerous attributes
     return input
-      .replace(/[<>]/g, '')
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+      .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+      .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+      .replace(/<link\b[^<]*>/gi, '')
+      .replace(/<meta\b[^<]*>/gi, '')
       .replace(/javascript:/gi, '')
-      .replace(/on\w+=/gi, '')
+      .replace(/vbscript:/gi, '')
+      .replace(/on\w+\s*=/gi, '')
+      .replace(/<[^>]*>/g, '') // Remove all remaining HTML tags
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#x27;/g, "'")
+      .replace(/&#x2F;/g, '/')
       .trim();
   }
 
@@ -98,9 +114,22 @@ export class SharedUtilityService {
   }
 
   /**
-   * Deep clone an object
+   * Deep clone an object with stack overflow protection
    */
-  deepClone<T>(obj: T): T {
+  deepClone<T>(obj: T, depth = 0): T {
+    // Check recursion depth to prevent stack overflow
+    if (depth > this.maxRecursionDepth) {
+      this.logger.warn(`Deep clone reached maximum recursion depth (${this.maxRecursionDepth})`);
+      throw new BadRequestException('Object too deeply nested for safe cloning');
+    }
+
+    // Check object size to prevent memory issues
+    const objSize = JSON.stringify(obj).length;
+    if (objSize > this.maxObjectSize) {
+      this.logger.warn(`Object too large for safe cloning (${objSize} bytes)`);
+      throw new BadRequestException('Object too large for safe cloning');
+    }
+
     if (obj === null || typeof obj !== 'object') {
       return obj;
     }
@@ -110,14 +139,14 @@ export class SharedUtilityService {
     }
     
     if (obj instanceof Array) {
-      return obj.map(item => this.deepClone(item)) as unknown as T;
+      return obj.map(item => this.deepClone(item, depth + 1)) as unknown as T;
     }
     
     if (typeof obj === 'object') {
       const cloned = {} as T;
       for (const key in obj) {
         if (obj.hasOwnProperty(key)) {
-          cloned[key] = this.deepClone(obj[key]);
+          cloned[key] = this.deepClone(obj[key], depth + 1);
         }
       }
       return cloned;
@@ -127,15 +156,21 @@ export class SharedUtilityService {
   }
 
   /**
-   * Merge objects with deep merge strategy
+   * Merge objects with deep merge strategy and stack overflow protection
    */
-  deepMerge<T>(target: T, source: Partial<T>): T {
+  deepMerge<T>(target: T, source: Partial<T>, depth = 0): T {
+    // Check recursion depth to prevent stack overflow
+    if (depth > this.maxRecursionDepth) {
+      this.logger.warn(`Deep merge reached maximum recursion depth (${this.maxRecursionDepth})`);
+      throw new BadRequestException('Objects too deeply nested for safe merging');
+    }
+
     const result = this.deepClone(target);
     
     for (const key in source) {
       if (source.hasOwnProperty(key)) {
         if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
-          result[key] = this.deepMerge(result[key], source[key]);
+          result[key] = this.deepMerge(result[key], source[key], depth + 1);
         } else {
           result[key] = source[key];
         }
@@ -146,15 +181,34 @@ export class SharedUtilityService {
   }
 
   /**
-   * Convert object keys to camelCase
+   * Convert object keys to camelCase (recursively)
    */
-  toCamelCase(obj: Record<string, any>): Record<string, any> {
+  toCamelCase(obj: Record<string, any>, depth = 0): Record<string, any> {
+    // Check recursion depth to prevent stack overflow
+    if (depth > this.maxRecursionDepth) {
+      this.logger.warn(`toCamelCase reached maximum recursion depth (${this.maxRecursionDepth})`);
+      throw new BadRequestException('Object too deeply nested for safe transformation');
+    }
+
     const camelCaseObj: Record<string, any> = {};
     
     for (const key in obj) {
       if (obj.hasOwnProperty(key)) {
         const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-        camelCaseObj[camelKey] = obj[key];
+        
+        // Recursively transform nested objects
+        if (obj[key] && typeof obj[key] === 'object' && !Array.isArray(obj[key]) && !(obj[key] instanceof Date)) {
+          camelCaseObj[camelKey] = this.toCamelCase(obj[key], depth + 1);
+        } else if (Array.isArray(obj[key])) {
+          // Transform array elements if they are objects
+          camelCaseObj[camelKey] = obj[key].map(item => 
+            item && typeof item === 'object' && !(item instanceof Date) 
+              ? this.toCamelCase(item, depth + 1) 
+              : item
+          );
+        } else {
+          camelCaseObj[camelKey] = obj[key];
+        }
       }
     }
     
@@ -162,15 +216,34 @@ export class SharedUtilityService {
   }
 
   /**
-   * Convert object keys to snake_case
+   * Convert object keys to snake_case (recursively)
    */
-  toSnakeCase(obj: Record<string, any>): Record<string, any> {
+  toSnakeCase(obj: Record<string, any>, depth = 0): Record<string, any> {
+    // Check recursion depth to prevent stack overflow
+    if (depth > this.maxRecursionDepth) {
+      this.logger.warn(`toSnakeCase reached maximum recursion depth (${this.maxRecursionDepth})`);
+      throw new BadRequestException('Object too deeply nested for safe transformation');
+    }
+
     const snakeCaseObj: Record<string, any> = {};
     
     for (const key in obj) {
       if (obj.hasOwnProperty(key)) {
         const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-        snakeCaseObj[snakeKey] = obj[key];
+        
+        // Recursively transform nested objects
+        if (obj[key] && typeof obj[key] === 'object' && !Array.isArray(obj[key]) && !(obj[key] instanceof Date)) {
+          snakeCaseObj[snakeKey] = this.toSnakeCase(obj[key], depth + 1);
+        } else if (Array.isArray(obj[key])) {
+          // Transform array elements if they are objects
+          snakeCaseObj[snakeKey] = obj[key].map(item => 
+            item && typeof item === 'object' && !(item instanceof Date) 
+              ? this.toSnakeCase(item, depth + 1) 
+              : item
+          );
+        } else {
+          snakeCaseObj[snakeKey] = obj[key];
+        }
       }
     }
     
@@ -201,5 +274,101 @@ export class SharedUtilityService {
     }
     
     return cleaned;
+  }
+
+  /**
+   * Safely get nested object property with fallback
+   */
+  safeGet<T>(obj: any, path: string, defaultValue?: T): T | undefined {
+    try {
+      const keys = path.split('.');
+      let result = obj;
+      
+      for (const key of keys) {
+        if (result === null || result === undefined || typeof result !== 'object') {
+          return defaultValue;
+        }
+        result = result[key];
+      }
+      
+      return result !== undefined ? result : defaultValue;
+    } catch (error) {
+      this.logger.warn(`Error accessing nested property ${path}: ${error.message}`);
+      return defaultValue;
+    }
+  }
+
+  /**
+   * Safely set nested object property
+   */
+  safeSet(obj: any, path: string, value: any): boolean {
+    try {
+      const keys = path.split('.');
+      let current = obj;
+      
+      for (let i = 0; i < keys.length - 1; i++) {
+        const key = keys[i];
+        if (!(key in current) || typeof current[key] !== 'object' || current[key] === null) {
+          current[key] = {};
+        }
+        current = current[key];
+      }
+      
+      current[keys[keys.length - 1]] = value;
+      return true;
+    } catch (error) {
+      this.logger.error(`Error setting nested property ${path}: ${error.message}`);
+      return false;
+    }
+  }
+
+  /**
+   * Check if a value is a valid UUID
+   */
+  isValidUUID(value: string): boolean {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(value);
+  }
+
+  /**
+   * Generate a UUID v4
+   */
+  generateUUID(): string {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
+
+  /**
+   * Debounce function execution
+   */
+  debounce<T extends (...args: any[]) => any>(
+    func: T,
+    wait: number
+  ): (...args: Parameters<T>) => void {
+    let timeout: NodeJS.Timeout;
+    return (...args: Parameters<T>) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+  }
+
+  /**
+   * Throttle function execution
+   */
+  throttle<T extends (...args: any[]) => any>(
+    func: T,
+    limit: number
+  ): (...args: Parameters<T>) => void {
+    let inThrottle: boolean;
+    return (...args: Parameters<T>) => {
+      if (!inThrottle) {
+        func.apply(this, args);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    };
   }
 }
