@@ -2,6 +2,9 @@ import { Module } from "@nestjs/common"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { BullModule } from "@nestjs/bull"
 import { ScheduleModule } from "@nestjs/schedule"
+import { ConfigModule } from "@nestjs/config"
+import { EventEmitterModule } from "@nestjs/event-emitter"
+import dataQualityConfig from "./config/data-quality.config"
 
 import { DataQualityController } from "./controllers/data-quality.controller"
 import { DataGovernanceController } from "./controllers/data-governance.controller"
@@ -26,6 +29,8 @@ import { DataQualityReport } from "./entities/data-quality-report.entity"
 
 @Module({
   imports: [
+    ConfigModule.forFeature(dataQualityConfig),
+    EventEmitterModule.forRoot(),
     TypeOrmModule.forFeature([
       DataQualityRule,
       DataQualityMetric,
@@ -34,7 +39,11 @@ import { DataQualityReport } from "./entities/data-quality-report.entity"
       DataLineage,
       DataQualityReport,
     ]),
-    BullModule.registerQueue({ name: "data-quality" }, { name: "data-cleansing" }),
+    BullModule.registerQueue(
+      { name: "data-quality" }, 
+      { name: "data-cleansing" },
+      { name: "data-quality-monitoring" }
+    ),
     ScheduleModule.forRoot(),
   ],
   controllers: [DataQualityController, DataGovernanceController, DataValidationController],

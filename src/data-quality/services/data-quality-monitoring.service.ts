@@ -1,6 +1,9 @@
 import { Injectable, Logger } from "@nestjs/common"
 import type { Repository } from "typeorm"
 import { Cron, CronExpression } from "@nestjs/schedule"
+import { EventEmitter2 } from "@nestjs/event-emitter"
+import { InjectQueue } from "@nestjs/bull"
+import type { Queue } from "bull"
 
 import type { DataQualityMetric } from "../entities/data-quality-metric.entity"
 import type { DataQualityIssue } from "../entities/data-quality-issue.entity"
@@ -16,6 +19,34 @@ export interface QualityDashboard {
   activeIssues: number
   criticalIssues: number
   recentIssues: DataQualityIssue[]
+  healthStatus: 'healthy' | 'warning' | 'critical'
+  lastUpdated: Date
+  entityCounts: Record<string, number>
+  performanceMetrics: {
+    avgProcessingTime: number
+    totalChecksToday: number
+    successRate: number
+  }
+}
+
+export interface QualityAlert {
+  id: string
+  type: 'quality_issue' | 'threshold_breach' | 'system_alert'
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  message: string
+  timestamp: Date
+  entityType: string
+  metadata?: Record<string, any>
+  acknowledged: boolean
+  resolvedAt?: Date
+}
+
+export interface RealTimeMetrics {
+  currentScore: number
+  trend: 'improving' | 'declining' | 'stable'
+  activeChecks: number
+  failureRate: number
+  lastCheckTime: Date
 }
 
 @Injectable()
@@ -25,6 +56,8 @@ export class DataQualityMonitoringService {
   constructor(
     private readonly metricRepository: Repository<DataQualityMetric>,
     private readonly issueRepository: Repository<DataQualityIssue>,
+    private readonly eventEmitter: EventEmitter2,
+    @InjectQueue('data-quality-monitoring') private readonly monitoringQueue: Queue,
   ) {}
 
   async getDashboard(entityType?: string): Promise<QualityDashboard> {
@@ -66,6 +99,15 @@ export class DataQualityMonitoringService {
       take: 10,
     })
 
+    // Calculate health status
+    const healthStatus = this.calculateHealthStatus(overallScore, criticalIssues)
+    
+    // Get entity counts
+    const entityCounts = await this.getEntityCounts(entityType)
+    
+    // Get performance metrics
+    const performanceMetrics = await this.getPerformanceMetrics(entityType, startDate, endDate)
+
     return {
       overallScore,
       categoryScores,
@@ -73,6 +115,10 @@ export class DataQualityMonitoringService {
       activeIssues,
       criticalIssues,
       recentIssues,
+      healthStatus,
+      lastUpdated: new Date(),
+      entityCounts,
+      performanceMetrics,
     }
   }
 
@@ -286,5 +332,228 @@ export class DataQualityMonitoringService {
     }
 
     return alerts.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+  }
+
+  private calculateHealthStatus(overallScore: number, criticalIssues: number): 'healthy' | 'warning' | 'critical' {
+    if (criticalIssues > 0 || overallScore < 60) {
+      return 'critical'
+    }
+    if (overallScore < 80) {
+      return 'warning'
+    }
+    return 'healthy'
+  }
+
+  private async getEntityCounts(entityType?: string): Promise<Record<string, number>> {
+    const query = this.metricRepository
+      .createQueryBuilder('metric')
+      .select('metric.entityType', 'entityType')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('metric.entityType')
+
+    if (entityType) {
+      query.where('metric.entityType = :entityType', { entityType })
+    }
+
+    const results = await query.getRawMany()
+    const counts: Record<string, number> = {}
+
+    for (const result of results) {
+      counts[result.entityType] = parseInt(result.count, 10)
+    }
+
+    return counts
+  }
+
+  private async getPerformanceMetrics(entityType?: string, startDate?: Date, endDate?: Date): Promise<{
+    avgProcessingTime: number
+    totalChecksToday: number
+    successRate: number
+  }> {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    // Get total checks today
+    const totalChecksQuery = this.metricRepository
+      .createQueryBuilder('metric')
+      .where('metric.timestamp >= :today', { today })
+
+    if (entityType) {
+      totalChecksQuery.andWhere('metric.entityType = :entityType', { entityType })
+    }
+
+    const totalChecksToday = await totalChecksQuery.getCount()
+
+    // Get success rate
+    const successQuery = this.metricRepository
+      .createQueryBuilder('metric')
+      .select('AVG(CASE WHEN metric.passed = true THEN 1 ELSE 0 END)', 'successRate')
+
+    if (entityType) {
+      successQuery.andWhere('metric.entityType = :entityType', { entityType })
+    }
+
+    if (startDate) {
+      successQuery.andWhere('metric.timestamp >= :startDate', { startDate })
+    }
+
+    if (endDate) {
+      successQuery.andWhere('metric.timestamp <= :endDate', { endDate })
+    }
+
+    const successResult = await successQuery.getRawOne()
+    const successRate = parseFloat(successResult.successRate) * 100 || 0
+
+    return {
+      avgProcessingTime: 0, // This would need to be tracked separately
+      totalChecksToday,
+      successRate,
+    }
+  }
+
+  async getRealTimeMetrics(entityType?: string): Promise<RealTimeMetrics> {
+    const now = new Date()
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
+
+    // Get current score (last hour average)
+    const currentScoreQuery = this.metricRepository
+      .createQueryBuilder('metric')
+      .select('AVG(metric.value)', 'avgScore')
+      .where('metric.timestamp >= :oneHourAgo', { oneHourAgo })
+
+    if (entityType) {
+      currentScoreQuery.andWhere('metric.entityType = :entityType', { entityType })
+    }
+
+    const currentScoreResult = await currentScoreQuery.getRawOne()
+    const currentScore = parseFloat(currentScoreResult.avgScore) || 0
+
+    // Get trend (compare with previous hour)
+    const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000)
+    const previousScoreQuery = this.metricRepository
+      .createQueryBuilder('metric')
+      .select('AVG(metric.value)', 'avgScore')
+      .where('metric.timestamp >= :twoHoursAgo', { twoHoursAgo })
+      .andWhere('metric.timestamp < :oneHourAgo', { oneHourAgo })
+
+    if (entityType) {
+      previousScoreQuery.andWhere('metric.entityType = :entityType', { entityType })
+    }
+
+    const previousScoreResult = await previousScoreQuery.getRawOne()
+    const previousScore = parseFloat(previousScoreResult.avgScore) || 0
+
+    let trend: 'improving' | 'declining' | 'stable' = 'stable'
+    const scoreDiff = currentScore - previousScore
+    if (Math.abs(scoreDiff) > 5) {
+      trend = scoreDiff > 0 ? 'improving' : 'declining'
+    }
+
+    // Get active checks count
+    const activeChecks = await this.metricRepository.count({
+      where: {
+        timestamp: new Date(now.getTime() - 5 * 60 * 1000), // Last 5 minutes
+        ...(entityType && { entityType }),
+      },
+    })
+
+    // Get failure rate
+    const failureQuery = this.metricRepository
+      .createQueryBuilder('metric')
+      .select('AVG(CASE WHEN metric.passed = false THEN 1 ELSE 0 END)', 'failureRate')
+      .where('metric.timestamp >= :oneHourAgo', { oneHourAgo })
+
+    if (entityType) {
+      failureQuery.andWhere('metric.entityType = :entityType', { entityType })
+    }
+
+    const failureResult = await failureQuery.getRawOne()
+    const failureRate = parseFloat(failureResult.failureRate) * 100 || 0
+
+    // Get last check time
+    const lastCheckQuery = this.metricRepository
+      .createQueryBuilder('metric')
+      .select('MAX(metric.timestamp)', 'lastCheck')
+
+    if (entityType) {
+      lastCheckQuery.andWhere('metric.entityType = :entityType', { entityType })
+    }
+
+    const lastCheckResult = await lastCheckQuery.getRawOne()
+    const lastCheckTime = lastCheckResult.lastCheck || now
+
+    return {
+      currentScore,
+      trend,
+      activeChecks,
+      failureRate,
+      lastCheckTime,
+    }
+  }
+
+  async acknowledgeAlert(alertId: string, acknowledgedBy: string): Promise<void> {
+    // This would update an alert acknowledgment table if we had one
+    // For now, we'll emit an event
+    this.eventEmitter.emit('alert.acknowledged', {
+      alertId,
+      acknowledgedBy,
+      timestamp: new Date(),
+    })
+  }
+
+  async scheduleQualityCheck(entityType: string, delay = 0): Promise<void> {
+    await this.monitoringQueue.add(
+      'quality-check',
+      { entityType },
+      { delay }
+    )
+  }
+
+  @Cron(CronExpression.EVERY_5_MINUTES)
+  async performRealTimeMonitoring(): Promise<void> {
+    try {
+      const entityTypes = await this.getUniqueEntityTypes()
+      
+      for (const entityType of entityTypes) {
+        const metrics = await this.getRealTimeMetrics(entityType)
+        
+        // Emit real-time metrics event
+        this.eventEmitter.emit('metrics.realtime', {
+          entityType,
+          metrics,
+          timestamp: new Date(),
+        })
+
+        // Check for critical conditions
+        if (metrics.failureRate > 50) {
+          this.eventEmitter.emit('alert.critical', {
+            type: 'high_failure_rate',
+            entityType,
+            failureRate: metrics.failureRate,
+            timestamp: new Date(),
+          })
+        }
+
+        if (metrics.currentScore < 60) {
+          this.eventEmitter.emit('alert.critical', {
+            type: 'low_quality_score',
+            entityType,
+            score: metrics.currentScore,
+            timestamp: new Date(),
+          })
+        }
+      }
+    } catch (error: any) {
+      this.logger.error(`Real-time monitoring failed: ${error.message}`, error.stack)
+    }
+  }
+
+  private async getUniqueEntityTypes(): Promise<string[]> {
+    const result = await this.metricRepository
+      .createQueryBuilder('metric')
+      .select('DISTINCT metric.entityType', 'entityType')
+      .getRawMany()
+
+    return result.map((r: any) => r.entityType)
   }
 }
