@@ -26,8 +26,42 @@ export class MentorshipService {
    * @returns An array of potential mentors.
    */
   async matchMentorMentee(menteeId: string, criteria: any): Promise<User[]> {
-    // TODO: Implement real matching logic
-    return this.userRepo.find({ where: { /* skills, interests, etc. */ } });
+    // Fetch mentee and optionally use preferences/criteria for matching
+    const mentee = await this.userRepo.findOne({ where: { id: menteeId } });
+    if (!mentee) return [];
+
+    const skills: string[] = (criteria?.skills || criteria?.interests || []).map((s: string) => s.toLowerCase());
+    const availability: string | undefined = criteria?.availability;
+
+    // Basic heuristic:
+    // - Prefer instructors (mentors) with higher reputation
+    // - Optional filter by availability if provided (assuming stored in settings.preferredLanguage as placeholder is not ideal)
+    // - Score overlap by tags/skills from learning paths or recommendations is not directly stored; use simple matching on username/bio as placeholder signal
+
+    const potentialMentors = await this.userRepo.find({ where: { isInstructor: true } });
+
+    const scored = potentialMentors
+      .map((mentor) => {
+        let score = 0;
+        // Reputation boost
+        if (typeof mentor.reputation === 'number') score += mentor.reputation;
+
+        // Simple textual signals using bio and username for provided skills/interests (fallback due to missing explicit fields)
+        const haystack = `${mentor.firstName} ${mentor.lastName} ${mentor.bio || ''} ${mentor.username}`.toLowerCase();
+        for (const s of skills) {
+          if (s && haystack.includes(s)) score += 10;
+        }
+
+        // Availability placeholder: if provided, lightly boost all mentors equally (no stored availability field)
+        if (availability) score += 1;
+
+        return { mentor, score };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10)
+      .map((s) => s.mentor);
+
+    return scored;
   }
 
   /**

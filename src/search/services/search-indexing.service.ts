@@ -2,6 +2,8 @@ import { Injectable, Logger } from "@nestjs/common"
 import type { ElasticsearchService } from "@nestjs/elasticsearch"
 import type { ConfigService } from "@nestjs/config"
 import type { Course } from "../../courses/entities/course.entity"
+import { InjectRepository } from "@nestjs/typeorm"
+import { Repository } from "typeorm"
 import type { SearchMLService } from "./search-ml.service"
 
 @Injectable()
@@ -14,6 +16,8 @@ export class SearchIndexingService {
     private readonly elasticsearchService: ElasticsearchService,
     private readonly configService: ConfigService,
     private readonly searchMLService: SearchMLService,
+    @InjectRepository(Object as any) private readonly _unused?: any,
+    @InjectRepository((null as unknown) as Course) private readonly courseRepo?: Repository<Course>,
   ) {
     this.batchSize = this.configService.get<number>("INDEXING_BATCH_SIZE", 100)
   }
@@ -112,8 +116,23 @@ export class SearchIndexingService {
       const newIndexName = `${this.indexName}_${Date.now()}`
       await this.createIndex(newIndexName)
 
-      // TODO: Fetch all courses from database and index them
-      // This would typically be done in batches to avoid memory issues
+      // Fetch all courses from database and index them in batches
+      if (!this.courseRepo) {
+        throw new Error("Course repository not available for reindexing")
+      }
+
+      const total = await this.courseRepo.count()
+      const pageSize = this.batchSize
+      for (let offset = 0; offset < total; offset += pageSize) {
+        const courses = await this.courseRepo.find({
+          skip: offset,
+          take: pageSize,
+          order: { createdAt: "ASC" as any },
+        })
+
+        if (courses.length === 0) break
+        await this.bulkIndex(courses)
+      }
 
       // Switch alias to new index
       await this.switchAlias(newIndexName)
