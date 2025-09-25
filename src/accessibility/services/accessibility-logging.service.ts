@@ -21,4 +21,8 @@ export interface AccessibilityEvent {
     platform: string
     mobile: boolean
   }
-  viewportInfo?:\
+  viewportInfo?: {
+    width: number
+    height: number
+  }
+}
