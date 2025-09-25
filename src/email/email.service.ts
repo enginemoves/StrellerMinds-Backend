@@ -16,6 +16,7 @@ import { EmailTemplate } from './entities/email-template.entity';
 import { EmailLog } from './entities/email-log.entity';
 import { EmailPreference } from './entities/email-preference.entity';
 import { addTrackingToEmail, generateEmailId } from './utils/tracking.util';
+import { JwtService } from '@nestjs/jwt';
 
 export interface EmailOptions {
   to: string | string[];
@@ -49,6 +50,7 @@ export class EmailService {
     private emailLogRepository: Repository<EmailLog>,
     @InjectRepository(EmailPreference)
     private emailPreferenceRepository: Repository<EmailPreference>,
+    private readonly jwtService?: JwtService,
   ) {
     this.initializeTransporter();
   }
@@ -375,9 +377,16 @@ export class EmailService {
    * @returns True if the token is valid, false otherwise
    */
    async verifyUnsubscribeToken(email: string, token: string): Promise<boolean> {
-    // TODO: Implement actual token verification logic
-    // For now, return true as a placeholder
-    return true;
+    try {
+      const secret = this.configService.get<string>('UNSUBSCRIBE_JWT_SECRET') || this.configService.get<string>('JWT_SECRET');
+      const payload = (this.jwtService
+        ? this.jwtService.verify(token, { secret })
+        : (await import('jsonwebtoken')).verify(token, secret)) as any;
+      return !!payload && (payload.email === email || payload.sub === email);
+    } catch (err) {
+      this.logger.warn(`Invalid unsubscribe token for ${email}: ${err?.message}`);
+      return false;
+    }
   }
 
   /**
