@@ -4,6 +4,7 @@ import { Repository, Between, FindManyOptions } from 'typeorm';
 import { Credential } from './entities/credential.entity';
 import { CredentialHistoryQueryDto, CredentialStatus } from './dto/credential-history-query.dto';
 import { CredentialHistoryResponseDto, CredentialDto } from './dto/credential-history-response.dto';
+import { StellarService } from '../blockchain/stellar/stellar.service';
 
 /**
  * CredentialService provides logic for credential management and history retrieval.
@@ -13,6 +14,7 @@ export class CredentialService {
   constructor(
     @InjectRepository(Credential)
     private credentialRepository: Repository<Credential>,
+    private readonly stellarService: StellarService,
   ) {}
 
   /**
@@ -86,16 +88,33 @@ export class CredentialService {
       throw new HttpException('Credential not found', HttpStatus.NOT_FOUND);
     }
 
-    // Verify on the blockchain
-    // TODO: Replace the following mock result with actual blockchain verification logic
-    const verificationResult = { verified: true };
+    // Verify on the blockchain using Stellar SDK
+    let verified = false;
+    try {
+      if (credential.network?.toLowerCase() !== 'stellar') {
+        // Currently only Stellar network is supported for on-chain verification
+        verified = false;
+      } else if (credential.txHash) {
+        const tx = await this.stellarService.monitorTransaction(credential.txHash);
+        if (tx) {
+          // If blockHeight is stored, ensure it matches the ledger sequence
+          if (credential.blockHeight && typeof tx.ledger === 'number') {
+            verified = Number(credential.blockHeight) === Number(tx.ledger);
+          } else {
+            verified = true;
+          }
+        }
+      }
+    } catch (err) {
+      verified = false;
+    }
 
     // Update verification status in database
-    credential.verificationStatus = verificationResult.verified;
+    credential.verificationStatus = verified;
     await this.credentialRepository.save(credential);
 
     return {
-      verified: verificationResult.verified,
+      verified,
       credential: this.mapToCredentialDto(credential),
     };
   }
