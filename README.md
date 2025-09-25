@@ -161,3 +161,15 @@ Due to the immutable nature of blockchain technology:
 ## Policy Review
 
 This data retention policy is reviewed annually and updated as necessary to comply with evolving regulations and platform requirements.
+
+
+# Contract Testing with Pact
+
+We use Pact for consumer-driven contract tests against external integrations:
+- Stellar Horizon API
+- SMTP Provider
+- S3 (LocalStack)
+
+## Running locally
+```bash
+yarn test:contract
