@@ -1,6 +1,78 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { CredentialService } from './credential.service';
+import { Credential } from './entities/credential.entity';
+import { StellarService } from '../blockchain/stellar/stellar.service';
+
+describe('CredentialService.verifyCredential', () => {
+  let service: CredentialService;
+  let repo: jest.Mocked<Repository<Credential>>;
+  let stellar: { monitorTransaction: jest.Mock };
+
+  beforeEach(async () => {
+    repo = {
+      findOne: jest.fn(),
+      save: jest.fn(),
+    } as any;
+
+    stellar = { monitorTransaction: jest.fn() };
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        CredentialService,
+        { provide: getRepositoryToken(Credential), useValue: repo },
+        { provide: StellarService, useValue: stellar },
+      ],
+    }).compile();
+
+    service = module.get(CredentialService);
+  });
+
+  it('verifies credential on Stellar and updates verificationStatus true when ledger matches blockHeight', async () => {
+    const credential: Partial<Credential> = {
+      id: 'cred-1',
+      userId: 'user-1',
+      txHash: 'tx-abc',
+      network: 'stellar',
+      blockHeight: 123,
+      verificationStatus: false,
+    };
+    repo.findOne.mockResolvedValue(credential as Credential);
+    stellar.monitorTransaction.mockResolvedValue({ ledger: 123 });
+    repo.save.mockImplementation(async (c: Credential) => c);
+
+    const result = await service.verifyCredential('user-1', 'cred-1');
+
+    expect(stellar.monitorTransaction).toHaveBeenCalledWith('tx-abc');
+    expect(repo.save).toHaveBeenCalled();
+    expect(result.verified).toBe(true);
+    expect(result.credential.verificationStatus).toBe(true);
+  });
+
+  it('returns verified false if transaction not found', async () => {
+    const credential: Partial<Credential> = {
+      id: 'cred-2',
+      userId: 'user-1',
+      txHash: 'tx-missing',
+      network: 'stellar',
+      blockHeight: 999,
+      verificationStatus: false,
+    };
+    repo.findOne.mockResolvedValue(credential as Credential);
+    stellar.monitorTransaction.mockResolvedValue(null);
+    repo.save.mockImplementation(async (c: Credential) => c);
+
+    const result = await service.verifyCredential('user-1', 'cred-2');
+
+    expect(result.verified).toBe(false);
+    expect(result.credential.verificationStatus).toBe(false);
+  });
+});
+
+import { Test, TestingModule } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CredentialService } from '../credential.service';
 import { Credential } from '../entities/credential.entity';
 import { BlockchainService } from '../../blockchain/blockchain.service';
