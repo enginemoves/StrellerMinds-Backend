@@ -1,3 +1,8 @@
+// Declare global test functions to avoid TypeScript errors
+declare const describe: (name: string, callback: () => void) => void;
+declare const it: (name: string, callback: () => void) => void;
+declare const expect: (value: any) => any;
+
 import { ErrorLog } from '../../../../src/common/entities/error-log.entity';
 
 describe('ErrorLog', () => {
