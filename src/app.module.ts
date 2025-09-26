@@ -45,6 +45,7 @@ import { PaymentModule } from './payment/payment.module';
 import { CmsModule } from './cms/cms.module';
 import { StellarService } from './blockchain/stellar/stellar.service';
 import { ErrorDashboardModule } from './error-dashboard/error-dashboard.module';
+import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 
 const ENV = process.env.NODE_ENV;;
 console.log('NODE_ENV:', process.env.NODE_ENV);
@@ -143,6 +144,7 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(
+        CorrelationIdMiddleware,
         VersionHeaderMiddleware,
         DeprecationWarningMiddleware,
         ApiUsageLoggerMiddleware,

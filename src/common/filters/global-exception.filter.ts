@@ -93,7 +93,7 @@ export class GlobalExceptionsFilter implements ExceptionFilter {
       });
 
       // Add to error dashboard
-      this.errorDashboardService.addErrorLog({
+      await this.errorDashboardService.addErrorLog({
         correlationId,
         errorCode: exceptionResponse.errorCode,
         message: await this.i18n.translate(`errors.${exceptionResponse.errorCode}`, {
@@ -108,6 +108,7 @@ export class GlobalExceptionsFilter implements ExceptionFilter {
         userAgent: request.get('User-Agent'),
         ip: request.ip,
         severity: this.getSeverityForErrorCode(exceptionResponse.errorCode),
+        category: this.categorizeError(exceptionResponse.errorCode),
         context: {
           ...errorContext,
           details: exceptionResponse.details,
@@ -139,7 +140,7 @@ export class GlobalExceptionsFilter implements ExceptionFilter {
         });
 
         // Add to error dashboard
-        this.errorDashboardService.addErrorLog({
+        await this.errorDashboardService.addErrorLog({
           correlationId,
           errorCode: ErrorCode.INVALID_INPUT,
           message: await this.i18n.translate('errors.INVALID_INPUT', { lang }),
@@ -151,6 +152,7 @@ export class GlobalExceptionsFilter implements ExceptionFilter {
           userAgent: request.get('User-Agent'),
           ip: request.ip,
           severity: this.getSeverityForErrorCode(ErrorCode.INVALID_INPUT),
+          category: this.categorizeError(ErrorCode.INVALID_INPUT),
           context: {
             ...errorContext,
             validationErrors: exceptionResponse.message,
@@ -177,7 +179,7 @@ export class GlobalExceptionsFilter implements ExceptionFilter {
         });
 
         // Add to error dashboard
-        this.errorDashboardService.addErrorLog({
+        await this.errorDashboardService.addErrorLog({
           correlationId,
           errorCode: ErrorCode.INTERNAL_ERROR,
           message: exceptionResponse.message || await this.i18n.translate('errors.INTERNAL_ERROR', { lang }),
@@ -189,6 +191,7 @@ export class GlobalExceptionsFilter implements ExceptionFilter {
           userAgent: request.get('User-Agent'),
           ip: request.ip,
           severity: this.getSeverityForErrorCode(ErrorCode.INTERNAL_ERROR),
+          category: this.categorizeError(ErrorCode.INTERNAL_ERROR),
           context: {
             ...errorContext,
             originalMessage: exceptionResponse.message,
@@ -244,7 +247,7 @@ export class GlobalExceptionsFilter implements ExceptionFilter {
       );
 
       // Add to error dashboard
-      this.errorDashboardService.addErrorLog({
+      await this.errorDashboardService.addErrorLog({
         correlationId,
         errorCode: ErrorCode.INTERNAL_ERROR,
         message: await this.i18n.translate('errors.INTERNAL_ERROR', { lang }),
@@ -256,6 +259,7 @@ export class GlobalExceptionsFilter implements ExceptionFilter {
         userAgent: request.get('User-Agent'),
         ip: request.ip,
         severity: this.getSeverityForErrorCode(ErrorCode.INTERNAL_ERROR),
+        category: this.categorizeError(ErrorCode.INTERNAL_ERROR),
         stackTrace: exception instanceof Error ? exception.stack : undefined,
         context: fatalErrorContext
       });

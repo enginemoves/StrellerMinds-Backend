@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { LoggerService } from '../common/logging/logger.service';
 import { AlertingService } from '../common/alerting/alerting.service';
+import { ErrorLog } from '../common/entities/error-log.entity';
 
 export interface ErrorSummary {
   totalErrors: number;
@@ -61,31 +64,34 @@ export interface AlertHistoryItem {
 
 @Injectable()
 export class ErrorDashboardService {
-  // In a real implementation, this would be stored in a database
-  // For this example, we'll use in-memory storage
-  private errorLogs: any[] = [];
-  private alertHistory: AlertHistoryItem[] = [];
-
   constructor(
     private readonly loggerService: LoggerService,
     private readonly alertingService: AlertingService,
+    @InjectRepository(ErrorLog)
+    private readonly errorLogRepository: Repository<ErrorLog>,
   ) {}
 
   async getErrorSummary(timeRangeHours = 24, errorCode?: string): Promise<ErrorSummary> {
     const endDate = new Date();
     const startDate = new Date(endDate.getTime() - timeRangeHours * 60 * 60 * 1000);
 
-    // Filter logs by time range and optionally by error code
-    const filteredLogs = this.errorLogs.filter(log => {
-      const logTime = new Date(log.timestamp);
-      const inTimeRange = logTime >= startDate && logTime <= endDate;
-      const matchesErrorCode = !errorCode || log.errorCode === errorCode;
-      return inTimeRange && matchesErrorCode;
-    });
+    // Build query
+    let query = this.errorLogRepository.createQueryBuilder('error')
+      .where('error.timestamp >= :startDate AND error.timestamp <= :endDate', {
+        startDate,
+        endDate
+      });
+
+    if (errorCode) {
+      query = query.andWhere('error.errorCode = :errorCode', { errorCode });
+    }
+
+    // Get all matching errors
+    const filteredLogs = await query.getMany();
 
     // Calculate statistics
     const totalErrors = filteredLogs.length;
-    const criticalErrors = filteredLogs.filter(log => 
+    const criticalErrors = filteredLogs.filter((log: ErrorLog) => 
       log.severity === 'high' || log.severity === 'critical'
     ).length;
     
@@ -94,7 +100,7 @@ export class ErrorDashboardService {
 
     // Group by error code and calculate top errors
     const errorTypeCounts: Record<string, number> = {};
-    filteredLogs.forEach(log => {
+    filteredLogs.forEach((log: ErrorLog) => {
       errorTypeCounts[log.errorCode] = (errorTypeCounts[log.errorCode] || 0) + 1;
     });
 
@@ -131,16 +137,23 @@ export class ErrorDashboardService {
       const intervalStart = new Date(startDate.getTime() + i * intervalHours * 60 * 60 * 1000);
       const intervalEnd = new Date(intervalStart.getTime() + intervalHours * 60 * 60 * 1000);
       
-      // Filter logs for this interval
-      const intervalLogs = this.errorLogs.filter(log => {
-        const logTime = new Date(log.timestamp);
-        return logTime >= intervalStart && logTime < intervalEnd;
-      });
+      // Get counts for this interval
+      const totalCount = await this.errorLogRepository
+        .createQueryBuilder('error')
+        .where('error.timestamp >= :intervalStart AND error.timestamp < :intervalEnd', {
+          intervalStart,
+          intervalEnd
+        })
+        .getCount();
       
-      const totalCount = intervalLogs.length;
-      const criticalCount = intervalLogs.filter(log => 
-        log.severity === 'high' || log.severity === 'critical'
-      ).length;
+      const criticalCount = await this.errorLogRepository
+        .createQueryBuilder('error')
+        .where('error.timestamp >= :intervalStart AND error.timestamp < :intervalEnd', {
+          intervalStart,
+          intervalEnd
+        })
+        .andWhere('error.severity IN (:...severities)', { severities: ['high', 'critical'] })
+        .getCount();
       
       // Calculate error rate for this interval (errors per hour)
       const errorRate = totalCount / intervalHours;
@@ -160,61 +173,39 @@ export class ErrorDashboardService {
     const endDate = new Date();
     const startDate = new Date(endDate.getTime() - timeRangeHours * 60 * 60 * 1000);
     
-    // Filter logs by time range
-    const filteredLogs = this.errorLogs.filter(log => {
-      const logTime = new Date(log.timestamp);
-      return logTime >= startDate && logTime <= endDate;
-    });
-    
-    // Group by error code and aggregate information
-    const errorAggregations: Record<string, any> = {};
-    
-    filteredLogs.forEach(log => {
-      if (!errorAggregations[log.errorCode]) {
-        errorAggregations[log.errorCode] = {
-          errorCode: log.errorCode,
-          errorMessage: log.message,
-          count: 0,
-          firstOccurrence: new Date(log.timestamp),
-          lastOccurrence: new Date(log.timestamp),
-          affectedEndpoints: new Set<string>()
-        };
-      }
-      
-      const aggregation = errorAggregations[log.errorCode];
-      aggregation.count++;
-      
-      if (new Date(log.timestamp) < aggregation.firstOccurrence) {
-        aggregation.firstOccurrence = new Date(log.timestamp);
-      }
-      
-      if (new Date(log.timestamp) > aggregation.lastOccurrence) {
-        aggregation.lastOccurrence = new Date(log.timestamp);
-      }
-      
-      if (log.endpoint) {
-        aggregation.affectedEndpoints.add(log.endpoint);
-      }
-    });
-    
-    // Convert to array and sort by count
-    const topErrors = Object.values(errorAggregations)
-      .map(aggregation => ({
-        errorCode: aggregation.errorCode,
-        errorMessage: aggregation.errorMessage,
-        count: aggregation.count,
-        firstOccurrence: aggregation.firstOccurrence,
-        lastOccurrence: aggregation.lastOccurrence,
-        affectedEndpoints: Array.from(aggregation.affectedEndpoints) as string[]
-      }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, limit);
-    
-    return topErrors;
+    // Get errors grouped by error code with aggregation information
+    const results = await this.errorLogRepository
+      .createQueryBuilder('error')
+      .select('error.errorCode', 'errorCode')
+      .addSelect('error.errorMessage', 'errorMessage')
+      .addSelect('COUNT(error.id)', 'count')
+      .addSelect('MIN(error.timestamp)', 'firstOccurrence')
+      .addSelect('MAX(error.timestamp)', 'lastOccurrence')
+      .addSelect('ARRAY_AGG(DISTINCT error.endpoint)', 'affectedEndpoints')
+      .where('error.timestamp >= :startDate AND error.timestamp <= :endDate', {
+        startDate,
+        endDate
+      })
+      .groupBy('error.errorCode, error.errorMessage')
+      .orderBy('count', 'DESC')
+      .limit(limit)
+      .getRawMany();
+
+    return results.map((result: any) => ({
+      errorCode: result.errorCode,
+      errorMessage: result.errorMessage,
+      count: parseInt(result.count, 10),
+      firstOccurrence: new Date(result.firstOccurrence),
+      lastOccurrence: new Date(result.lastOccurrence),
+      affectedEndpoints: result.affectedEndpoints ? result.affectedEndpoints.filter(Boolean) : []
+    }));
   }
 
   async getErrorDetails(correlationId: string): Promise<ErrorDetails | null> {
-    const log = this.errorLogs.find(log => log.correlationId === correlationId);
+    const log = await this.errorLogRepository
+      .createQueryBuilder('error')
+      .where('error.correlationId = :correlationId', { correlationId })
+      .getOne();
     
     if (!log) {
       return null;
@@ -223,9 +214,9 @@ export class ErrorDashboardService {
     return {
       correlationId: log.correlationId,
       errorCode: log.errorCode,
-      errorMessage: log.message,
+      errorMessage: log.errorMessage,
       statusCode: log.statusCode,
-      timestamp: new Date(log.timestamp),
+      timestamp: log.timestamp,
       endpoint: log.endpoint,
       method: log.method,
       userId: log.userId,
@@ -237,42 +228,47 @@ export class ErrorDashboardService {
   }
 
   async getAlertHistory(timeRangeHours = 168, severity?: string): Promise<AlertHistoryItem[]> {
-    const endDate = new Date();
-    const startDate = new Date(endDate.getTime() - timeRangeHours * 60 * 60 * 1000);
-    
-    // Filter alerts by time range and optionally by severity
-    let filteredAlerts = this.alertHistory.filter(alert => {
-      const alertTime = new Date(alert.timestamp);
-      const inTimeRange = alertTime >= startDate && alertTime <= endDate;
-      const matchesSeverity = !severity || alert.severity === severity;
-      return inTimeRange && matchesSeverity;
-    });
-    
-    // Sort by timestamp (newest first)
-    filteredAlerts = filteredAlerts.sort((a, b) => 
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
-    
-    return filteredAlerts;
+    // For now, we'll return an empty array since alert history is not yet implemented
+    // This would typically be stored in a separate table
+    return [];
   }
 
   // Method to add error logs (would be called by the exception filter)
-  addErrorLog(errorLog: any): void {
-    this.errorLogs.push(errorLog);
-    
-    // Keep only recent logs (last 1000 errors)
-    if (this.errorLogs.length > 1000) {
-      this.errorLogs = this.errorLogs.slice(-1000);
+  async addErrorLog(errorLogData: any): Promise<void> {
+    try {
+      const errorLog = this.errorLogRepository.create({
+        correlationId: errorLogData.correlationId,
+        errorCode: errorLogData.errorCode,
+        errorMessage: errorLogData.message,
+        statusCode: errorLogData.statusCode,
+        endpoint: errorLogData.endpoint,
+        method: errorLogData.method,
+        userId: errorLogData.userId,
+        userAgent: errorLogData.userAgent,
+        ip: errorLogData.ip,
+        stackTrace: errorLogData.stackTrace,
+        context: errorLogData.context || {},
+        severity: errorLogData.severity || 'medium',
+        category: errorLogData.category || 'UNKNOWN',
+        timestamp: new Date(errorLogData.timestamp)
+      });
+      
+      await this.errorLogRepository.save(errorLog);
+    } catch (error: any) {
+      this.loggerService.error('Failed to save error log to database', {
+        error: error.message,
+        correlationId: errorLogData.correlationId
+      });
     }
   }
 
   // Method to add alert history (would be called by the alerting service)
-  addAlertHistory(alert: AlertHistoryItem): void {
-    this.alertHistory.push(alert);
-    
-    // Keep only recent alerts (last 100 alerts)
-    if (this.alertHistory.length > 100) {
-      this.alertHistory = this.alertHistory.slice(-100);
-    }
+  async addAlertHistory(alert: AlertHistoryItem): Promise<void> {
+    // This would typically save to a separate alert history table
+    this.loggerService.info('Alert history item received', {
+      alertId: alert.id,
+      type: alert.type,
+      severity: alert.severity
+    });
   }
 }
