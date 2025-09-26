@@ -19,14 +19,15 @@ _Prerequisites:_
 • PostgreSQL
 • Docker (optional, for containerized development)
 
-_Installation:_  
+_Installation:_
+
 1. Clone the repository:  
-   `git clone https://github.com/your-username/strellerminds-backend.git`  
+   `git clone https://github.com/your-username/strellerminds-backend.git`
 2. Change to the project directory:  
-   `cd starkminds-backend`  
+   `cd starkminds-backend`
 3. Install dependencies:  
-   `npm install`  
-4. Create a `.env` file based on the provided `.env.example`.  
+   `npm install`
+4. Create a `.env` file based on the provided `.env.example`.
 5. Start the development server:  
    `npm run start:dev`
 
@@ -59,6 +60,7 @@ User accounts may exist in one of the following states:
 User data is categorized as follows:
 
 ### Personal Identifiable Information (PII)
+
 - Full name
 - Email address
 - Profile picture
@@ -66,38 +68,42 @@ User data is categorized as follows:
 - Other personal details
 
 ### Account Data
+
 - User ID
 - Account credentials (password hash)
 - Role information
 - Account creation and activity timestamps
 
 ### Blockchain Credentials
+
 - Wallet address
 - Chain ID
 - Wallet type
 - Associated blockchain credentials
 
 ### Activity Data
+
 - Learning progress
 - Course completion records
 - Transaction history (if applicable)
 
 ## Retention Periods
 
-| Data Category | Active Account | Deactivated Account | Post-Deletion |
-|---------------|----------------|---------------------|--------------|
-| PII | Retained | Retained | Scrubbed immediately |
-| Account Data | Retained | Retained | Soft-deleted for 30 days, then hard-deleted |
-| Blockchain Credentials | Retained | Retained | Preserved indefinitely for compliance* |
-| Activity Data | Retained | Retained | Soft-deleted for 30 days, then hard-deleted |
+| Data Category          | Active Account | Deactivated Account | Post-Deletion                               |
+| ---------------------- | -------------- | ------------------- | ------------------------------------------- |
+| PII                    | Retained       | Retained            | Scrubbed immediately                        |
+| Account Data           | Retained       | Retained            | Soft-deleted for 30 days, then hard-deleted |
+| Blockchain Credentials | Retained       | Retained            | Preserved indefinitely for compliance\*     |
+| Activity Data          | Retained       | Retained            | Soft-deleted for 30 days, then hard-deleted |
 
-\* *Retention of blockchain credentials is necessary for compliance with financial regulations and to maintain the integrity of blockchain transactions. These credentials are dissociated from personal information upon account deletion.*
+\* _Retention of blockchain credentials is necessary for compliance with financial regulations and to maintain the integrity of blockchain transactions. These credentials are dissociated from personal information upon account deletion._
 
 ## Data Handling Procedures
 
 ### Account Deactivation
 
 When an account is deactivated:
+
 - All data is preserved
 - Access to the account is suspended
 - User can reactivate the account at any time
@@ -106,6 +112,7 @@ When an account is deactivated:
 ### Account Deletion Request
 
 When a user requests account deletion:
+
 1. User must confirm deletion via a secure link sent to their email
 2. Account is marked as "Pending Deletion"
 3. User has 24 hours to cancel the deletion request
@@ -114,6 +121,7 @@ When a user requests account deletion:
 ### Account Deletion Process
 
 When account deletion is confirmed:
+
 1. Personal identifiable information is immediately scrubbed:
    - Name fields are replaced with "[REDACTED]"
    - Email is anonymized
@@ -127,6 +135,7 @@ When account deletion is confirmed:
 ### Final Data Purge
 
 After the 30-day retention period:
+
 1. All remaining user data is permanently deleted from the system
 2. Blockchain credentials are reviewed and retained only if necessary for legal compliance
 3. Purge is logged for audit purposes
@@ -134,6 +143,7 @@ After the 30-day retention period:
 ## Compliance Considerations
 
 This data retention policy is designed to comply with:
+
 - General Data Protection Regulation (GDPR)
 - California Consumer Privacy Act (CCPA)
 - Other applicable privacy regulations
@@ -143,6 +153,7 @@ The policy provides users with the "right to be forgotten" while maintaining nec
 ## Audit Trail
 
 All account state changes and data handling operations are logged with:
+
 - Action type
 - Timestamp
 - User ID (or system identifier for automated processes)
@@ -153,6 +164,7 @@ Audit logs are retained for a minimum of 2 years for compliance purposes.
 ## Special Considerations for Blockchain Data
 
 Due to the immutable nature of blockchain technology:
+
 - Transactions recorded on the blockchain cannot be removed
 - Wallet addresses and public keys remain on the blockchain
 - Our system preserves the minimum necessary information to maintain blockchain integrity
@@ -161,6 +173,132 @@ Due to the immutable nature of blockchain technology:
 ## Policy Review
 
 This data retention policy is reviewed annually and updated as necessary to comply with evolving regulations and platform requirements.
+
+# OAuth Strategy Integration Guide
+
+## Supported Providers
+
+- Google
+- Facebook
+- Apple Sign-In
+
+## Design Pattern
+
+- All OAuth strategies implement `IAuthStrategy`
+- Each is wrapped in an Adapter to conform to internal structure
+- Dynamic injection via 'AUTH_STRATEGIES' token
+- Strategy selection based on `provider` string
+
+## Flow
+
+1. User hits `/auth/{provider}` → redirects to provider login
+2. Callback `/auth/{provider}/callback` is handled
+3. User profile is validated, token issued via `AuthService.login`
+4. Optionally, credentials can be used to `register` or `link` accounts
+
+## Adding a New Provider
+
+1. Implement provider’s Passport strategy
+2. Create Adapter implementing `IAuthStrategy`
+3. Register Adapter and Strategy in AuthModule
+4. Add new route in AuthController
+
+# API Documentation
+
+The backend provides interactive OpenAPI (Swagger) documentation and supports SDK generation for client integration.
+
+### Swagger UI
+- Access the interactive API docs at: `/api` (e.g., http://localhost:3000/api)
+- All endpoints, request/response models, and modules are grouped and described for clarity.
+
+### SDK Generation
+
+You can generate client SDKs in various languages using the OpenAPI spec:
+
+#### Generate OpenAPI Spec
+
+```
+npm run generate:openapi
+```
+
+#### Generate SDK (example using openapi-generator-cli)
+
+```
+npx openapi-generator-cli generate -i http://localhost:3000/api-json -g typescript-axios -o ./sdk/typescript
+```
+
+Replace `typescript-axios` and output path as needed for your target language.
+
+### Scripts
+
+- `generate:openapi`: Exports the OpenAPI spec to `openapi.json` for SDK generation.
+
+## Contributing
+
+Please follow the contribution guidelines outlined in the **Getting Started** section. Additionally, ensure your code changes do not break the API contract and are reflected in the OpenAPI documentation.
+
+# OAuth Strategy Integration Guide
+
+## Supported Providers
+
+- Google
+- Facebook
+- Apple Sign-In
+
+## Design Pattern
+
+- All OAuth strategies implement `IAuthStrategy`
+- Each is wrapped in an Adapter to conform to internal structure
+- Dynamic injection via 'AUTH_STRATEGIES' token
+- Strategy selection based on `provider` string
+
+## Flow
+
+1. User hits `/auth/{provider}` → redirects to provider login
+2. Callback `/auth/{provider}/callback` is handled
+3. User profile is validated, token issued via `AuthService.login`
+4. Optionally, credentials can be used to `register` or `link` accounts
+
+## Adding a New Provider
+
+1. Implement provider’s Passport strategy
+2. Create Adapter implementing `IAuthStrategy`
+3. Register Adapter and Strategy in AuthModule
+4. Add new route in AuthController
+
+# API Documentation
+
+The backend provides interactive OpenAPI (Swagger) documentation and supports SDK generation for client integration.
+
+### Swagger UI
+- Access the interactive API docs at: `/api` (e.g., http://localhost:3000/api)
+- All endpoints, request/response models, and modules are grouped and described for clarity.
+
+### SDK Generation
+
+You can generate client SDKs in various languages using the OpenAPI spec:
+
+#### Generate OpenAPI Spec
+
+```
+npm run generate:openapi
+```
+
+#### Generate SDK (example using openapi-generator-cli)
+
+```
+npx openapi-generator-cli generate -i http://localhost:3000/api-json -g typescript-axios -o ./sdk/typescript
+```
+
+Replace `typescript-axios` and output path as needed for your target language.
+
+### Scripts
+
+- `generate:openapi`: Exports the OpenAPI spec to `openapi.json` for SDK generation.
+
+## Contributing
+
+Please follow the contribution guidelines outlined in the **Getting Started** section. Additionally, ensure your code changes do not break the API contract and are reflected in the OpenAPI documentation.
 
 
 # Contract Testing with Pact

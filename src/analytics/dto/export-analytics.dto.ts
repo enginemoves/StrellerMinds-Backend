@@ -1,6 +1,9 @@
 import { IsOptional, IsIn } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
+/**
+ * DTO for analytics data export query parameters.
+ */
 export class ExportAnalyticsDto {
   @ApiPropertyOptional({
     description: 'Export format: csv or json (default)',

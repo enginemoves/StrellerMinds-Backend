@@ -1,12 +1,19 @@
+/**
+ * UsersModule provides user management, authentication, and progress tracking features.
+ *
+ * @module Users
+ */
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { ApiTags } from '@nestjs/swagger';
 
 import { UsersController } from './users.controller';
 import { UsersService } from './services/users.service';
 import { AccountDeletionConfirmationService } from './services/account.deletion.confirmation.service';
 import { ProgressService } from './services/progress.service';
 import { ProgressController } from './controllers/progress.controller';
+import { AdminUsersController } from './admin.users.controller';
 
 import { User } from './entities/user.entity';
 import { WalletInfo } from './entities/wallet-info.entity';
@@ -25,6 +32,8 @@ import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 import { EmailModule } from 'src/email/email.module';
+import { SharedModule } from 'src/shared/shared.module';
+import { CommonModule } from '../common/common.module';
 
 @Module({
   imports: [
@@ -42,8 +51,10 @@ import { EmailModule } from 'src/email/email.module';
     ConfigModule,
     EmailModule,
     CloudinaryModule,
+    SharedModule,
+    CommonModule, // Import CommonModule for shared services
   ],
-  controllers: [UsersController, ProgressController],
+  controllers: [UsersController, ProgressController, AdminUsersController],
   providers: [
     UsersService,
     AccountDeletionConfirmationService,

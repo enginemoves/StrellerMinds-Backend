@@ -1,17 +1,42 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PaymentsController } from './payment.controller';
-import { PaymentsService } from './payment.service';
-import { Payment } from './entities/payment.entity';
-import { Subscription } from './entities/subscription.entity';
-// import { StellarService } from './services/stellar.service';
+import { ConfigModule } from '@nestjs/config';
+import { PaymentController } from './payment.controller';
+import { PaymentService } from './payment.service';
+import { SubscriptionService } from './subscription.service';
+import { InvoiceService } from './invoice.service';
+import { PaymentAnalyticsService } from './payment-analytics.service';
+import { PaymentEntity } from './entities/payment.entity';
+import { SubscriptionEntity } from './entities/subscription.entity';
+import { InvoiceEntity } from './entities/invoice.entity';
+import { PaymentMethodEntity } from './entities/payment-method.entity';
+import { StripeService } from './stripe.service';
+import { PaymentWebhookController } from './payment-webhook.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Payment, Subscription]),
+    TypeOrmModule.forFeature([
+      PaymentEntity,
+      SubscriptionEntity,
+      InvoiceEntity,
+      PaymentMethodEntity,
+    ]),
+    ConfigModule,
   ],
-  controllers: [PaymentsController],
-  providers: [PaymentsService],
-  exports: [PaymentsService],
+  controllers: [PaymentController, PaymentWebhookController],
+  providers: [
+    PaymentService,
+    SubscriptionService,
+    InvoiceService,
+    PaymentAnalyticsService,
+    StripeService,
+  ],
+  exports: [
+    PaymentService,
+    SubscriptionService,
+    InvoiceService,
+    PaymentAnalyticsService,
+    StripeService,
+  ],
 })
-export class PaymentModule {}
+export class PaymentModule {} 

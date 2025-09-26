@@ -47,6 +47,9 @@ export class UserProfile {
   @Column({ default: false })
   isPublic: boolean
 
+  @Column({ nullable: true })
+  preferredLanguage: string; // e.g., 'en', 'fr', 'pt-BR'
+  
   @OneToOne(
     () => User,
     (user) => user.profile,

@@ -1,4 +1,58 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
+import { EmailService } from './email.service';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { EmailTemplate } from './entities/email-template.entity';
+import { EmailLog } from './entities/email-log.entity';
+import { EmailPreference } from './entities/email-preference.entity';
+import { Queue } from 'bull';
+import { JwtService } from '@nestjs/jwt';
+
+describe('EmailService.verifyUnsubscribeToken', () => {
+  let service: EmailService;
+  let config: Partial<ConfigService>;
+  let jwt: { sign: jest.Mock; verify: jest.Mock };
+
+  beforeEach(async () => {
+    config = {
+      get: jest.fn((key: string) => {
+        if (key === 'UNSUBSCRIBE_JWT_SECRET') return 'secret-x';
+        if (key === 'JWT_SECRET') return 'fallback';
+        return undefined;
+      }),
+    } as any;
+
+    jwt = { sign: jest.fn(), verify: jest.fn() };
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        EmailService,
+        { provide: ConfigService, useValue: config },
+        { provide: 'BullQueue_email', useValue: { add: jest.fn() } as Partial<Queue> },
+        { provide: getRepositoryToken(EmailTemplate), useValue: {} },
+        { provide: getRepositoryToken(EmailLog), useValue: {} },
+        { provide: getRepositoryToken(EmailPreference), useValue: {} },
+        { provide: JwtService, useValue: jwt },
+      ],
+    }).compile();
+
+    service = module.get(EmailService);
+  });
+
+  it('returns true when token payload email matches', async () => {
+    jwt.verify.mockReturnValue({ email: 'user@example.com' });
+    const ok = await service.verifyUnsubscribeToken('user@example.com', 'tok');
+    expect(ok).toBe(true);
+  });
+
+  it('returns false on invalid token', async () => {
+    jwt.verify.mockImplementation(() => { throw new Error('bad'); });
+    const ok = await service.verifyUnsubscribeToken('user@example.com', 'tok');
+    expect(ok).toBe(false);
+  });
+});
+
+import { Test, TestingModule } from '@nestjs/testing';
 import { EmailService } from './email.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { EmailTemplate } from './entities/email-template.entity';

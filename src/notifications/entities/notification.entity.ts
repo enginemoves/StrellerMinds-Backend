@@ -1,7 +1,7 @@
 import {
   Entity,
-  Column,
   PrimaryGeneratedColumn,
+  Column,
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
@@ -10,83 +10,79 @@ import {
 } from "typeorm"
 import { User } from "../../users/entities/user.entity"
 
-export enum NotificationType {
-  IN_APP = "in_app",
-  EMAIL = "email",
-  PUSH = "push",
+export enum NotificationChannel {
+  EMAIL = "EMAIL",
+  SMS = "SMS",
+  IN_APP = "IN_APP",
+  PUSH = "PUSH",
 }
 
 export enum NotificationStatus {
-  UNREAD = "unread",
-  READ = "read",
+  PENDING = "PENDING",
+  SENT = "SENT",
+  FAILED = "FAILED",
+  READ = "READ",
+  CLICKED = "CLICKED",
 }
 
-export enum NotificationPriority {
-  LOW = "low",
-  MEDIUM = "medium",
-  HIGH = "high",
+export enum NotificationType {
+  COURSE_UPDATE = "COURSE_UPDATE",
+  NEW_MESSAGE = "NEW_MESSAGE",
+  REMINDER = "REMINDER",
+  PROMOTION = "PROMOTION",
+  ACCOUNT_ALERT = "ACCOUNT_ALERT",
+  COURSE_ENROLLMENT = "COURSE_ENROLLMENT",
+  COURSE_COMPLETION = "COURSE_COMPLETION",
 }
 
 @Entity("notifications")
 @Index(["userId", "createdAt"])
+@Index(["status", "createdAt"])
 export class Notification {
   @PrimaryGeneratedColumn("uuid")
   id: string
 
-  @Column({ name: "user_id" })
+  @Column({ type: "uuid" })
   userId: string
 
-  @ManyToOne(() => User)
-  @JoinColumn({ name: "user_id" })
-  user: User
-
-  @Column({ type: "varchar", length: 255 })
-  title: string
+  @Column({ type: "enum", enum: NotificationType })
+  type: NotificationType
 
   @Column({ type: "text" })
-  content: string
+  message: string
 
-  @Column({
-    type: "enum",
-    enum: NotificationType,
-    array: true,
-    default: [NotificationType.IN_APP],
-  })
-  types: NotificationType[]
-
-  @Column({
-    type: "enum",
-    enum: NotificationStatus,
-    default: NotificationStatus.UNREAD,
-  })
-  status: NotificationStatus
-
-  @Column({
-    type: "enum",
-    enum: NotificationPriority,
-    default: NotificationPriority.MEDIUM,
-  })
-  priority: NotificationPriority
-
-  @Column({ type: "varchar", length: 100 })
-  category: string
+  @Column({ type: "varchar", length: 255, nullable: true })
+  title: string | null
 
   @Column({ type: "jsonb", nullable: true })
-  metadata: Record<string, any>
+  data: Record<string, any> | null // Additional data like courseId, senderId, link
 
-  @Column({ type: "boolean", default: false })
-  isDelivered: boolean
+  @Column({ type: "enum", enum: NotificationChannel, array: true, default: [] })
+  channels: NotificationChannel[]
 
-  @Column({ type: "timestamp", nullable: true })
-  readAt: Date
+  @Column({ type: "enum", enum: NotificationStatus, default: NotificationStatus.PENDING })
+  status: NotificationStatus
 
-  @Column({ type: "timestamp", nullable: true })
-  deliveredAt: Date
-
-  @CreateDateColumn({ name: "created_at" })
+  @CreateDateColumn({ type: "timestamp" })
   createdAt: Date
 
-  @UpdateDateColumn({ name: "updated_at" })
+  @UpdateDateColumn({ type: "timestamp" })
   updatedAt: Date
-}
 
+  @Column({ type: "timestamp", nullable: true })
+  sentAt: Date | null
+
+  @Column({ type: "timestamp", nullable: true })
+  readAt: Date | null
+
+  @Column({ type: "timestamp", nullable: true })
+  clickedAt: Date | null
+
+  @ManyToOne(
+    () => User,
+    (user) => user.notifications,
+    { onDelete: "CASCADE" },
+  )
+  @JoinColumn({ name: "userId" })
+  user: User
+}

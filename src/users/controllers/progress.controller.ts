@@ -1,3 +1,6 @@
+/**
+ * ProgressController handles user progress tracking and analytics endpoints.
+ */
 import {
   Controller,
   Post,
@@ -16,12 +19,20 @@ import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { UpdateProgressDto } from '../dtos/update-progress.dto';
 import { Role } from 'src/role/roles.enum';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 
+@ApiTags('Progress')
+@ApiBearerAuth()
 @Controller('progress')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ProgressController {
   constructor(private readonly progressService: ProgressService) {}
 
+  @ApiOperation({ summary: 'Update lesson progress' })
+  @ApiParam({ name: 'courseId', type: 'string', description: 'Course ID' })
+  @ApiParam({ name: 'lessonId', type: 'string', description: 'Lesson ID' })
+  @ApiBody({ type: UpdateProgressDto })
+  @ApiResponse({ status: 200, description: 'Lesson progress updated.' })
   @Post('courses/:courseId/lessons/:lessonId')
   async updateLessonProgress(
     @Request() req,
@@ -48,6 +59,9 @@ export class ProgressController {
     }
   }
 
+  @ApiOperation({ summary: 'Get course progress' })
+  @ApiParam({ name: 'courseId', type: 'string', description: 'Course ID' })
+  @ApiResponse({ status: 200, description: 'Course progress.' })
   @Get('courses/:courseId')
   async getCourseProgress(
     @Request() req,
@@ -66,6 +80,8 @@ export class ProgressController {
     }
   }
 
+  @ApiOperation({ summary: 'Get user progress' })
+  @ApiResponse({ status: 200, description: 'User progress.' })
   @Get('user')
   async getUserProgress(@Request() req) {
     try {
@@ -78,6 +94,9 @@ export class ProgressController {
     }
   }
 
+  @ApiOperation({ summary: 'Sync course progress' })
+  @ApiParam({ name: 'courseId', type: 'string', description: 'Course ID' })
+  @ApiResponse({ status: 200, description: 'Progress synchronized.' })
   @Post('courses/:courseId/sync')
   async syncProgress(
     @Request() req,
@@ -97,6 +116,9 @@ export class ProgressController {
     }
   }
 
+  @ApiOperation({ summary: 'Get course progress (admin)' })
+  @ApiParam({ name: 'courseId', type: 'string', description: 'Course ID' })
+  @ApiResponse({ status: 200, description: 'Admin course progress.' })
   @Get('admin/courses/:courseId')
   @Roles(Role.Admin)
   async getCourseProgressAdmin(
@@ -116,4 +138,64 @@ export class ProgressController {
       );
     }
   }
-} 
+
+  @ApiOperation({ summary: 'Get learning analytics' })
+  @ApiParam({ name: 'courseId', type: 'string', description: 'Course ID' })
+  @ApiResponse({ status: 200, description: 'Learning analytics.' })
+  @Get('courses/:courseId/analytics')
+  async getLearningAnalytics(
+    @Request() req,
+    @Param('courseId', ParseUUIDPipe) courseId: string,
+  ) {
+    try {
+      return await this.progressService.getLearningAnalytics(req.user.id, courseId);
+    } catch (error) {
+      throw new HttpException('Failed to retrieve analytics', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @ApiOperation({ summary: 'Get adaptive next lessons' })
+  @ApiParam({ name: 'courseId', type: 'string', description: 'Course ID' })
+  @ApiResponse({ status: 200, description: 'Adaptive next lessons.' })
+  @Get('courses/:courseId/adaptive-next')
+  async getAdaptiveNextLessons(
+    @Request() req,
+    @Param('courseId', ParseUUIDPipe) courseId: string,
+  ) {
+    try {
+      return await this.progressService.getAdaptiveNextLessons(req.user.id, courseId);
+    } catch (error) {
+      throw new HttpException('Failed to retrieve adaptive next lessons', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @ApiOperation({ summary: 'Get progress visualization' })
+  @ApiParam({ name: 'courseId', type: 'string', description: 'Course ID' })
+  @ApiResponse({ status: 200, description: 'Progress visualization.' })
+  @Get('courses/:courseId/visualization')
+  async getProgressVisualization(
+    @Request() req,
+    @Param('courseId', ParseUUIDPipe) courseId: string,
+  ) {
+    try {
+      return await this.progressService.getProgressVisualization(req.user.id, courseId);
+    } catch (error) {
+      throw new HttpException('Failed to retrieve progress visualization', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @ApiOperation({ summary: 'Get learning outcome metrics' })
+  @ApiParam({ name: 'courseId', type: 'string', description: 'Course ID' })
+  @ApiResponse({ status: 200, description: 'Learning outcome metrics.' })
+  @Get('courses/:courseId/outcomes')
+  async getLearningOutcomeMetrics(
+    @Request() req,
+    @Param('courseId', ParseUUIDPipe) courseId: string,
+  ) {
+    try {
+      return await this.progressService.getLearningOutcomeMetrics(req.user.id, courseId);
+    } catch (error) {
+      throw new HttpException('Failed to retrieve learning outcome metrics', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+}
