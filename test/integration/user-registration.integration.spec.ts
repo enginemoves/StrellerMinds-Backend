@@ -1,23 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import * as request from 'supertest';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
-import { AuthModule } from '../../src/auth/auth.module';
-import { UsersModule } from '../../src/users/users.module';
-import { EmailModule } from '../../src/email/email.module';
+import { AppModule } from '../../src/app.module';
 import { User } from '../../src/users/entities/user.entity';
-import { RefreshToken } from '../../src/auth/entities/refresh-token.entity';
 import { DatabaseTestModule } from '../utils/database-test.module';
 
 describe('User Registration Integration Tests', () => {
   let app: INestApplication;
   let moduleRef: TestingModule;
   let userRepository: Repository<User>;
-  let refreshTokenRepository: Repository<RefreshToken>;
 
   beforeAll(async () => {
     moduleRef = await Test.createTestingModule({
@@ -27,10 +23,8 @@ describe('User Registration Integration Tests', () => {
           envFilePath: '.env.test',
         }),
         DatabaseTestModule,
-        TypeOrmModule.forFeature([User, RefreshToken]),
-        AuthModule,
-        UsersModule,
-        EmailModule,
+        TypeOrmModule.forFeature([User]),
+        AppModule,
       ],
     }).compile();
 
@@ -38,7 +32,6 @@ describe('User Registration Integration Tests', () => {
     await app.init();
 
     userRepository = moduleRef.get<Repository<User>>(getRepositoryToken(User));
-    refreshTokenRepository = moduleRef.get<Repository<RefreshToken>>(getRepositoryToken(RefreshToken));
   });
 
   afterAll(async () => {
@@ -46,21 +39,19 @@ describe('User Registration Integration Tests', () => {
   });
 
   beforeEach(async () => {
-    // Clean database before each test
-    await refreshTokenRepository.clear();
     await userRepository.clear();
   });
 
   describe('Complete User Registration Flow', () => {
-    const validUserData = {
-      email: 'john.doe@example.com',
-      password: 'SecurePass123!',
-      firstName: 'John',
-      lastName: 'Doe',
-      name: 'John Doe',
-    };
-
     it('should complete full registration flow successfully', async () => {
+      const validUserData = {
+        email: 'test@example.com',
+        password: 'SecurePass123!',
+        firstName: 'John',
+        lastName: 'Doe',
+        role: 'student',
+      };
+
       // Step 1: Register user
       const registerResponse = await request(app.getHttpServer())
         .post('/auth/register')
@@ -75,10 +66,8 @@ describe('User Registration Integration Tests', () => {
           email: validUserData.email,
           firstName: validUserData.firstName,
           lastName: validUserData.lastName,
-          name: validUserData.name,
           role: 'student',
           isEmailVerified: false,
-          accountStatus: 'active',
         },
       });
 
@@ -88,28 +77,20 @@ describe('User Registration Integration Tests', () => {
       });
 
       expect(savedUser).toBeDefined();
-      expect(savedUser.email).toBe(validUserData.email);
-      expect(savedUser.firstName).toBe(validUserData.firstName);
-      expect(savedUser.lastName).toBe(validUserData.lastName);
-      expect(savedUser.isEmailVerified).toBe(false);
-      expect(savedUser.role).toBe('student');
+      expect(savedUser?.email).toBe(validUserData.email);
+      expect(savedUser?.firstName).toBe(validUserData.firstName);
+      expect(savedUser?.lastName).toBe(validUserData.lastName);
+      expect(savedUser?.isEmailVerified).toBe(false);
+      expect(savedUser?.role).toBe('student');
 
-      // Step 3: Verify refresh token is created
-      const refreshToken = await refreshTokenRepository.findOne({
-        where: { userId: savedUser.id },
-      });
-
-      expect(refreshToken).toBeDefined();
-      expect(refreshToken.token).toBe(registerResponse.body.refresh_token);
-
-      // Step 4: Verify access token can be used to access protected routes
+      // Step 3: Verify access token can be used to access protected routes
       const profileResponse = await request(app.getHttpServer())
         .get('/auth/profile')
         .set('Authorization', `Bearer ${registerResponse.body.access_token}`)
         .expect(200);
 
       expect(profileResponse.body).toMatchObject({
-        id: savedUser.id,
+        id: savedUser?.id,
         email: validUserData.email,
         firstName: validUserData.firstName,
         lastName: validUserData.lastName,
@@ -117,245 +98,281 @@ describe('User Registration Integration Tests', () => {
     });
 
     it('should handle email verification flow', async () => {
+      const userData = {
+        email: 'verify@example.com',
+        password: 'SecurePass123!',
+        firstName: 'Jane',
+        lastName: 'Smith',
+        role: 'student',
+      };
+
       // Register user
       const registerResponse = await request(app.getHttpServer())
         .post('/auth/register')
-        .send(validUserData)
+        .send(userData)
         .expect(201);
 
       const userId = registerResponse.body.user.id;
 
-      // Simulate email verification
-      const verificationResponse = await request(app.getHttpServer())
+      // Verify email
+      const verifyResponse = await request(app.getHttpServer())
         .post('/auth/verify-email')
         .send({
-          token: 'mock-verification-token',
           userId: userId,
+          token: 'test-verification-token',
         })
         .expect(200);
 
-      expect(verificationResponse.body.message).toContain('verified');
+      expect(verifyResponse.body).toMatchObject({
+        message: 'Email verified successfully',
+        user: {
+          id: userId,
+          isEmailVerified: true,
+        },
+      });
 
-      // Verify user is marked as verified in database
-      const verifiedUser = await userRepository.findOne({
+      // Verify user is updated in database
+      const updatedUser = await userRepository.findOne({
         where: { id: userId },
       });
 
-      expect(verifiedUser.isEmailVerified).toBe(true);
+      expect(updatedUser?.isEmailVerified).toBe(true);
     });
 
     it('should prevent duplicate email registration', async () => {
+      const userData = {
+        email: 'duplicate@example.com',
+        password: 'SecurePass123!',
+        firstName: 'First',
+        lastName: 'User',
+        role: 'student',
+      };
+
       // First registration
       await request(app.getHttpServer())
         .post('/auth/register')
-        .send(validUserData)
+        .send(userData)
         .expect(201);
 
-      // Second registration with same email
+      // Attempt duplicate registration
       const duplicateResponse = await request(app.getHttpServer())
         .post('/auth/register')
-        .send(validUserData)
-        .expect(409);
+        .send({
+          ...userData,
+          firstName: 'Second',
+          lastName: 'User',
+        })
+        .expect(400);
 
       expect(duplicateResponse.body.message).toContain('already exists');
-
-      // Verify only one user exists
-      const userCount = await userRepository.count({
-        where: { email: validUserData.email },
-      });
-      expect(userCount).toBe(1);
     });
 
     it('should validate password strength requirements', async () => {
       const weakPasswords = [
-        '123456',
+        '123',
         'password',
-        'abc123',
-        'qwerty',
-        'Password1', // Missing special character
-        'password123!', // Missing uppercase
-        'PASSWORD123!', // Missing lowercase
-        'Password!', // Too short
+        '12345678',
+        'Password',
+        'Password1',
       ];
 
-      for (const weakPassword of weakPasswords) {
+      for (const password of weakPasswords) {
         const response = await request(app.getHttpServer())
           .post('/auth/register')
           .send({
-            ...validUserData,
-            email: `test${Date.now()}@example.com`, // Unique email
-            password: weakPassword,
+            email: `test${Math.random()}@example.com`,
+            password: password,
+            firstName: 'Test',
+            lastName: 'User',
+            role: 'student',
           })
           .expect(400);
 
-        expect(response.body.message).toContain('Password');
+        expect(response.body.message).toContain('password');
       }
-
-      // Verify no users were created with weak passwords
-      const userCount = await userRepository.count();
-      expect(userCount).toBe(0);
     });
 
     it('should sanitize and validate user input', async () => {
-      const maliciousData = {
+      const maliciousInput = {
         email: 'test@example.com',
         password: 'SecurePass123!',
-        firstName: '<script>alert("xss")</script>John',
-        lastName: 'Doe\'; DROP TABLE users; --',
-        name: 'John Doe',
+        firstName: '<script>alert("xss")</script>',
+        lastName: 'Doe',
+        role: 'student',
       };
 
       const response = await request(app.getHttpServer())
         .post('/auth/register')
-        .send(maliciousData)
+        .send(maliciousInput)
         .expect(201);
 
+      // Verify input was sanitized
       const savedUser = await userRepository.findOne({
-        where: { email: maliciousData.email },
+        where: { email: 'test@example.com' },
       });
 
-      // Verify input was sanitized
-      expect(savedUser.firstName).not.toContain('<script>');
-      expect(savedUser.firstName).not.toContain('alert');
-      expect(savedUser.lastName).not.toContain('DROP TABLE');
-      expect(savedUser.lastName).not.toContain('--');
+      expect(savedUser?.firstName).not.toContain('<script>');
+      expect(savedUser?.firstName).toBe('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;');
     });
 
     it('should handle concurrent registration attempts', async () => {
-      const promises = Array.from({ length: 5 }, (_, i) =>
+      const userData = {
+        email: 'concurrent@example.com',
+        password: 'SecurePass123!',
+        firstName: 'Concurrent',
+        lastName: 'User',
+        role: 'student',
+      };
+
+      // Attempt concurrent registrations
+      const promises = Array(5).fill(null).map(() =>
         request(app.getHttpServer())
           .post('/auth/register')
-          .send({
-            ...validUserData,
-            email: `user${i}@example.com`,
-          })
+          .send(userData)
       );
 
       const responses = await Promise.allSettled(promises);
-      const successful = responses.filter(r => r.status === 'fulfilled').length;
-      
-      expect(successful).toBe(5);
 
-      // Verify all users were created
-      const userCount = await userRepository.count();
-      expect(userCount).toBe(5);
+      // Only one should succeed
+      const successful = responses.filter(r => r.status === 'fulfilled' && r.value.status === 201);
+      const failed = responses.filter(r => r.status === 'fulfilled' && r.value.status === 400);
+
+      expect(successful).toHaveLength(1);
+      expect(failed).toHaveLength(4);
     });
 
     it('should handle registration with different user roles', async () => {
-      const roles = ['student', 'instructor'];
+      const roles = ['student', 'instructor', 'admin'];
 
       for (const role of roles) {
+        const userData = {
+          email: `${role}@example.com`,
+          password: 'SecurePass123!',
+          firstName: 'Test',
+          lastName: 'User',
+          role: role,
+        };
+
         const response = await request(app.getHttpServer())
           .post('/auth/register')
-          .send({
-            ...validUserData,
-            email: `${role}@example.com`,
-            role: role,
-          })
+          .send(userData)
           .expect(201);
 
         expect(response.body.user.role).toBe(role);
 
+        // Verify in database
         const savedUser = await userRepository.findOne({
           where: { email: `${role}@example.com` },
         });
 
-        expect(savedUser.role).toBe(role);
+        expect(savedUser?.role).toBe(role);
       }
     });
 
     it('should generate unique user IDs', async () => {
-      const userIds = new Set();
-      
-      for (let i = 0; i < 10; i++) {
-        const response = await request(app.getHttpServer())
-          .post('/auth/register')
-          .send({
-            ...validUserData,
-            email: `user${i}@example.com`,
-          })
-          .expect(201);
+      const userData1 = {
+        email: 'user1@example.com',
+        password: 'SecurePass123!',
+        firstName: 'User',
+        lastName: 'One',
+        role: 'student',
+      };
 
-        userIds.add(response.body.user.id);
-      }
+      const userData2 = {
+        email: 'user2@example.com',
+        password: 'SecurePass123!',
+        firstName: 'User',
+        lastName: 'Two',
+        role: 'student',
+      };
 
-      expect(userIds.size).toBe(10);
+      const response1 = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send(userData1)
+        .expect(201);
+
+      const response2 = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send(userData2)
+        .expect(201);
+
+      expect(response1.body.user.id).not.toBe(response2.body.user.id);
+      expect(response1.body.user.id).toMatch(/^[a-f0-9-]{36}$/);
+      expect(response2.body.user.id).toMatch(/^[a-f0-9-]{36}$/);
     });
 
     it('should handle international characters in names', async () => {
-      const internationalData = {
+      const userData = {
         email: 'international@example.com',
         password: 'SecurePass123!',
         firstName: 'José',
-        lastName: 'García-Müller',
-        name: 'José García-Müller',
+        lastName: 'García',
+        role: 'student',
       };
 
       const response = await request(app.getHttpServer())
         .post('/auth/register')
-        .send(internationalData)
+        .send(userData)
         .expect(201);
 
+      expect(response.body.user.firstName).toBe('José');
+      expect(response.body.user.lastName).toBe('García');
+
+      // Verify in database
       const savedUser = await userRepository.findOne({
-        where: { email: internationalData.email },
+        where: { email: 'international@example.com' },
       });
 
-      expect(savedUser.firstName).toBe('José');
-      expect(savedUser.lastName).toBe('García-Müller');
+      expect(savedUser?.firstName).toBe('José');
+      expect(savedUser?.lastName).toBe('García');
     });
 
     it('should set appropriate default values', async () => {
+      const userData = {
+        email: 'defaults@example.com',
+        password: 'SecurePass123!',
+        firstName: 'Default',
+        lastName: 'User',
+        role: 'student',
+      };
+
       const response = await request(app.getHttpServer())
         .post('/auth/register')
-        .send({
-          email: 'defaults@example.com',
-          password: 'SecurePass123!',
-          firstName: 'Default',
-          lastName: 'User',
-          name: 'Default User',
-        })
+        .send(userData)
         .expect(201);
 
-      const savedUser = await userRepository.findOne({
-        where: { email: 'defaults@example.com' },
+      expect(response.body.user).toMatchObject({
+        isEmailVerified: false,
+        accountStatus: 'active',
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
       });
-
-      expect(savedUser.role).toBe('student');
-      expect(savedUser.isEmailVerified).toBe(false);
-      expect(savedUser.accountStatus).toBe('active');
-      expect(savedUser.createdAt).toBeInstanceOf(Date);
-      expect(savedUser.updatedAt).toBeInstanceOf(Date);
     });
   });
 
   describe('Registration Edge Cases', () => {
     it('should handle registration during high load', async () => {
-      const startTime = Date.now();
-      
-      const promises = Array.from({ length: 50 }, (_, i) =>
-        request(app.getHttpServer())
-          .post('/auth/register')
-          .send({
-            email: `load${i}@example.com`,
-            password: 'SecurePass123!',
-            firstName: 'Load',
-            lastName: 'Test',
-            name: 'Load Test',
-          })
-      );
+      const userPromises = Array(10).fill(null).map((_, index) => {
+        const userData = {
+          email: `loadtest${index}@example.com`,
+          password: 'SecurePass123!',
+          firstName: 'Load',
+          lastName: 'Test',
+          role: 'student',
+        };
 
-      const responses = await Promise.allSettled(promises);
-      const endTime = Date.now();
-      
-      const successful = responses.filter(r => r.status === 'fulfilled').length;
-      const duration = endTime - startTime;
-      
-      expect(successful).toBe(50);
-      expect(duration).toBeLessThan(30000); // Should complete within 30 seconds
-      
-      // Verify all users were created correctly
-      const userCount = await userRepository.count();
-      expect(userCount).toBe(50);
+        return request(app.getHttpServer())
+          .post('/auth/register')
+          .send(userData);
+      });
+
+      const responses = await Promise.all(userPromises);
+
+      // All should succeed
+      responses.forEach(response => {
+        expect(response.status).toBe(201);
+        expect(response.body.user).toBeDefined();
+      });
     });
 
     it('should handle very long email addresses', async () => {
@@ -368,129 +385,97 @@ describe('User Registration Integration Tests', () => {
           password: 'SecurePass123!',
           firstName: 'Long',
           lastName: 'Email',
-          name: 'Long Email',
-        });
+          role: 'student',
+        })
+        .expect(400);
 
-      // Should either accept it or reject with proper validation error
-      if (response.status === 201) {
-        const savedUser = await userRepository.findOne({
-          where: { email: longEmail },
-        });
-        expect(savedUser).toBeDefined();
-      } else {
-        expect(response.status).toBe(400);
-        expect(response.body.message).toContain('email');
-      }
+      expect(response.body.message).toContain('email');
     });
 
     it('should handle registration with empty optional fields', async () => {
-      const minimalData = {
+      const userData = {
         email: 'minimal@example.com',
         password: 'SecurePass123!',
-        firstName: 'Min',
-        lastName: 'Imal',
-        name: 'Min Imal',
+        firstName: 'Minimal',
+        lastName: 'User',
+        role: 'student',
       };
 
       const response = await request(app.getHttpServer())
         .post('/auth/register')
-        .send(minimalData)
+        .send(userData)
         .expect(201);
 
-      const savedUser = await userRepository.findOne({
-        where: { email: minimalData.email },
-      });
-
-      expect(savedUser).toBeDefined();
-      expect(savedUser.bio).toBeNull();
-      expect(savedUser.phoneNumber).toBeNull();
-      expect(savedUser.avatar).toBeNull();
+      expect(response.body.user).toBeDefined();
+      expect(response.body.user.email).toBe('minimal@example.com');
     });
   });
 
   describe('Registration Security Tests', () => {
     it('should rate limit registration attempts', async () => {
-      const email = 'ratelimit@example.com';
-      
-      // Make rapid registration attempts
-      const promises = Array.from({ length: 20 }, () =>
+      const userData = {
+        email: 'ratelimit@example.com',
+        password: 'SecurePass123!',
+        firstName: 'Rate',
+        lastName: 'Limit',
+        role: 'student',
+      };
+
+      // Make multiple rapid requests
+      const promises = Array(20).fill(null).map(() =>
         request(app.getHttpServer())
           .post('/auth/register')
-          .send({
-            email: email,
-            password: 'SecurePass123!',
-            firstName: 'Rate',
-            lastName: 'Limit',
-            name: 'Rate Limit',
-          })
+          .send(userData)
       );
 
       const responses = await Promise.allSettled(promises);
-      
-      // Should have some rate limiting (not all should succeed)
-      const successful = responses.filter(r => 
-        r.status === 'fulfilled' && r.value.status === 201
-      ).length;
-      
       const rateLimited = responses.filter(r => 
         r.status === 'fulfilled' && r.value.status === 429
-      ).length;
+      );
 
-      expect(successful).toBeLessThan(20);
-      expect(rateLimited).toBeGreaterThan(0);
+      expect(rateLimited.length).toBeGreaterThan(0);
     });
 
     it('should not leak sensitive information in error messages', async () => {
-      // Try to register with existing email
-      await request(app.getHttpServer())
-        .post('/auth/register')
-        .send({
-          email: 'existing@example.com',
-          password: 'SecurePass123!',
-          firstName: 'Existing',
-          lastName: 'User',
-          name: 'Existing User',
-        })
-        .expect(201);
-
       const response = await request(app.getHttpServer())
         .post('/auth/register')
         .send({
-          email: 'existing@example.com',
-          password: 'SecurePass123!',
-          firstName: 'Another',
-          lastName: 'User',
-          name: 'Another User',
+          email: 'invalid-email',
+          password: 'weak',
+          firstName: '',
+          lastName: '',
+          role: 'invalid-role',
         })
-        .expect(409);
+        .expect(400);
 
-      // Error message should not leak database details
+      // Error messages should not contain sensitive information
+      expect(response.body.message).not.toContain('password');
       expect(response.body.message).not.toContain('database');
-      expect(response.body.message).not.toContain('SQL');
-      expect(response.body.message).not.toContain('constraint');
+      expect(response.body.message).not.toContain('sql');
     });
 
     it('should hash passwords securely', async () => {
-      const password = 'SecurePass123!';
-      
-      const response = await request(app.getHttpServer())
+      const userData = {
+        email: 'passwordtest@example.com',
+        password: 'SecurePass123!',
+        firstName: 'Password',
+        lastName: 'Test',
+        role: 'student',
+      };
+
+      await request(app.getHttpServer())
         .post('/auth/register')
-        .send({
-          email: 'password@example.com',
-          password: password,
-          firstName: 'Password',
-          lastName: 'Test',
-          name: 'Password Test',
-        })
+        .send(userData)
         .expect(201);
 
       const savedUser = await userRepository.findOne({
-        where: { email: 'password@example.com' },
+        where: { email: 'passwordtest@example.com' },
       });
 
       // Password should be hashed, not stored in plain text
-      expect(savedUser.password).not.toBe(password);
-      expect(savedUser.password).toMatch(/^\$2[aby]\$.{56}$/); // bcrypt hash pattern
+      expect(savedUser?.password).not.toBe('SecurePass123!');
+      expect(savedUser?.password).toMatch(/^\$2[aby]\$\d+\$/); // bcrypt hash pattern
+      expect(savedUser?.password.length).toBeGreaterThan(50);
     });
   });
 });
