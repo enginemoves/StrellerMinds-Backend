@@ -2,7 +2,7 @@ import { Injectable, Logger } from "@nestjs/common"
 import type { AnalyticsGateway } from "../gateways/analytics.gateway"
 import type { EventData } from "./data-collection.service"
 
-interface RealTimeMetric {
+export interface RealTimeMetric {
   name: string
   value: number
   timestamp: Date
