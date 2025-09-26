@@ -4,8 +4,11 @@ import { RolesGuard } from './role/roles.guard';
 import { GlobalExceptionsFilter } from './common/filters/global-exception.filter';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { setupTracing } from './monitoring/tracing.bootstrap';
 
 async function bootstrap() {
+    await setupTracing();
+
   const app = await NestFactory.create(AppModule);
 
   // ✅ Global Validation Pipe with i18n error support

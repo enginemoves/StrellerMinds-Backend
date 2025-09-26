@@ -9,6 +9,7 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
+    "start:tracing": "node -r ts-node/register src/main.ts",
     "test:contract": "jest --config jest.config.js --testPathPattern=contract",
     "start:dev": "set NODE_ENV=development && nest start --watch",
     "start:debug": "nest start --debug --watch",
