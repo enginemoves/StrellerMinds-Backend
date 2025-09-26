@@ -7,9 +7,11 @@ import { CourseModule } from '../courses/entities/course-module.entity';
 import { UserProgress } from '../users/entities/user-progress.entity';
 import { Assignment } from 'src/assignment/entities/assignment.entity';
 import { Module as ModuleEntity } from 'src/module/entities/module.entity';
+import { ApiTags } from '@nestjs/swagger';
 
-// import { Lesson } from 'src/modules/lesson/entities/lesson.entity';
-
+/**
+ * Lesson module for managing lessons, their assignments, and progress.
+ */
 @Module({
   imports: [
     TypeOrmModule.forFeature([

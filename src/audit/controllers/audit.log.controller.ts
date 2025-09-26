@@ -1,3 +1,6 @@
+/**
+ * AuditLogController handles endpoints for retrieving audit logs.
+ */
 import {
   Controller,
   Get,

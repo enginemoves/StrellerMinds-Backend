@@ -1,3 +1,6 @@
+/**
+ * AuthController handles authentication and authorization endpoints.
+ */
 import {
   Controller,
   Post,
@@ -11,9 +14,12 @@ import {
   HttpStatus,
   Injectable,
   BadRequestException,
+  Req,
+  HttpException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AuthService } from './auth.service';
+// import { AuthService } from './auth.service';
+
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -21,39 +27,57 @@ import { PasswordValidationService } from './password-validation.service';
 import { PasswordRequirementsDto } from './dto/password-requirements.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+} from '@nestjs/swagger';
 import { UsersService } from 'src/users/services/users.service';
 import { RateLimitGuard } from 'src/common/guards/rate-limiter.guard';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
+import { JwtLocalStrategy } from './strategies/jwt-local.strategy';
+import { AuthGuard } from '@nestjs/passport';
+import { AuthService } from './auth.service';
 
-@ApiTags('authentication')
+@ApiTags('Authentication')
+@ApiBearerAuth()
 @Controller('auth')
 export class AuthController {
   constructor(
-    private readonly authService: AuthService,
+    private readonly jwtLocalStrategy: JwtLocalStrategy,
     private readonly usersService: UsersService,
     private readonly passwordValidationService: PasswordValidationService,
+    private readonly authService: AuthService,
   ) {}
 
   @UseGuards(RateLimitGuard)
   @Post('login')
   @ApiOperation({ summary: 'User login' })
-  @ApiResponse({ status: 200, description: 'Login successful' })
+  @ApiBody({ type: LoginDto })
+  @ApiResponse({ status: 200, description: 'Login successful.' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   @HttpCode(HttpStatus.OK)
   async login(@Body() body: LoginDto) {
-    const user = await this.authService.validateUser(body.email, body.password);
+    const user = await this.jwtLocalStrategy.validateUser(
+      body.email,
+      body.password,
+    );
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    return this.authService.login(user);
+    return this.jwtLocalStrategy.login(user);
   }
 
   @Post('register')
+  @ApiOperation({ summary: 'User registration' })
+  @ApiBody({ type: RegisterDto })
+  @ApiResponse({ status: 201, description: 'Registration successful.' })
   async register(@Body() registerDto: RegisterDto) {
     try {
       const { email, password, ...userData } = registerDto;
-      return await this.authService.register(email, password, userData);
+      return await this.jwtLocalStrategy.register(registerDto);
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
@@ -63,6 +87,8 @@ export class AuthController {
   }
 
   @Get('password-requirements')
+  @ApiOperation({ summary: 'Get password requirements' })
+  @ApiResponse({ status: 200, description: 'Password requirements retrieved' })
   getPasswordRequirements(): PasswordRequirementsDto {
     return {
       requirements: this.passwordValidationService.getPasswordRequirements(),
@@ -78,27 +104,39 @@ export class AuthController {
     if (!body.userId || !body.refreshToken) {
       throw new UnauthorizedException('Missing credentials');
     }
-    return this.authService.refreshToken(body.userId, body.refreshToken);
+    return this.jwtLocalStrategy.refreshToken(body.userId, body.refreshToken);
   }
 
   @Post('forgot-password')
+  @ApiOperation({ summary: 'Request password reset' })
+  @ApiResponse({ status: 200, description: 'Password reset requested' })
   async forgotPassword(@Body('email') email: string) {
-    return this.authService.requestPasswordReset(email);
+    return this.jwtLocalStrategy.requestPasswordReset(email);
   }
 
   @Get('validate-reset-token')
+  @ApiOperation({ summary: 'Validate password reset token' })
+  @ApiResponse({ status: 200, description: 'Token is valid' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired token' })
   async validateToken(@Query('token') token: string) {
-    await this.authService.validateResetToken(token);
+    await this.jwtLocalStrategy.validateResetToken(token);
     return { message: 'Token is valid' };
   }
 
   @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password' })
+  @ApiResponse({ status: 200, description: 'Password reset successful' })
   async resetPassword(@Body() resetDto: ResetPasswordDto) {
-    return this.authService.resetPassword(resetDto.token, resetDto.newPassword);
+    return this.jwtLocalStrategy.resetPassword(
+      resetDto.token,
+      resetDto.newPassword,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('change-password')
+  @ApiOperation({ summary: 'Change password' })
+  @ApiResponse({ status: 200, description: 'Password changed successfully' })
   async changePassword(
     @Request() req,
     @Body() body: { currentPassword: string; newPassword: string },
@@ -107,10 +145,16 @@ export class AuthController {
     const { currentPassword, newPassword } = body;
 
     if (!currentPassword || !newPassword) {
-      throw new BadRequestException('Current password and new password are required');
+      throw new BadRequestException(
+        'Current password and new password are required',
+      );
     }
 
-    return this.authService.changePassword(userId, currentPassword, newPassword);
+    return this.jwtLocalStrategy.changePassword(
+      userId,
+      currentPassword,
+      newPassword,
+    );
   }
 
   @Post('logout')
@@ -120,8 +164,59 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Logout successful' })
   @HttpCode(HttpStatus.OK)
   async logout(@Request() req) {
-    await this.authService.logout(req.user.userId);
+    await this.jwtLocalStrategy.logout(req.user.userId);
     return { message: 'Logout successful' };
+  }
+
+  // Redirect to Google
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleLogin() {
+    return { msg: 'Redirecting to Google OAuth' };
+  }
+
+  // Google callback
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleCallback(@Req() req) {
+    return this.authService.login('google', req.user);
+  }
+
+  @Get('facebook')
+  @UseGuards(AuthGuard('facebook'))
+  async facebookLogin() {
+    return { msg: 'Redirecting to Facebook OAuth' };
+  }
+
+  @Get('facebook/callback')
+  @UseGuards(AuthGuard('facebook'))
+  async facebookCallback(@Req() req) {
+    return this.authService.login('facebook', req.user);
+  }
+
+  @Get('apple')
+  @UseGuards(AuthGuard('apple'))
+  async appleLogin() {
+    return { msg: 'Redirecting to Apple Sign-In' };
+  }
+
+  @Post('apple/callback') // Apple uses POST with redirect_uri
+  @UseGuards(AuthGuard('apple'))
+  async appleCallback(@Req() req) {
+    return this.authService.login('apple', req.user);
+  }
+
+  // Account linking (example)
+  @Post('link')
+  async linkAccount(
+    @Query('provider') provider: string,
+    @Body() credentials: any,
+  ) {
+    try {
+      return await this.authService.register(provider, credentials);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 }
 

@@ -5,7 +5,7 @@ import { AuditLog } from '../entities/audit.log.entity';
 
 
 /**
- * Service for creating and managing audit logs
+ * AuditLogService provides logic for creating and retrieving audit logs.
  */
 @Injectable()
 export class AuditLogService {
@@ -17,7 +17,7 @@ export class AuditLogService {
   ) {}
 
   /**
-   * Create a new audit log entry
+   * Create a new audit log entry.
    * @param logData Log data to record
    */
   async createLog(logData: {
@@ -51,7 +51,7 @@ export class AuditLogService {
   }
 
   /**
-   * Get audit logs for a specific entity
+   * Get audit logs for a specific entity.
    * @param entityType Type of entity
    * @param entityId Entity ID
    */
@@ -71,7 +71,7 @@ export class AuditLogService {
   }
 
   /**
-   * Get all user deletion logs
+   * Get all user deletion logs.
    */
   async getUserDeletionLogs(): Promise<AuditLog[]> {
     return this.auditLogRepository.find({

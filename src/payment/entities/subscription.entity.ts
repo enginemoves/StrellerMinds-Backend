@@ -1,43 +1,136 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index } from "typeorm"
-import { User } from "../../users/entities/user.entity"
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
+} from 'typeorm';
+import { User } from '../../users/entities/user.entity';
+import { PaymentEntity } from './payment.entity';
 
 export enum SubscriptionStatus {
   ACTIVE = 'active',
+  INACTIVE = 'inactive',
   CANCELLED = 'cancelled',
-  EXPIRED = 'expired',
-  PENDING = 'pending'
+  PAST_DUE = 'past_due',
+  UNPAID = 'unpaid',
+  TRIAL = 'trial',
 }
 
-@Entity("subscriptions")
-export class Subscription {
-  @PrimaryGeneratedColumn("uuid")
-  id: string
+export enum SubscriptionPlan {
+  BASIC = 'basic',
+  PREMIUM = 'premium',
+  ENTERPRISE = 'enterprise',
+  STUDENT = 'student',
+}
 
-  @ManyToOne(() => User, { nullable: false })
-  @Index()
-  user: User
+export enum BillingCycle {
+  MONTHLY = 'monthly',
+  QUARTERLY = 'quarterly',
+  YEARLY = 'yearly',
+}
 
-  @Column()
-  planName: string
-
-  @Column({ type: "decimal", precision: 10, scale: 2 })
-  amount: number
-
-  @Column()
-  billingCycle: string // monthly, yearly, etc.
-
-  @Column({ type: 'enum', enum: SubscriptionStatus, default: SubscriptionStatus.PENDING })
-  status: SubscriptionStatus
+@Entity('subscriptions')
+export class SubscriptionEntity {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
-  nextBillingDate: Date
+  userId: string;
 
-  @CreateDateColumn()
-  createdAt: Date
+  @Column()
+  stripeSubscriptionId: string;
 
-  @UpdateDateColumn()
-  updatedAt: Date
+  @Column()
+  stripeCustomerId: string;
+
+  @Column({
+    type: 'enum',
+    enum: SubscriptionStatus,
+    default: SubscriptionStatus.INACTIVE,
+  })
+  status: SubscriptionStatus;
+
+  @Column({
+    type: 'enum',
+    enum: SubscriptionPlan,
+  })
+  plan: SubscriptionPlan;
+
+  @Column({
+    type: 'enum',
+    enum: BillingCycle,
+  })
+  billingCycle: BillingCycle;
+
+  @Column()
+  amount: number; // Amount in cents
+
+  @Column()
+  currency: string;
+
+  @Column()
+  currentPeriodStart: Date;
+
+  @Column()
+  currentPeriodEnd: Date;
 
   @Column({ nullable: true })
-  cancelledAt: Date
-}
+  trialStart: Date;
+
+  @Column({ nullable: true })
+  trialEnd: Date;
+
+  @Column({ nullable: true })
+  cancelledAt: Date;
+
+  @Column({ nullable: true })
+  cancelAtPeriodEnd: boolean;
+
+  @Column({ nullable: true })
+  cancelReason: string;
+
+  @Column({ type: 'jsonb', nullable: true })
+  features: Record<string, any>;
+
+  @Column({ type: 'jsonb', nullable: true })
+  metadata: Record<string, any>;
+
+  @Column({ nullable: true })
+  couponCode: string;
+
+  @Column({ nullable: true })
+  discountAmount: number;
+
+  @Column({ nullable: true })
+  taxAmount: number;
+
+  @Column({ nullable: true })
+  nextBillingDate: Date;
+
+  @Column({ nullable: true })
+  lastPaymentDate: Date;
+
+  @Column({ nullable: true })
+  failedPaymentAttempts: number;
+
+  @Column({ nullable: true })
+  maxFailedAttempts: number;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  // Relations
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' })
+  user: User;
+
+  @OneToMany(() => PaymentEntity, (payment) => payment.subscription)
+  payments: PaymentEntity[];
+} 

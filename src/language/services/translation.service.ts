@@ -3,11 +3,12 @@ import type { TranslationRepository } from "../repositories/translation.reposito
 import type { TranslationKeyRepository } from "../repositories/translation-key.repository"
 import type { LanguageRepository } from "../repositories/language.repository"
 import type { Translation } from "../entities/translation.entity"
-// import type { CreateTranslationDto } from "../dto/create-translation.dto"
-// import type { UpdateTranslationDto } from "../dto/update-translation.dto"
 import type { CacheService } from "./cache.service"
 import type { EventEmitterService } from "./event-emitter.service"
 
+/**
+ * Service for managing content translations in multiple languages.
+ */
 @Injectable()
 export class TranslationService {
   constructor(
@@ -20,10 +21,17 @@ export class TranslationService {
 
   private readonly CACHE_PREFIX = "translations:"
 
+  /**
+   * Get all translations in the system.
+   */
   async getAllTranslations(): Promise<Translation[]> {
     return this.translationRepository.findAll()
   }
 
+  /**
+   * Get a specific translation by its ID.
+   * @param id - The ID of the translation.
+   */
   async getTranslationById(id: string): Promise<Translation> {
     const translation = await this.translationRepository.findById(id)
     if (!translation) {
@@ -32,6 +40,10 @@ export class TranslationService {
     return translation
   }
 
+  /**
+   * Get translations for a specific language.
+   * @param languageCode - The code of the language.
+   */
   async getTranslationsByLanguage(languageCode: string): Promise<Record<string, string>> {
     const cacheKey = `${this.CACHE_PREFIX}${languageCode}`
     const cached = await this.cacheService.get<Record<string, string>>(cacheKey)
@@ -59,6 +71,11 @@ export class TranslationService {
     return result
   }
 
+  /**
+   * Get translations for a specific category in a language.
+   * @param languageCode - The code of the language.
+   * @param category - The category of the translations.
+   */
   async getTranslationsByCategory(languageCode: string, category: string): Promise<Record<string, string>> {
     const cacheKey = `${this.CACHE_PREFIX}${languageCode}:${category}`
     const cached = await this.cacheService.get<Record<string, string>>(cacheKey)
@@ -160,6 +177,10 @@ export class TranslationService {
   //   return updatedTranslation
   // }
 
+  /**
+   * Delete a translation by its ID.
+   * @param id - The ID of the translation to delete.
+   */
   async deleteTranslation(id: string): Promise<void> {
     const translation = await this.translationRepository.findById(id)
     if (!translation) {

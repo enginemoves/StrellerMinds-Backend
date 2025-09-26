@@ -10,20 +10,28 @@ import { CreateGradeDto } from '../dto/create-grade.dto';
 import { UpdateGradeDto } from '../dto/update-grade.dto';
 import { User } from '../../users/entities/user.entity';
 
+/**
+ * GradingService provides logic for grading assignments and updating grades.
+ */
 @Injectable()
 export class GradingService {
-  createGrade(
-    arg0: number,
-    arg1: { grade: number; feedback: string },
-    arg2: any,
-  ) {
-    throw new Error('Method not implemented.');
-  }
+  /**
+   * Creates an instance of GradingService.
+   * @param gradeRepository - The grade repository
+   */
   constructor(
     @InjectRepository(Grade)
     private readonly gradeRepository: Repository<Grade>,
   ) {}
 
+  /**
+   * Grade a student assignment.
+   * @param mentor - Mentor user
+   * @param studentId - Student ID
+   * @param assignmentId - Assignment ID
+   * @param dto - Grade data
+   * @returns The created Grade entity
+   */
   async gradeAssignment(
     mentor: User,
     studentId: number,
@@ -40,6 +48,13 @@ export class GradingService {
     return this.gradeRepository.save(grade);
   }
 
+  /**
+   * Update an existing grade.
+   * @param mentor - Mentor user
+   * @param gradeId - Grade ID
+   * @param dto - Updated grade data
+   * @returns The updated Grade entity
+   */
   async updateGrade(mentor: User, gradeId: number, dto: UpdateGradeDto) {
     const grade = await this.gradeRepository.findOne({
       where: { id: gradeId },
@@ -53,6 +68,11 @@ export class GradingService {
     return this.gradeRepository.save(grade);
   }
 
+  /**
+   * Get grading history for a mentor.
+   * @param mentor - Mentor user
+   * @returns Array of Grade entities
+   */
   async getGradingHistory(mentor: User) {
     return this.gradeRepository.find({
       where: { mentor: { id: mentor.id } },
