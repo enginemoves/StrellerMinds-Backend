@@ -10,7 +10,7 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:tracing": "node -r ts-node/register src/main.ts",
-    "test:contract": "jest --config jest.config.js --testPathPattern=contract",
+    "test:contract": "pact-broker can-i-deploy --pacticipant strellerminds-backend --version $npm_package_version",
     "start:dev": "set NODE_ENV=development && nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
@@ -34,7 +34,6 @@
     "test:mutation": "stryker run",
     "test:visual": "cypress run --spec 'test/e2e/specs/visual/**/*.cy.ts'",
     "test:a11y": "cypress run --spec 'test/e2e/specs/accessibility/**/*.cy.ts'",
-    "test:contract": "pact-broker can-i-deploy --pacticipant strellerminds-backend --version $npm_package_version",
     "accessibility:audit": "node scripts/accessibility-audit.js",
     "accessibility:test": "jest --testPathPattern=accessibility",
     "accessibility:report": "npm run accessibility:audit && npm run accessibility:test",
@@ -164,11 +163,11 @@
     "zxcvbn": "^4.4.2"
   },
   "devDependencies": {
+    "@aws-sdk/client-cloudfront": "^3.896.0",
     "@faker-js/faker": "^8.4.1",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.0",
-    "@pact-foundation/pact": "^12.1.0",
     "@stryker-mutator/core": "^8.2.6",
     "@stryker-mutator/jest-runner": "^8.2.6",
     "@stryker-mutator/typescript-checker": "^8.2.6",
@@ -226,8 +225,7 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.1.3"
   },
-
-    "lint-staged": {            
+  "lint-staged": {
     "*.{ts,js,json,md}": [
       "eslint --fix",
       "prettier --write"
