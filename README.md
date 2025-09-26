@@ -16,19 +16,77 @@ StrellerMinds-Backend is the NestJS-based API server powering StarkMinds, a pion
 _Prerequisites:_  
 • Node.js v14 or higher  
 • npm  
-• PostgreSQL
-• Docker (optional, for containerized development)
+• Docker and Docker Compose (for local development services)
+• PostgreSQL (if not using Docker)
 
-_Installation:_
+## Local Development with Docker Compose
+
+The easiest way to set up local development is using Docker Compose, which provides all necessary services:
+
+### Quick Start
 
 1. Clone the repository:  
    `git clone https://github.com/your-username/strellerminds-backend.git`
 2. Change to the project directory:  
-   `cd starkminds-backend`
+   `cd strellerminds-backend`
+3. Copy the development environment file:  
+   `cp development.env.example .env.development`
+4. Start all services:  
+   `docker-compose up -d`
+5. Install dependencies:  
+   `npm install`
+6. Start the development server:  
+   `npm run start:dev`
+
+### Services Included
+
+The Docker Compose setup includes:
+
+- **PostgreSQL** (port 5432): Database with persistent storage
+- **Redis** (port 6379): Cache and queue management with password protection
+- **Mailhog** (ports 1025/8025): Email testing with web UI at http://localhost:8025
+- **LocalStack** (port 4566): AWS S3 emulation for file storage
+
+### Service URLs
+
+- **Application**: http://localhost:3000
+- **API Documentation**: http://localhost:3000/api
+- **Mailhog Web UI**: http://localhost:8025
+- **LocalStack S3**: http://localhost:4566
+
+### Docker Compose Commands
+
+```bash
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+
+# Stop and remove volumes (WARNING: This will delete all data)
+docker-compose down -v
+
+# Restart a specific service
+docker-compose restart postgres
+
+# Check service health
+docker-compose ps
+```
+
+### Manual Installation (without Docker)
+
+1. Clone the repository:  
+   `git clone https://github.com/your-username/strellerminds-backend.git`
+2. Change to the project directory:  
+   `cd strellerminds-backend`
 3. Install dependencies:  
    `npm install`
-4. Create a `.env` file based on the provided `.env.example`.
-5. Start the development server:  
+4. Set up PostgreSQL database and Redis
+5. Create a `.env` file based on the provided `.env.example`
+6. Start the development server:  
    `npm run start:dev`
 
 _Contribution Guidelines:_  
