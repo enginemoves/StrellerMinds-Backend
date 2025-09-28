@@ -1,3 +1,7 @@
+// Initialize tracing before any other imports
+import { initTracing } from './tracing';
+initTracing();
+
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { RolesGuard } from './role/roles.guard';

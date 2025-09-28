@@ -42,6 +42,7 @@ import { VersionController } from './modules/version/version.controller';
 import { apiVersionConfig } from './config/api-version.config';
 import { VersionHeaderMiddleware } from './common/middleware/version-header.middleware';
 import { PaymentModule } from './payment/payment.module';
+import { TracingModule } from './tracing/tracing.module';
 
 const ENV = process.env.NODE_ENV;;
 console.log('NODE_ENV:', process.env.NODE_ENV);
@@ -115,6 +116,7 @@ console.log('ENV:', ENV);
     VersionController,
     CmsModule,
     PaymentModule,
+    TracingModule,
   ],
   controllers: [AppController],
   providers: [
