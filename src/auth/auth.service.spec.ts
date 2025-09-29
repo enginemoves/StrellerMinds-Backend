@@ -6,9 +6,9 @@ import { ConfigService } from '@nestjs/config';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { PasswordValidationService } from './password-validation.service';
 import { EmailService } from '../email/email.service';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 
-jest.mock('bcryptjs');
+jest.mock('bcrypt');
 
 describe('AuthService', () => {
   let service: AuthService;
