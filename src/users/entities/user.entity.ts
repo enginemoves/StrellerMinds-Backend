@@ -12,7 +12,7 @@ import {
   DeleteDateColumn,
   Index,
 } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserProgress } from './user-progress.entity';
 import { WalletInfo } from './wallet-info.entity';
