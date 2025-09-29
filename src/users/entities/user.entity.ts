@@ -135,6 +135,10 @@ export class User {
   @Column({ unique: true, nullable: false })
   username: string;
 
+  @ApiPropertyOptional({ description: 'Stripe customer ID linked to this user', example: 'cus_123456789' })
+  @Column({ nullable: true })
+  stripeCustomerId?: string;
+
   gradesGiven: any;
   gradesReceived: any;
   reputation: number;
