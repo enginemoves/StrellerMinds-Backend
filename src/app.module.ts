@@ -43,6 +43,7 @@ import { apiVersionConfig } from './config/api-version.config';
 import { VersionHeaderMiddleware } from './common/middleware/version-header.middleware';
 import { PaymentModule } from './payment/payment.module';
 import { CmsModule } from './cms/cms.module';
+import { BillingModule } from './billing/billing.module';
 import { StellarService } from './blockchain/stellar/stellar.service';
 import { ErrorDashboardModule } from './error-dashboard/error-dashboard.module';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
@@ -119,6 +120,7 @@ console.log('ENV:', ENV);
     // CoursesControllerV2,
     VersionController,
     CmsModule,
+    BillingModule,
     PaymentModule,
     ErrorDashboardModule,
     DatabaseOptimizationModule.forRoot(),
