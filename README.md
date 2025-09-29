@@ -294,3 +294,78 @@ Replace `typescript-axios` and output path as needed for your target language.
 ## Contributing
 
 Please follow the contribution guidelines outlined in the **Getting Started** section. Additionally, ensure your code changes do not break the API contract and are reflected in the OpenAPI documentation.
+
+# OAuth Strategy Integration Guide
+
+## Supported Providers
+
+- Google
+- Facebook
+- Apple Sign-In
+
+## Design Pattern
+
+- All OAuth strategies implement `IAuthStrategy`
+- Each is wrapped in an Adapter to conform to internal structure
+- Dynamic injection via 'AUTH_STRATEGIES' token
+- Strategy selection based on `provider` string
+
+## Flow
+
+1. User hits `/auth/{provider}` → redirects to provider login
+2. Callback `/auth/{provider}/callback` is handled
+3. User profile is validated, token issued via `AuthService.login`
+4. Optionally, credentials can be used to `register` or `link` accounts
+
+## Adding a New Provider
+
+1. Implement provider’s Passport strategy
+2. Create Adapter implementing `IAuthStrategy`
+3. Register Adapter and Strategy in AuthModule
+4. Add new route in AuthController
+
+# API Documentation
+
+The backend provides interactive OpenAPI (Swagger) documentation and supports SDK generation for client integration.
+
+### Swagger UI
+- Access the interactive API docs at: `/api` (e.g., http://localhost:3000/api)
+- All endpoints, request/response models, and modules are grouped and described for clarity.
+
+### SDK Generation
+
+You can generate client SDKs in various languages using the OpenAPI spec:
+
+#### Generate OpenAPI Spec
+
+```
+npm run generate:openapi
+```
+
+#### Generate SDK (example using openapi-generator-cli)
+
+```
+npx openapi-generator-cli generate -i http://localhost:3000/api-json -g typescript-axios -o ./sdk/typescript
+```
+
+Replace `typescript-axios` and output path as needed for your target language.
+
+### Scripts
+
+- `generate:openapi`: Exports the OpenAPI spec to `openapi.json` for SDK generation.
+
+## Contributing
+
+Please follow the contribution guidelines outlined in the **Getting Started** section. Additionally, ensure your code changes do not break the API contract and are reflected in the OpenAPI documentation.
+
+
+# Contract Testing with Pact
+
+We use Pact for consumer-driven contract tests against external integrations:
+- Stellar Horizon API
+- SMTP Provider
+- S3 (LocalStack)
+
+## Running locally
+```bash
+yarn test:contract
