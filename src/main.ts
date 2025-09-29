@@ -11,6 +11,9 @@ import {
 } from '@nestjs/platform-fastify';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyCsrf from '@fastify/csrf-protection';
+import { FastifyRequest } from 'fastify';
+import rateLimit from '@fastify/rate-limit';
+import request from 'request';
 
 import { setupTracing } from './monitoring/tracing.bootstrap';
 
@@ -30,7 +33,49 @@ async function bootstrap() {
   });
 
   // Register Helmet for security headers
-  await app.register(fastifyHelmet);
+  //await app.register(fastifyHelmet);
+
+  await app.register(fastifyHelmet, {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],       
+        styleSrc: ["'self'", "'unsafe-inline'"], 
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: [],
+      },
+    },
+  });
+
+  const allowedOrigins = process.env.CORS_ORIGINS?.split(',') ?? [];
+  app.enableCors({
+    origin: (origin, cb) => {
+      if (!origin || allowedOrigins.includes(origin)) cb(null, true);
+      else cb(new Error('Not allowed by CORS'), false);
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true,
+  });
+  // Rate limiting
+  await app.register(rateLimit, {
+    max: 100,          
+    timeWindow: '1 minute',
+    keyGenerator: (req: FastifyRequest) => {
+      const user = (req as any).user; 
+      return user?.id ?? req.ip;
+    },
+    errorResponseBuilder: () => ({
+      statusCode: 429,
+      error: 'Too Many Requests',
+      message: 'Rate limit exceeded. Please try again later.',
+    }),
+  });
+
+
+
 
   // Register CSRF protection globally
   await app.register(fastifyCsrf);
