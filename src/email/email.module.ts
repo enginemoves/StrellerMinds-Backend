@@ -20,6 +20,7 @@ import { EmailTemplateService } from './admin/template.service';
 import { EmailTestService } from './utils/test.util';
 import { EmailPreviewController } from './admin/preview.controller';
 import { MockEmailService } from './mock-email.service';
+import { EmailTrackingUtil } from './utils/tracking.util';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { MockEmailService } from './mock-email.service';
     EmailProcessor,
     EmailTemplateService,
     EmailTestService,
+    EmailTrackingUtil,
   ],
   exports: [EmailService],
 })

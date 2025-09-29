@@ -2,9 +2,11 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Express } from 'express';
 import { CreateSubmissionDto } from '../dtos/createSubmission.dto';
 import { Submission } from '../submission.entity';
+import * as fs from 'fs';
+import * as path from 'path';
+import { UploadedFileLike } from '../../common/types/uploaded-file-like';
 
 @Injectable()
 export class SubmissionService {
@@ -13,10 +15,14 @@ export class SubmissionService {
     private submissionRepo: Repository<Submission>,
   ) {}
 
-  async create(createDto: CreateSubmissionDto, file?: Express.Multer.File) {
+  async create(createDto: CreateSubmissionDto, file?: UploadedFileLike) {
+    let fileUrl: string | null = null;
+    if (file?.buffer) {
+      fileUrl = await this.saveBufferToUploads(file);
+    }
     const submission = this.submissionRepo.create({
       ...createDto,
-      fileUrl: file ? file.path : null,
+      fileUrl,
       status: 'submitted',
     });
     return this.submissionRepo.save(submission);
@@ -28,7 +34,7 @@ export class SubmissionService {
     return submission;
   }
 
-  async update(id: string, updateDto: Partial<CreateSubmissionDto>, file?: Express.Multer.File) {
+  async update(id: string, updateDto: Partial<CreateSubmissionDto>, file?: UploadedFileLike) {
     const submission = await this.findOne(id);
     const now = new Date();
 
@@ -39,7 +45,17 @@ export class SubmissionService {
     }
 
     Object.assign(submission, updateDto);
-    if (file) submission.fileUrl = file.path;
+    if (file?.buffer) submission.fileUrl = await this.saveBufferToUploads(file);
     return this.submissionRepo.save(submission);
+  }
+
+  private async saveBufferToUploads(file: UploadedFileLike): Promise<string> {
+    const uploadsDir = path.join(process.cwd(), 'uploads');
+    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+    const base = file.originalname || `submission_${Date.now()}`;
+    const safeName = base.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const fullPath = path.join(uploadsDir, `${Date.now()}_${safeName}`);
+    await fs.promises.writeFile(fullPath, file.buffer);
+    return fullPath;
   }
 }
