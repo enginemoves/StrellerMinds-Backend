@@ -2,20 +2,20 @@
 
 StrellerMinds-Backend is the NestJS-based API server powering StarkMinds, a pioneering blockchain education platform built on Stellar. This repository provides secure, scalable endpoints for user authentication, course management, data persistence, and integration with Stellar smart contracts.
 
-**Features**  
-• Secure JWT-based authentication and authorization  
-• RESTful APIs for managing courses and user data  
-• Integration with Stellar smart contracts for on-chain interactions  
-• Modular architecture with environment-based configuration  
-• Comprehensive logging, error handling, and testing (Jest)  
-• Auto-generated API docs with Swagger  
+**Features**
+• Secure JWT-based authentication and authorization
+• RESTful APIs for managing courses and user data
+• Integration with Stellar smart contracts for on-chain interactions
+• Modular architecture with environment-based configuration
+• Comprehensive logging, error handling, and testing (Jest)
+• Auto-generated API docs with Swagger
 • CI/CD pipeline integration for continuous delivery
 
 **Getting Started**
 
-_Prerequisites:_  
-• Node.js v14 or higher  
-• npm  
+_Prerequisites:_
+• Node.js v14 or higher
+• npm
 • Docker and Docker Compose (for local development services)
 • PostgreSQL (if not using Docker)
 
@@ -25,17 +25,17 @@ The easiest way to set up local development is using Docker Compose, which provi
 
 ### Quick Start
 
-1. Clone the repository:  
+1. Clone the repository:
    `git clone https://github.com/your-username/strellerminds-backend.git`
-2. Change to the project directory:  
+2. Change to the project directory:
    `cd strellerminds-backend`
-3. Copy the development environment file:  
+3. Copy the development environment file:
    `cp development.env.example .env.development`
-4. Start all services:  
+4. Start all services:
    `docker-compose up -d`
-5. Install dependencies:  
+5. Install dependencies:
    `npm install`
-6. Start the development server:  
+6. Start the development server:
    `npm run start:dev`
 
 ### Services Included
@@ -78,24 +78,27 @@ docker-compose ps
 
 ### Manual Installation (without Docker)
 
-1. Clone the repository:  
+1. Clone the repository:
    `git clone https://github.com/your-username/strellerminds-backend.git`
-2. Change to the project directory:  
+2. Change to the project directory:
    `cd strellerminds-backend`
-3. Install dependencies:  
+3. Install dependencies:
    `npm install`
 4. Set up PostgreSQL database and Redis
 5. Create a `.env` file based on the provided `.env.example`
-6. Start the development server:  
+6. Start the development server:
    `npm run start:dev`
 
-_Contribution Guidelines:_  
-• Fork the repository and create a feature branch.  
-• Follow the established ESLint/Prettier configurations.  
-• Write tests for new features and ensure all existing tests pass.  
+_Contribution Guidelines:_
+• Fork the repository and create a feature branch.
+• Follow the established ESLint/Prettier configurations.
+• Write tests for new features and ensure all existing tests pass.
 • Submit a detailed pull request describing your changes.
 
-**Contact**  
+
+• NB: `package-lock.json` is the recommended file for tracking package versions and ensuring consistent installations across environments.
+
+**Contact**
 For questions or feedback, please open an issue or contact the maintainers.
 
 # User Data Retention Policy
