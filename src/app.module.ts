@@ -46,6 +46,7 @@ import { CmsModule } from './cms/cms.module';
 import { StellarService } from './blockchain/stellar/stellar.service';
 import { ErrorDashboardModule } from './error-dashboard/error-dashboard.module';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
+import { DatabaseOptimizationModule } from './database-optimization/database-optimization.module';
 
 const ENV = process.env.NODE_ENV;;
 console.log('NODE_ENV:', process.env.NODE_ENV);
@@ -120,6 +121,7 @@ console.log('ENV:', ENV);
     CmsModule,
     PaymentModule,
     ErrorDashboardModule,
+    DatabaseOptimizationModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [
