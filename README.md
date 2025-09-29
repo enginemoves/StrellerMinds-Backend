@@ -291,6 +291,34 @@ Replace `typescript-axios` and output path as needed for your target language.
 
 - `generate:openapi`: Exports the OpenAPI spec to `openapi.json` for SDK generation.
 
+### Automated SDK Release
+
+When you push a version tag in the format `vX.Y.Z`, an automated workflow will:
+- Build the backend and generate the OpenAPI spec (`openapi.json`) aligned to your `package.json` version.
+- Generate a TypeScript Axios SDK with fully typed models and API clients.
+- Publish artifacts to GitHub Releases, and optionally publish the SDK to npm if `NPM_TOKEN` is configured in repository secrets.
+
+Artifacts published in the GitHub Release:
+- `openapi.json` (the exact OpenAPI spec used for generation)
+- `typescript-sdk-<version>.zip` (generated SDK package)
+
+To consume the SDK from npm:
+- Install: `npm install @starkmindshq/strellerminds-sdk@<version>`
+- Import and use in your TypeScript/JavaScript project:
+
+```ts
+import { Configuration, DefaultApi } from '@starkmindshq/strellerminds-sdk';
+
+const config = new Configuration({ basePath: 'https://api.strellerminds.io', accessToken: 'YOUR_TOKEN' });
+const api = new DefaultApi(config);
+// Example call
+// const result = await api.usersControllerFindAll();
+```
+
+Release traceability:
+- Each Release includes a direct link to the matching `openapi.json` used for SDK generation.
+- The SDK package version matches the backend `package.json` version used for the tag.
+
 ## Contributing
 
 Please follow the contribution guidelines outlined in the **Getting Started** section. Additionally, ensure your code changes do not break the API contract and are reflected in the OpenAPI documentation.
@@ -349,10 +377,6 @@ npx openapi-generator-cli generate -i http://localhost:3000/api-json -g typescri
 ```
 
 Replace `typescript-axios` and output path as needed for your target language.
-
-### Scripts
-
-- `generate:openapi`: Exports the OpenAPI spec to `openapi.json` for SDK generation.
 
 ## Contributing
 
