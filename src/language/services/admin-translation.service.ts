@@ -9,6 +9,10 @@ import type { UpdateLanguageDto } from "../dto/update-language.dto"
 import type { CacheService } from "./cache.service"
 import type { EventEmitterService } from "./event-emitter.service"
 
+/**
+ * Service for admin-level language and translation management.
+ * Handles CRUD operations for languages and translation keys.
+ */
 @Injectable()
 export class AdminTranslationService {
   constructor(
@@ -20,10 +24,17 @@ export class AdminTranslationService {
     private readonly eventEmitter: EventEmitterService,
   ) {}
 
+  /**
+   * Get all languages in the system.
+   */
   async getAllLanguages(): Promise<Language[]> {
     return this.languageRepository.findAll()
   }
 
+  /**
+   * Get a language by its unique ID.
+   * @param id Language UUID
+   */
   async getLanguageById(id: string): Promise<Language> {
     const language = await this.languageRepository.findById(id)
     if (!language) {
@@ -32,6 +43,10 @@ export class AdminTranslationService {
     return language
   }
 
+  /**
+   * Get a language by its code (e.g., 'en').
+   * @param code Language code
+   */
   async getLanguageByCode(code: string): Promise<Language> {
     const language = await this.languageRepository.findByCode(code)
     if (!language) {
@@ -40,6 +55,10 @@ export class AdminTranslationService {
     return language
   }
 
+  /**
+   * Create a new language.
+   * @param createDto DTO for language creation
+   */
   async createLanguage(createDto: CreateLanguageDto): Promise<Language> {
     // Check if language with the same code already exists
     const existingLanguage = await this.languageRepository.findByCode(createDto.code)
@@ -74,6 +93,11 @@ export class AdminTranslationService {
     return newLanguage
   }
 
+  /**
+   * Update an existing language.
+   * @param id Language UUID
+   * @param updateDto DTO for language update
+   */
   async updateLanguage(id: string, updateDto: UpdateLanguageDto): Promise<Language> {
     const language = await this.languageRepository.findById(id)
     if (!language) {
@@ -113,6 +137,10 @@ export class AdminTranslationService {
     return updatedLanguage
   }
 
+  /**
+   * Delete a language by its ID.
+   * @param id Language UUID
+   */
   async deleteLanguage(id: string): Promise<void> {
     const language = await this.languageRepository.findById(id)
     if (!language) {
@@ -134,6 +162,10 @@ export class AdminTranslationService {
     this.eventEmitter.emit("admin.language.deleted", { id, code: language.code })
   }
 
+  /**
+   * Set a language as the default language.
+   * @param id Language UUID
+   */
   async setDefaultLanguage(id: string): Promise<Language> {
     const language = await this.languageRepository.findById(id)
     if (!language) {
@@ -152,6 +184,9 @@ export class AdminTranslationService {
     return updatedLanguage
   }
 
+  /**
+   * Get translation statistics for all languages.
+   */
   async getTranslationStats(): Promise<any> {
     const languages = await this.languageRepository.findAll()
     const translationKeys = await this.translationKeyRepository.findAll()

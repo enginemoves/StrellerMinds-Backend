@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { create } from 'ipfs-http-client';
-import NodeCache from 'node-cache';
+import NodeCache  from 'node-cache';
+import { of as hashOf } from 'ipfs-only-hash';
+import { ApiTags } from '@nestjs/swagger';
 
+/**
+ * Service for interacting with IPFS: add, retrieve, and verify content.
+ */
 @Injectable()
 export class IpfsService {
   private ipfs;
@@ -14,7 +19,12 @@ export class IpfsService {
     this.cache = new NodeCache({ stdTTL: 100, checkperiod: 120 });
   }
 
-  async addFile(content: Buffer) {
+  /**
+   * Add a file to IPFS and cache it.
+   * @param content Buffer of the file content.
+   * @returns The CID of the stored content.
+   */
+  async addFile(content: Buffer): Promise<string> {
     try {
       const { cid } = await this.ipfs.add(content);
       this.cache.set(cid.toString(), content);
@@ -24,7 +34,12 @@ export class IpfsService {
     }
   }
 
-  async getFile(cid: string) {
+  /**
+   * Retrieve a file from IPFS by CID, using cache if available.
+   * @param cid The Content Identifier.
+   * @returns The content as a string.
+   */
+  async getFile(cid: string): Promise<string> {
     try {
       const cachedContent = this.cache.get(cid);
       if (cachedContent) {
@@ -45,8 +60,14 @@ export class IpfsService {
     }
   }
 
-  verifyContent(cid: string, content: Buffer) {
-    const hash = this.ipfs.hash(content);
+  /**
+   * Verify that the content matches the given CID.
+   * @param cid The Content Identifier.
+   * @param content The content buffer to verify.
+   * @returns True if the content matches the CID, false otherwise.
+   */
+  async verifyContent(cid: string, content: Buffer): Promise<boolean> {
+    const hash = await hashOf(content, { cidVersion: 0 });
     return hash === cid;
   }
 }

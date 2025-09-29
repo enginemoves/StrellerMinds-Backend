@@ -6,6 +6,9 @@ import type { Language } from "../entities/language.entity"
 import { firstValueFrom } from "rxjs"
 import type { CacheService } from "./cache.service"
 
+/**
+ * Service for detecting user language preferences from headers or IP address.
+ */
 @Injectable()
 export class LanguageDetectionService {
   constructor(
@@ -18,6 +21,11 @@ export class LanguageDetectionService {
   private readonly CACHE_PREFIX = "language_detection:"
   private readonly IP_GEOLOCATION_API = "https://ipapi.co"
 
+  /**
+   * Detect language from the Accept-Language header.
+   * @param acceptLanguageHeader The Accept-Language header value
+   * @returns The detected Language entity
+   */
   async detectLanguageFromHeaders(acceptLanguageHeader: string): Promise<Language> {
     if (!acceptLanguageHeader) {
       return this.languageRepository.findDefault()
@@ -45,6 +53,11 @@ export class LanguageDetectionService {
     return this.languageRepository.findDefault()
   }
 
+  /**
+   * Detect language from the user's IP address.
+   * @param ipAddress The user's IP address
+   * @returns The detected Language entity
+   */
   async detectLanguageFromIP(ipAddress: string): Promise<Language> {
     const cacheKey = `${this.CACHE_PREFIX}ip:${ipAddress}`
     const cached = await this.cacheService.get<string>(cacheKey)
@@ -90,6 +103,13 @@ export class LanguageDetectionService {
     }
   }
 
+  /**
+   * Detect and save the user's language preference.
+   * @param userId The user's ID
+   * @param acceptLanguageHeader The Accept-Language header value
+   * @param ipAddress The user's IP address
+   * @returns The detected Language entity
+   */
   async detectAndSaveUserLanguage(
     userId: string,
     acceptLanguageHeader?: string,
