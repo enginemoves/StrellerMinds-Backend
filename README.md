@@ -2,20 +2,20 @@
 
 StrellerMinds-Backend is the NestJS-based API server powering StarkMinds, a pioneering blockchain education platform built on Stellar. This repository provides secure, scalable endpoints for user authentication, course management, data persistence, and integration with Stellar smart contracts.
 
-**Features**  
-• Secure JWT-based authentication and authorization  
-• RESTful APIs for managing courses and user data  
-• Integration with Stellar smart contracts for on-chain interactions  
-• Modular architecture with environment-based configuration  
-• Comprehensive logging, error handling, and testing (Jest)  
-• Auto-generated API docs with Swagger  
+**Features**
+• Secure JWT-based authentication and authorization
+• RESTful APIs for managing courses and user data
+• Integration with Stellar smart contracts for on-chain interactions
+• Modular architecture with environment-based configuration
+• Comprehensive logging, error handling, and testing (Jest)
+• Auto-generated API docs with Swagger
 • CI/CD pipeline integration for continuous delivery
 
 **Getting Started**
 
-_Prerequisites:_  
-• Node.js v14 or higher  
-• npm  
+_Prerequisites:_
+• Node.js v14 or higher
+• npm
 • Docker and Docker Compose (for local development services)
 • PostgreSQL (if not using Docker)
 
@@ -25,17 +25,17 @@ The easiest way to set up local development is using Docker Compose, which provi
 
 ### Quick Start
 
-1. Clone the repository:  
+1. Clone the repository:
    `git clone https://github.com/your-username/strellerminds-backend.git`
-2. Change to the project directory:  
+2. Change to the project directory:
    `cd strellerminds-backend`
-3. Copy the development environment file:  
+3. Copy the development environment file:
    `cp development.env.example .env.development`
-4. Start all services:  
+4. Start all services:
    `docker-compose up -d`
-5. Install dependencies:  
+5. Install dependencies:
    `npm install`
-6. Start the development server:  
+6. Start the development server:
    `npm run start:dev`
 
 ### Services Included
@@ -78,24 +78,27 @@ docker-compose ps
 
 ### Manual Installation (without Docker)
 
-1. Clone the repository:  
+1. Clone the repository:
    `git clone https://github.com/your-username/strellerminds-backend.git`
-2. Change to the project directory:  
+2. Change to the project directory:
    `cd strellerminds-backend`
-3. Install dependencies:  
+3. Install dependencies:
    `npm install`
 4. Set up PostgreSQL database and Redis
 5. Create a `.env` file based on the provided `.env.example`
-6. Start the development server:  
+6. Start the development server:
    `npm run start:dev`
 
-_Contribution Guidelines:_  
-• Fork the repository and create a feature branch.  
-• Follow the established ESLint/Prettier configurations.  
-• Write tests for new features and ensure all existing tests pass.  
+_Contribution Guidelines:_
+• Fork the repository and create a feature branch.
+• Follow the established ESLint/Prettier configurations.
+• Write tests for new features and ensure all existing tests pass.
 • Submit a detailed pull request describing your changes.
 
-**Contact**  
+
+• NB: `package-lock.json` is the recommended file for tracking package versions and ensuring consistent installations across environments.
+
+**Contact**
 For questions or feedback, please open an issue or contact the maintainers.
 
 # User Data Retention Policy
@@ -291,6 +294,34 @@ Replace `typescript-axios` and output path as needed for your target language.
 
 - `generate:openapi`: Exports the OpenAPI spec to `openapi.json` for SDK generation.
 
+### Automated SDK Release
+
+When you push a version tag in the format `vX.Y.Z`, an automated workflow will:
+- Build the backend and generate the OpenAPI spec (`openapi.json`) aligned to your `package.json` version.
+- Generate a TypeScript Axios SDK with fully typed models and API clients.
+- Publish artifacts to GitHub Releases, and optionally publish the SDK to npm if `NPM_TOKEN` is configured in repository secrets.
+
+Artifacts published in the GitHub Release:
+- `openapi.json` (the exact OpenAPI spec used for generation)
+- `typescript-sdk-<version>.zip` (generated SDK package)
+
+To consume the SDK from npm:
+- Install: `npm install @starkmindshq/strellerminds-sdk@<version>`
+- Import and use in your TypeScript/JavaScript project:
+
+```ts
+import { Configuration, DefaultApi } from '@starkmindshq/strellerminds-sdk';
+
+const config = new Configuration({ basePath: 'https://api.strellerminds.io', accessToken: 'YOUR_TOKEN' });
+const api = new DefaultApi(config);
+// Example call
+// const result = await api.usersControllerFindAll();
+```
+
+Release traceability:
+- Each Release includes a direct link to the matching `openapi.json` used for SDK generation.
+- The SDK package version matches the backend `package.json` version used for the tag.
+
 ## Contributing
 
 Please follow the contribution guidelines outlined in the **Getting Started** section. Additionally, ensure your code changes do not break the API contract and are reflected in the OpenAPI documentation.
@@ -349,10 +380,6 @@ npx openapi-generator-cli generate -i http://localhost:3000/api-json -g typescri
 ```
 
 Replace `typescript-axios` and output path as needed for your target language.
-
-### Scripts
-
-- `generate:openapi`: Exports the OpenAPI spec to `openapi.json` for SDK generation.
 
 ## Contributing
 
