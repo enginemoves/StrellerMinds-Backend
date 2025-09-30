@@ -150,7 +150,6 @@
     "class-transformer": "^0.5.0",
     "class-validator": "^0.14.0",
     "cloudinary": "^1.41.3",
-{{ ... }}
     "fluent-ffmpeg": "^2.1.3",
     "handlebars": "^4.7.8",
     "ipfs-http-client": "^50.1.2",
@@ -183,7 +182,6 @@
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.1.6",
-    
     "@stryker-mutator/core": "^8.2.6",
     "@stryker-mutator/jest-runner": "^8.2.6",
     "@stryker-mutator/typescript-checker": "^8.2.6",
