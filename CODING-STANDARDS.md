@@ -3,6 +3,7 @@
 ## General
 - Follow ESLint rules (strict TypeScript).
 - Prettier is mandatory for formatting.
+- NPM is a recommended tool for package management.
 
 ## Naming Conventions
 - Classes: `PascalCase`

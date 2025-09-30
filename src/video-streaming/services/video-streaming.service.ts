@@ -9,6 +9,7 @@ import { AwsCloudFrontService } from './aws-cloudfront.service';
 import { VideoProcessingService } from './video-processing.service';
 import { VideoSecurityService } from './video-security.service';
 import { VideoAnalyticsService } from './video-analytics.service';
+import { UploadedFileLike } from '../../common/types/uploaded-file-like';
 
 export interface VideoUploadResult {
   video: Video;
@@ -119,7 +120,7 @@ export class VideoStreamingService {
     }
   }
 
-  async uploadVideoFile(videoId: string, file: Express.Multer.File): Promise<void> {
+  async uploadVideoFile(videoId: string, file: UploadedFileLike): Promise<void> {
     try {
       this.logger.debug(`Uploading video file for video: ${videoId}`);
 
