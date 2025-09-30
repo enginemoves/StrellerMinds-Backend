@@ -11,11 +11,13 @@ import {
     Patch,
     ParseUUIDPipe,
     UseGuards,
+    Query,
   } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { CourseService } from './courses.service';
 import { CreateCourseDto } from './dtos/create.course.dto';
 import { UpdateCourseDto } from './dtos/update.course.dto';
+import { ElectiveCourseQueryDto } from './dtos/elective-course-query.dto';
 import { PremiumContentGuard } from '../billing/premium-content.guard';
 
 @ApiTags('Courses')
@@ -37,6 +39,13 @@ export class CourseController {
     @Get()
     public async findAll() {
       return await this.courseService.findAll();
+    }
+
+    @ApiOperation({ summary: 'Get elective courses with search and filtering' })
+    @ApiResponse({ status: 200, description: 'Paginated list of elective courses with applied filters.' })
+    @Get('elective-courses')
+    public async findElectiveCourses(@Query() query: ElectiveCourseQueryDto) {
+      return await this.courseService.findElectiveCourses(query);
     }
   
     @ApiOperation({ summary: 'Get course by ID' })

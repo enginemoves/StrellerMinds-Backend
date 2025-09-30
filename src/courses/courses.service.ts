@@ -9,6 +9,7 @@ import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Course } from './entities/course.entity';
 import { CreateCourseDto } from './dtos/create.course.dto';
 import { UpdateCourseDto } from './dtos/update.course.dto';
+import { ElectiveCourseQueryDto } from './dtos/elective-course-query.dto';
 import { BaseService, PaginationOptions, PaginatedResult } from '../common/services/base.service';
 import { ICourseService } from '../common/interfaces/service.interface';
 import { SharedUtilityService } from '../common/services/shared-utility.service';
@@ -68,6 +69,70 @@ export class CourseService extends BaseService<Course> implements ICourseService
       });
     } catch (error) {
       return this.handleError(error, 'fetching courses');
+    }
+  }
+
+  /**
+   * Find elective courses with search and filtering capabilities
+   */
+  public async findElectiveCourses(query: ElectiveCourseQueryDto): Promise<PaginatedResult<Course>> {
+    try {
+      const page = query.page || 1;
+      const limit = query.limit || 10;
+      const skip = (page - 1) * limit;
+
+      // Build query with all necessary relations to avoid N+1
+      let queryBuilder = this.courseRepository.createQueryBuilder('course')
+        .leftJoinAndSelect('course.instructor', 'instructor')
+        .leftJoinAndSelect('course.category', 'category')
+        .leftJoinAndSelect('course.tags', 'tags');
+
+      // Apply search filter (case-insensitive, partial match on title or description)
+      if (query.search) {
+        queryBuilder = queryBuilder.andWhere(
+          '(LOWER(course.title) LIKE LOWER(:search) OR LOWER(course.description) LIKE LOWER(:search))',
+          { search: `%${query.search}%` }
+        );
+      }
+
+      // Apply category filter
+      if (query.category) {
+        queryBuilder = queryBuilder.andWhere('LOWER(category.name) = LOWER(:category)', {
+          category: query.category
+        });
+      }
+
+      // Apply credit hours filter (using durationInHours field)
+      if (query.creditHours !== undefined) {
+        queryBuilder = queryBuilder.andWhere('course.durationInHours = :creditHours', {
+          creditHours: query.creditHours
+        });
+      }
+
+      // Apply active status filter
+      if (query.isActive !== undefined) {
+        const status = query.isActive ? 'published' : 'draft';
+        queryBuilder = queryBuilder.andWhere('course.status = :status', { status });
+      }
+
+      // Add ordering
+      queryBuilder = queryBuilder.orderBy('course.createdAt', 'DESC');
+
+      // Get results with pagination
+      const [courses, total] = await queryBuilder
+        .skip(skip)
+        .take(limit)
+        .getManyAndCount();
+
+      return {
+        items: courses,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (error) {
+      return this.handleError(error, 'fetching elective courses');
     }
   }
 
