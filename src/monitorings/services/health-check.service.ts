@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { HealthCheckResult, HealthStatus, MonitoringConfig } from '../interfaces/monitoring-config.interface';
 
@@ -8,7 +8,7 @@ export class HealthCheckService {
   private healthChecks = new Map<string, HealthCheckResult>();
   private customHealthChecks = new Map<string, () => Promise<HealthCheckResult>>();
 
-  constructor(private readonly config: MonitoringConfig) {}
+  constructor(@Inject('MONITORING_CONFIG') private readonly config: MonitoringConfig) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
   async performHealthChecks(): Promise<void> {

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { MetricData, ObservabilityMetrics, SystemMetrics, ApplicationMetrics } from '../interfaces/observability.interface';
 import { MonitoringConfig } from '../interfaces/monitoring-config.interface';
@@ -13,7 +13,7 @@ export class MetricsCollectorService {
   private responseTimes: number[] = [];
   private errorCounts = new Map<string, number>();
 
-  constructor(private readonly config: MonitoringConfig) {}
+  constructor(@Inject('MONITORING_CONFIG') private readonly config: MonitoringConfig) {}
 
   @Cron(CronExpression.EVERY_30_SECONDS)
   async collectSystemMetrics(): Promise<void> {
