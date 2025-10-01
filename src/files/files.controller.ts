@@ -8,14 +8,12 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import {
   Controller,
   Post,
-  UploadedFile,
   Body,
-  UseInterceptors,
   Req,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FastifyRequest } from 'fastify';
 import { FilesService } from './files.service';
 import { UploadChunkDto } from './dto/upload-chunk.dto';
 import { CompleteUploadDto } from './dto/complete-upload.dto';
@@ -30,22 +28,23 @@ export class FilesController {
   // Endpoint to receive a file chunk
   @FileRateLimit.chunkUpload()
   @Post('upload/chunk')
-  @UseInterceptors(FileInterceptor('chunk'))
   @ApiOperation({ summary: 'Upload file chunk' })
   @ApiResponse({ status: 200, description: 'Chunk uploaded successfully' })
   @ApiResponse({ status: 429, description: 'Too many chunk upload attempts' })
-  async uploadChunk(
-    @UploadedFile() file: Express.Multer.File,
-    @Body() body: UploadChunkDto,
-  ) {
+  async uploadChunk(@Req() req: FastifyRequest, @Body() body: UploadChunkDto) {
     const { uploadId, chunkIndex, totalChunks } = body;
-    if (!file || !uploadId || chunkIndex === undefined || !totalChunks) {
+    if (!uploadId || chunkIndex === undefined || !totalChunks) {
       throw new HttpException(
         'Missing required fields',
         HttpStatus.BAD_REQUEST,
       );
     }
-    await this.filesService.saveChunk(uploadId, chunkIndex, file);
+    const part = await (req as any).file();
+    if (!part) {
+      throw new HttpException('Missing chunk', HttpStatus.BAD_REQUEST);
+    }
+    const buffer = await part.toBuffer();
+    await this.filesService.saveChunk(uploadId, chunkIndex, { buffer } as any);
     return { message: 'Chunk uploaded' };
   }
 

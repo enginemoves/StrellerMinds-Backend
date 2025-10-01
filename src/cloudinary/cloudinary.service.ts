@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { v2 as cloudinary } from 'cloudinary';
 import { UploadApiResponse } from 'cloudinary';
+import { UploadedFileLike } from '../common/types/uploaded-file-like';
 
 @Injectable()
 export class CloudinaryService {
@@ -14,7 +15,7 @@ export class CloudinaryService {
 
   //FN TO UPLOAD PROFILE IMG
   public async uploadImage(
-    file: Express.Multer.File,
+    file: UploadedFileLike,
   ): Promise<UploadApiResponse> {
     return new Promise((resolve, reject) => {
       cloudinary.uploader
