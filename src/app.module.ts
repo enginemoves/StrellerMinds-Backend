@@ -50,7 +50,7 @@ import { CorrelationIdMiddleware } from './common/middleware/correlation-id.midd
 import { DatabaseOptimizationModule } from './database-optimization/database-optimization.module';
 import { NotificationsModule } from './notifications/notifications.module';
 
-const ENV = process.env.NODE_ENV;;
+const ENV = process.env.NODE_ENV;
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('ENV:', ENV);
 
@@ -143,7 +143,6 @@ console.log('ENV:', ENV);
       provide: APP_GUARD,
       useClass: CustomThrottlerGuard,
     },
-    StellarService,
   ],
 })
 export class AppModule implements NestModule {
