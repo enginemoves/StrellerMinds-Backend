@@ -5,7 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { CoursesModule } from './courses/courses.module';
 import { AuthModule } from './auth/auth.module';
-import { CertificateModule } from './certificate/certificate.module';
+import { CertificateModule } from './certificates/certificate.module';
 import { FilesModule } from './files/files.module';
 import { EmailModule } from './email/email.module';
 import { LessonModule } from './lesson/lesson.module';
@@ -49,6 +49,7 @@ import { ErrorDashboardModule } from './error-dashboard/error-dashboard.module';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 import { DatabaseOptimizationModule } from './database-optimization/database-optimization.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { I18nApiModule } from './i18n/i18n.module';
 
 const ENV = process.env.NODE_ENV;
 console.log('NODE_ENV:', process.env.NODE_ENV);
@@ -108,12 +109,11 @@ console.log('ENV:', ENV);
     CredentialModule,
     ArchiveModule,
     // FeedbackModule,
-    // I18nModule,
+    I18nApiModule,
     MentorshipModule,
     TranslationModule,
     GdprModule,
     MonitoringModule,
-    UsersModule,
     CoursesAdvancesModule,
     AuthControllerV1,
     AuthControllerV2,
