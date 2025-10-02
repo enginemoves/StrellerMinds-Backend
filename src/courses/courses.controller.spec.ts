@@ -17,6 +17,13 @@ describe('CourseController', () => {
           create: jest.fn().mockResolvedValue({}),
           update: jest.fn().mockResolvedValue({}),
           remove: jest.fn().mockResolvedValue({}),
+          findElectiveCourses: jest.fn().mockResolvedValue({
+            items: [],
+            total: 0,
+            page: 1,
+            limit: 10,
+            totalPages: 0
+          }),
         }
       }],
     }).compile();
@@ -27,5 +34,20 @@ describe('CourseController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it('should call findElectiveCourses with query parameters', async () => {
+    const query = {
+      search: 'blockchain',
+      category: 'Science',
+      creditHours: 3,
+      isActive: true,
+      page: 1,
+      limit: 10
+    };
+
+    await controller.findElectiveCourses(query);
+
+    expect(service.findElectiveCourses).toHaveBeenCalledWith(query);
   });
 });
