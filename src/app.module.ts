@@ -48,6 +48,7 @@ import { StellarService } from './blockchain/stellar/stellar.service';
 import { ErrorDashboardModule } from './error-dashboard/error-dashboard.module';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 import { DatabaseOptimizationModule } from './database-optimization/database-optimization.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 const ENV = process.env.NODE_ENV;
 console.log('NODE_ENV:', process.env.NODE_ENV);
@@ -137,6 +138,7 @@ const databaseImports = isOpenApiEnv
     PaymentModule,
     ErrorDashboardModule,
     DatabaseOptimizationModule.forRoot(),
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [

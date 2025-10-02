@@ -50,3 +50,24 @@ export const mockServiceResponse = <T>(data: T) => ({
   data,
   message: 'Success',
 });
+
+/**
+ * Creates a test user with mock data
+ */
+export function createTestUser(overrides: any = {}) {
+  const userId = Math.random().toString(36).substring(7);
+  const timestamp = Date.now();
+  
+  return {
+    id: userId,
+    email: `test-${timestamp}@example.com`,
+    firstName: `Test`,
+    lastName: `User${timestamp}`,
+    roles: ['student'],
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
