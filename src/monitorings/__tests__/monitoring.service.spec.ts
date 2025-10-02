@@ -39,7 +39,7 @@ describe("MonitoringModule", () => {
       imports: [ScheduleModule.forRoot()],
       providers: [
         {
-          provide: MonitoringConfig,
+          provide: 'MONITORING_CONFIG',
           useValue: mockConfig,
         },
         MetricsCollectorService,
@@ -60,32 +60,40 @@ describe("MonitoringModule", () => {
       expect(metricsCollector).toBeDefined()
     })
 
-    it("should record request metrics", () => {
+    it("should record request metrics", async () => {
       metricsCollector.recordRequest("/api/users")
       metricsCollector.recordRequest("/api/users")
       metricsCollector.recordRequest("/api/posts")
 
-     const metrics = metricsCollector.getMetrics();
-     expect(metrics.requests['/api/users']).toBe(2);
-     expect(metrics.requests['/api/posts']).toBe(1);
-     expect(metrics.totalRequests).toBe(3);
+      await metricsCollector.collectSystemMetrics()
+
+      const requestMetrics = metricsCollector.getMetricsByName("request_count")
+      expect(Array.isArray(requestMetrics)).toBe(true)
+      const last = requestMetrics[requestMetrics.length - 1]
+      expect(last).toBeDefined()
+      expect(last.value).toBe(3)
     })
 
-    it("should record response time metrics", () => {
+    it("should record response time metrics", async () => {
       metricsCollector.recordResponseTime(150)
       metricsCollector.recordResponseTime(200)
       metricsCollector.recordResponseTime(100)
 
-      const metrics = metricsCollector.getMetrics()
-      expect(metrics).toBeDefined()
+      await metricsCollector.collectSystemMetrics()
+
+      const respMetrics = metricsCollector.getMetricsByName("response_time_avg")
+      expect(respMetrics.length).toBeGreaterThan(0)
+      expect(respMetrics[respMetrics.length - 1].value).toBeGreaterThan(0)
     })
 
-    it("should record error metrics", () => {
+    it("should record error metrics", async () => {
       metricsCollector.recordError("ValidationError")
       metricsCollector.recordError("DatabaseError")
 
-      const metrics = metricsCollector.getMetrics()
-      expect(metrics).toBeDefined()
+      await metricsCollector.collectSystemMetrics()
+
+      const errMetrics = metricsCollector.getMetricsByName("error_rate")
+      expect(errMetrics.length).toBeGreaterThan(0)
     })
 
     it("should get metrics by name", () => {
@@ -312,4 +320,3 @@ it("should trigger alerts based on metrics thresholds", async () => {
       expect(logs.length).toBeGreaterThan(0)
     })
   })
-})

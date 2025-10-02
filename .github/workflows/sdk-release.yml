@@ -30,6 +30,8 @@ jobs:
 
       - name: Generate OpenAPI spec
         run: npm run generate:openapi
+        env:
+          NODE_ENV: openapi
 
       - name: Verify OpenAPI output exists
         run: |

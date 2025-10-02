@@ -1,4 +1,4 @@
-import { Injectable, LoggerService as NestLoggerService } from '@nestjs/common';
+import { Injectable, LoggerService as NestLoggerService, Inject } from '@nestjs/common';
 import { LogEntry, LogLevel } from '../interfaces/observability.interface';
 import { MonitoringConfig } from '../interfaces/monitoring-config.interface';
 
@@ -7,7 +7,7 @@ export class CustomLoggerService implements NestLoggerService {
   private logs: LogEntry[] = [];
   private readonly maxLogs = 10000;
 
-  constructor(private readonly config: MonitoringConfig) {}
+  constructor(@Inject('MONITORING_CONFIG') private readonly config: MonitoringConfig) {}
 
   log(message: any, context?: string, traceId?: string): void {
     this.writeLog(LogLevel.INFO, message, context, undefined, traceId);

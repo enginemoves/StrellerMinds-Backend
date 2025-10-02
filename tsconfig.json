@@ -13,7 +13,9 @@
     "sourceMap": true,
     "incremental": true,
     "baseUrl": "./",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "types": ["node"]
   },
   "exclude": ["node_modules", "dist"]
 }

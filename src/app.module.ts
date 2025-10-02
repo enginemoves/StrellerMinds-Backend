@@ -53,11 +53,47 @@ const ENV = process.env.NODE_ENV;
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('ENV:', ENV);
 
+// In OpenAPI generation environment, skip database initialization to avoid CI failures
+const isOpenApiEnv = ENV && ENV.trim() === 'openapi';
+const databaseImports = isOpenApiEnv
+  ? []
+  : [
+      TypeOrmModule.forRootAsync({
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: async (configService: ConfigService) => ({
+          type: 'postgres',
+          host: configService.get<string>('database.host'),
+          port: configService.get<number>('database.port'),
+          username: configService.get<string>('database.user'),
+          password: configService.get<string>('database.password'),
+          database: configService.get<string>('database.name'),
+          autoLoadEntities: configService.get<boolean>('database.autoload'),
+          synchronize: configService.get<boolean>('database.synchronize'),
+          // Connection Pool Settings
+          extra: {
+            max: configService.get<number>('database.maxPoolSize'),
+            min: configService.get<number>('database.minPoolSize'),
+            idleTimeoutMillis: configService.get<number>(
+              'database.poolIdleTimeout',
+            ),
+          },
+          // Retry Mechanism
+          retryAttempts: configService.get<number>('database.retryAttempts'),
+          retryDelay: configService.get<number>('database.retryDelay'),
+        }),
+      }),
+    ];
+
 @Module({
   imports: [
     ThrottlerModule.forRoot({
-      ttl: 60, // 60 seconds
-      limit: 100,
+      ttl: process.env.GLOBAL_RATE_LIMIT_TTL
+        ? Number(process.env.GLOBAL_RATE_LIMIT_TTL)
+        : 60,
+      limit: process.env.GLOBAL_RATE_LIMIT_LIMIT
+        ? Number(process.env.GLOBAL_RATE_LIMIT_LIMIT)
+        : 100,
     }),
     // Global Config
     ScheduleModule.forRoot(),
@@ -68,31 +104,8 @@ console.log('ENV:', ENV);
     }),
 
     // Database
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get<string>('database.host'),
-        port: configService.get<number>('database.port'),
-        username: configService.get<string>('database.user'),
-        password: configService.get<string>('database.password'),
-        database: configService.get<string>('database.name'),
-        autoLoadEntities: configService.get<boolean>('database.autoload'),
-        synchronize: configService.get<boolean>('database.synchronize'),
-        // Connection Pool Settings
-        extra: {
-          max: configService.get<number>('database.maxPoolSize'),
-          min: configService.get<number>('database.minPoolSize'),
-          idleTimeoutMillis: configService.get<number>(
-            'database.poolIdleTimeout',
-          ),
-        },
-        // Retry Mechanism
-        retryAttempts: configService.get<number>('database.retryAttempts'),
-        retryDelay: configService.get<number>('database.retryDelay'),
-      }),
-    }),
+    // Replace direct DB import with a conditional to avoid connecting during OpenAPI generation
+    ...databaseImports,
     UsersModule,
     CoursesModule,
     AuthModule,
