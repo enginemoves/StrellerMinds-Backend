@@ -21,6 +21,7 @@ import { AppService } from './app.service';
 import { MentorshipModule } from './mentorship/mentorship.module';
 import { ArchiveModule } from './archive/archive.module';
 import databaseConfig from './config/database.config';
+import { getValidationSchema, validationOptions } from './config/validation.schema';
 import { ScheduleModule } from '@nestjs/schedule';
 import { GdprModule } from './gdpr/gdpr.module';
 import { MonitoringModule } from './monitoring/monitoring-module';
@@ -51,9 +52,27 @@ import { DatabaseOptimizationModule } from './database-optimization/database-opt
 import { NotificationsModule } from './notifications/notifications.module';
 import { I18nApiModule } from './i18n/i18n.module';
 
-const ENV = process.env.NODE_ENV;
+const ENV = process.env.NODE_ENV?.trim() || 'development';
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('ENV:', ENV);
+
+// Safe environment file path resolution
+function getEnvFilePaths(environment: string): string[] {
+  const paths: string[] = [];
+  
+  // Add environment-specific file first (highest priority)
+  if (environment && environment !== 'development') {
+    paths.push(`.env.${environment}`);
+  }
+  
+  // Add local override file (second priority)
+  paths.push('.env.local');
+  
+  // Add default development file (lowest priority)
+  paths.push('.env');
+  
+  return paths;
+}
 
 // In OpenAPI generation environment, skip database initialization to avoid CI failures
 const isOpenApiEnv = ENV && ENV.trim() === 'openapi';
@@ -101,8 +120,11 @@ const databaseImports = isOpenApiEnv
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: !ENV ? '.env' : `.env.${ENV.trim()}`,
+      envFilePath: getEnvFilePaths(ENV),
       load: [databaseConfig, () => ({ api: apiVersionConfig })],
+      validationSchema: getValidationSchema(ENV),
+      validationOptions: validationOptions,
+      expandVariables: true, // Allow variable expansion in .env files
     }),
 
     // Database
